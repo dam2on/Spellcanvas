@@ -1,0 +1,10 @@
+pieces:
+ - build class
+ - ability to upload media
+ - delete pieces
+ - add labels
+ - players can only move their own pieces
+ - dms can move any pieces
+
+dm/players
+ - 
