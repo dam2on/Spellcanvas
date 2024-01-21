@@ -84,7 +84,7 @@ const changeBackground = function(ctx) {
 
 const initParty = function() {
   let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
-  _peer = new Peer();
+  _peer = new Peer('abc123', {});
 
   if (mode == 1) {
     _hostId = document.getElementById("input-party-id").value;
