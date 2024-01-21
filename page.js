@@ -2,7 +2,8 @@
 PIECES = [];
 _playerId = null;
 _peer = null;
-_partyId = null;
+_peerId = null;
+_hostId = null;
 
 const newGuid = function () {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
@@ -66,7 +67,7 @@ const addGamePiece = function(ctx) {
   PIECES.push(piece);
 
   debugger;
-  var conn = _peer.connect(_partyId);
+  var conn = _peer.connect(_hostId);
   conn.on('open', function() {
     conn.send('Added a new piece ' + JSON.stringify(piece));
   })
@@ -83,16 +84,15 @@ const changeBackground = function(ctx) {
 
 const initParty = function() {
   let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
+  _peer = new Peer();
+
   if (mode == 1) {
-    _peer = new Peer(document.getElementById("input-party-id").value);
-  }
-  else {
-    _peer = new Peer();
+    _hostId = document.getElementById("input-party-id").value;
   }
 
   _peer.on('open', function(id) {
     console.log('My peer ID is: ' + id);
-    _partyId = id;
+    _peerId = id;
   });
 
   _peer.on('connection', function(conn) {
