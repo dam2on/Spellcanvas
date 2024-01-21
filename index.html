@@ -5,7 +5,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
             integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-        <script src="https://unpkg.com/netplayjs@0.4.1/dist/netplay.js"></script>
+        <!-- <script src="https://unpkg.com/netplayjs@0.4.1/dist/netplay.js"></script> -->
+        <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
             crossorigin="anonymous"></script>
@@ -104,6 +105,41 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary" id="btn-modal-bg-ok">Accept</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal" id="modal-party" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Welcome to DnD Combat Simulator!</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="form-modal-bg">
+                            <label class="form-label">I would like to</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="radio-party" id="radio-party-create" value="0" checked>
+                                <label class="form-check-label" for="radio-party-create">
+                                  Create a party
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="radio-party" id="radio-party-join" value="1">
+                                <label class="form-check-label" for="radio-party-join">
+                                  Join a party
+                                </label>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="#input-piece-name">Party ID</label>
+                                <input id="input-party-id" class="form-control" type="text" />
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="btn-modal-party-ok">Accept</button>
                     </div>
                 </div>
             </div>

@@ -1,6 +1,8 @@
 
 PIECES = [];
 _playerId = null;
+_peer = null;
+_partyId = null;
 
 const newGuid = function () {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
@@ -62,6 +64,12 @@ const addGamePiece = function(ctx) {
   });
 
   PIECES.push(piece);
+
+  debugger;
+  var conn = _peer.connect(_partyId);
+  conn.on('open', function() {
+    conn.send('Added a new piece ' + JSON.stringify(piece));
+  })
 }
 
 const changeBackground = function(ctx) {
@@ -73,6 +81,27 @@ const changeBackground = function(ctx) {
   });
 }
 
+const initParty = function() {
+  let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
+  if (mode == 1) {
+    _peer = new Peer(document.getElementById("input-party-id").value);
+  }
+  else {
+    _peer = new Peer();
+  }
+
+  _peer.on('open', function(id) {
+    console.log('My peer ID is: ' + id);
+    _partyId = id;
+  });
+
+  _peer.on('connection', function(conn) {
+    debugger;
+  });
+
+  bootstrap.Modal.getInstance(document.getElementById('modal-party')).hide();
+}
+
 const toBase64 = file => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.readAsDataURL(file);
@@ -81,14 +110,18 @@ const toBase64 = file => new Promise((resolve, reject) => {
 });
 
 window.onload = function () {
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-party')).show(); 
+
   playerId = newGuid();
   var can = document.getElementById('canvas');
   var ctx = can.getContext('2d');
   can.width = window.innerWidth;
+
   can.height = window.innerHeight;
 
   document.getElementById('btn-modal-piece-ok').addEventListener('click', () => addGamePiece(ctx));
   document.getElementById('btn-modal-bg-ok').addEventListener('click', () => changeBackground(ctx));
+  document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
 
   var dragging = null;
   can.addEventListener('mousedown', function (args) {
