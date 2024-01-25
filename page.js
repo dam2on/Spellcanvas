@@ -67,11 +67,13 @@ const addGamePiece = function() {
 
   PIECES.push(piece);
 
-  debugger;
-  var conn = _peer.connect(_hostId);
-  conn.on('open', function() {
-    conn.send({event: EventTypes.AddPiece, data: piece});
-  })
+  if (_hostId != null) {
+    debugger;
+    var conn = _peer.connect(_hostId);
+    conn.on('open', function() {
+      conn.send({event: EventTypes.AddPiece, data: piece});
+    })
+  }
 }
 
 const changeBackground = function() {
