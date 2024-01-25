@@ -97,6 +97,9 @@ const initParty = function() {
 
   _peer.on('connection', function(conn) {
     debugger;
+    conn.on('data', function(data) {
+      debugger;
+    });
   });
 
   bootstrap.Modal.getInstance(document.getElementById('modal-party')).hide();
