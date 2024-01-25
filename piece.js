@@ -1,4 +1,8 @@
 class Piece {
+    constructor(obj) {
+        obj && Object.assign(this, obj);
+    }
+
     constructor(guid, ownerId, name, img, size) {
         this.id = guid;
         this.owner = ownerId;

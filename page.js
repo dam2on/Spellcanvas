@@ -4,6 +4,7 @@ _playerId = null;
 _peer = null;
 _peerId = null;
 _hostId = null;
+_ctx = null;
 
 const newGuid = function () {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
@@ -27,30 +28,30 @@ const shapeIntersects = function (x, y) {
   return null;
 }
 
-const refreshCanvas = function (ctx) {
+const refreshCanvas = function () {
 
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  _ctx.clearRect(0, 0, _ctx.canvas.width, _ctx.canvas.height);
 
   for (var piece of PIECES) {
-    ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
-    ctx.fillText(piece.name, piece.x + 10, piece.y);
+    _ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
+    _ctx.fillText(piece.name, piece.x + 10, piece.y);
   }
 
 }
 
-const drawImageScaled = function (img, ctx) {
-  var canvas = ctx.canvas ;
+const drawImageScaled = function (img) {
+  var canvas = _ctx.canvas ;
   var hRatio = canvas.width  / img.width    ;
   var vRatio =  canvas.height / img.height  ;
   var ratio  = Math.min ( hRatio, vRatio );
   var centerShift_x = ( canvas.width - img.width*ratio ) / 2;
   var centerShift_y = ( canvas.height - img.height*ratio ) / 2;  
-  ctx.clearRect(0,0,canvas.width, canvas.height);
-  ctx.drawImage(img, 0,0, img.width, img.height,
+  _ctx.clearRect(0,0,canvas.width, canvas.height);
+  _ctx.drawImage(img, 0,0, img.width, img.height,
                      centerShift_x,centerShift_y,img.width*ratio, img.height*ratio);  
 }
 
-const addGamePiece = function(ctx) {
+const addGamePiece = function() {
   const modalPieceInputs = document.getElementById('form-modal-piece').getElementsByTagName('input');
   const name = modalPieceInputs[0].value;
   const img = modalPieceInputs[1].files[0];
@@ -58,7 +59,7 @@ const addGamePiece = function(ctx) {
 
   const piece = new Piece(newGuid(), playerId, name, img, size);
   piece.image.addEventListener('load', () => {
-    ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
+    _ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
     bootstrap.Modal.getInstance(document.getElementById('modal-piece')).hide();
     modalPieceInputs[0].value = null;
     modalPieceInputs[1].value = null;
@@ -69,17 +70,23 @@ const addGamePiece = function(ctx) {
   debugger;
   var conn = _peer.connect(_hostId);
   conn.on('open', function() {
-    conn.send('Added a new piece ' + JSON.stringify(piece));
+    conn.send({event: EventTypes.AddPiece, data: piece});
   })
 }
 
-const changeBackground = function(ctx) {
+const changeBackground = function() {
   const bgImg = document.getElementById("input-bg-img").files[0];
   Promise.resolve(toBase64(bgImg)).then((result) => {
     document.getElementById("canvas").style['background-image'] = `url(${result})`;
     bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
-    refreshCanvas(ctx);
+    refreshCanvas();
   });
+}
+
+const onAddPieceEvent = function(data) {
+  debugger;
+  PIECES.push(data);
+  refreshCanvas();
 }
 
 const initParty = function() {
@@ -98,7 +105,18 @@ const initParty = function() {
   _peer.on('connection', function(conn) {
     debugger;
     conn.on('data', function(data) {
-      debugger;
+      switch (data.event) {
+        case EventTypes.AddPiece:
+          onAddPieceEvent(data.data);
+          break;
+        case EventTypes.MovePiece:
+          break;
+        case EventTypes.DeletePiece:
+          break;
+        default:
+          console.log("unrecognized event type: " + data.event);
+          break;
+      }
     });
   });
 
@@ -117,13 +135,13 @@ window.onload = function () {
 
   playerId = newGuid();
   var can = document.getElementById('canvas');
-  var ctx = can.getContext('2d');
+  _ctx = can.getContext('2d');
   can.width = window.innerWidth;
 
   can.height = window.innerHeight;
 
-  document.getElementById('btn-modal-piece-ok').addEventListener('click', () => addGamePiece(ctx));
-  document.getElementById('btn-modal-bg-ok').addEventListener('click', () => changeBackground(ctx));
+  document.getElementById('btn-modal-piece-ok').addEventListener('click', () => addGamePiece());
+  document.getElementById('btn-modal-bg-ok').addEventListener('click', () => changeBackground());
   document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
 
   var dragging = null;
@@ -134,8 +152,7 @@ window.onload = function () {
     if (dragging != null) {
       dragging.x = args.layerX - parseInt(dragging.width / 2);
       dragging.y = args.layerY - parseInt(dragging.height / 2);
-      refreshCanvas(ctx);
-
+      refreshCanvas();
     }
   });
   can.addEventListener('mouseup', () => dragging = null);
@@ -148,7 +165,7 @@ window.onload = function () {
       if (confirm("Delete piece: " + piece.name + "?")) {
         let index = PIECES.indexOf(piece);
         PIECES.splice(index, 1);
-        refreshCanvas(ctx);
+        refreshCanvas();
       }
     }
 
