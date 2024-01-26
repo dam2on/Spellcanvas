@@ -73,7 +73,7 @@ const addGamePiece = function() {
     conn.on('open', function() {
       let pieceCopy = {...piece};
       pieceCopy.image = piece.image.src;
-      conn.send({event: EventTypes.AddPiece, data: pieceCopy});
+      conn.send({event: EventTypes.AddPiece, piece: pieceCopy});
     })
   }
 }
