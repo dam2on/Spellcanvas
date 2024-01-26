@@ -87,9 +87,16 @@ const changeBackground = function() {
   });
 }
 
-const onAddPieceEvent = function(data) {
-  let newPiece = Piece.fromObj(data);
+const onAddPieceEvent = function(piece) {
+  let newPiece = Piece.fromObj(piece);
   PIECES.push(newPiece);
+  refreshCanvas();
+}
+
+const onMovePieceEvent = function(movedPiece) {
+  let pieceToMove = PIECES.find(p => p.id == movedPiece.id);
+  pieceToMove.x = movedPiece.x;
+  pieceToMove.y = movedPiece.y;
   refreshCanvas();
 }
 
@@ -111,9 +118,10 @@ const initParty = function() {
     conn.on('data', function(data) {
       switch (data.event) {
         case EventTypes.AddPiece:
-          onAddPieceEvent(data.data);
+          onAddPieceEvent(data.piece);
           break;
         case EventTypes.MovePiece:
+          onMovePieceEvent(data.movedPiece);
           break;
         case EventTypes.DeletePiece:
           break;
@@ -148,18 +156,38 @@ window.onload = function () {
   document.getElementById('btn-modal-bg-ok').addEventListener('click', () => changeBackground());
   document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
 
-  var dragging = null;
+  var draggedPiece = null;
   can.addEventListener('mousedown', function (args) {
-    dragging = shapeIntersects(args.clientX, args.clientY);
+    draggedPiece = shapeIntersects(args.clientX, args.clientY);
   });
   can.addEventListener('mousemove', function (args) {
-    if (dragging != null) {
-      dragging.x = args.layerX - parseInt(dragging.width / 2);
-      dragging.y = args.layerY - parseInt(dragging.height / 2);
+    if (draggedPiece != null) {
+      draggedPiece.x = args.layerX - parseInt(draggedPiece.width / 2);
+      draggedPiece.y = args.layerY - parseInt(draggedPiece.height / 2);
       refreshCanvas();
     }
   });
-  can.addEventListener('mouseup', () => dragging = null);
+  can.addEventListener('mouseup', function () {
+    let movedPieceId = draggedPiece.id;
+    let newX = draggedPiece.x;
+    let newY = draggedPiece.y;
+
+    if (_hostId != null) {
+      var conn = _peer.connect(_hostId);
+      conn.on('open', function() {
+        conn.send({
+          event: EventTypes.MovePiece, 
+          movedPiece: {
+            id: movedPieceId,
+            x: newX,
+            y: newY
+          }
+        });
+      });
+    }
+
+    draggedPiece = null;
+  });
 
   can.addEventListener('contextmenu', (e) => {
     debugger;
