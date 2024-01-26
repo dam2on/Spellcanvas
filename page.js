@@ -141,12 +141,8 @@ const emitRequestPieceEvent = function(peiceId) {
   });
 }
 
-const onAddPieceEvent = function(piece) {
-  // new pieces need their image to load once
-  var img = new Image();
-  img.src = piece.image;
-  document.createElement(img);
-  let newPiece = Piece.fromObj(piece);
+const onAddPieceEvent = async function(piece) {
+  let newPiece = await Piece.fromObj(piece);
   PIECES.push(newPiece);
   refreshCanvas();
 }

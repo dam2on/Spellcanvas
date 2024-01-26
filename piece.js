@@ -25,6 +25,9 @@ class Piece {
     }
 
     static fromObj(obj) {
-        return new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size);
+        let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size);
+        return new Promise(function(resolve, reject) {
+            piece.image.onload = () => resolve(piece);
+        });
     }
 }
