@@ -1,9 +1,7 @@
 
 PIECES = [];
 _connectedIds = [];
-_playerId = null;
 _peer = null;
-_peerId = null;
 _hostId = null;
 _ctx = null;
 
@@ -58,7 +56,7 @@ const addGamePiece = function() {
   const img = modalPieceInputs[1].files[0];
   const size = document.querySelector('input[name="radio-piece-size"]:checked').value;
 
-  const piece = new Piece(newGuid(), playerId, name, img, size);
+  const piece = new Piece(newGuid(), _peer.id, name, img, size);
   piece.image.addEventListener('load', () => {
     _ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
     bootstrap.Modal.getInstance(document.getElementById('modal-piece')).hide();
@@ -68,14 +66,24 @@ const addGamePiece = function() {
 
   PIECES.push(piece);
 
+  debugger;
   if (_hostId != null) {
-    var conn = _peer.connect(_hostId);
-    conn.on('open', function() {
-      let pieceCopy = {...piece};
-      pieceCopy.image = piece.image.src;
-      conn.send({event: EventTypes.AddPiece, piece: pieceCopy});
-    })
+    emitAddPieceEvent(_hostId, piece);
   }
+  else if (_connectedIds.length > 0) {
+    for (var id of _connectedIds) {
+      emitAddPieceEvent(id, piece);
+    }
+  }
+}
+
+const emitAddPieceEvent = function(peerId, piece) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function() {
+    let pieceCopy = {...piece};
+    pieceCopy.image = piece.image.src;
+    conn.send({event: EventTypes.AddPiece, piece: pieceCopy});
+  })
 }
 
 const changeBackground = function() {
@@ -110,11 +118,14 @@ const initParty = function() {
 
   _peer.on('open', function(id) {
     console.log('My peer ID is: ' + id);
-    _peerId = id;
   });
 
   _peer.on('connection', function(conn) {
     debugger;
+    if (_connectedIds.indexOf(conn.peer) < 0) {
+      //add new 
+      _connectedIds.push(conn.peer);
+    }
     conn.on('data', function(data) {
       switch (data.event) {
         case EventTypes.AddPiece:
@@ -145,7 +156,6 @@ const toBase64 = file => new Promise((resolve, reject) => {
 window.onload = function () {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-party')).show(); 
 
-  playerId = newGuid();
   var can = document.getElementById('canvas');
   _ctx = can.getContext('2d');
   can.width = window.innerWidth;
