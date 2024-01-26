@@ -132,7 +132,7 @@ const emitRequestPieceEvent = function(peiceId) {
     return;
   }
   // fetch piece from host
-  var conn = _peer.conn(_host);
+  var conn = _peer.connect(_host);
   conn.on('open', function() {
     conn.send({
       event: EventTypes.RequestPiece,
@@ -170,6 +170,10 @@ const onRequestPieceEvent = function(peerId, id) {
   emitAddPieceEvent(peerId, piece);
 }
 
+const onNewPlayerEvent = function(peerId) {
+  _connectedIds.push(peerId);
+}
+
 const initParty = function() {
   let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
   let partyId = document.getElementById("input-party-id").value;
@@ -186,14 +190,18 @@ const initParty = function() {
 
   _peer.on('open', function(id) {
     console.log('My peer ID is: ' + id);
+    if (mode == 1 && _host != null) {
+      // say hello to host
+      var conn = _peer.connect(_host);
+      conn.send({
+        event: EventTypes.NewPlayer
+      });
+    }
   });
 
   _peer.on('connection', function(conn) {
-    debugger;
-    if (!_host && _connectedIds.indexOf(conn.peer) < 0) {
-      _connectedIds.push(conn.peer);
-    }
     conn.on('data', function(data) {
+      debugger;
       switch (data.event) {
         case EventTypes.AddPiece:
           onAddPieceEvent(data.piece);
@@ -206,6 +214,10 @@ const initParty = function() {
           break;
         case EventTypes.RequestPiece:
           onRequestPieceEvent(conn.peer, data.id);
+          break;
+        case EventTypes.NewPlayer:
+          onNewPlayerEvent(conn.peer);
+          break;
         default:
           console.log("unrecognized event type: " + data.event);
           break;
