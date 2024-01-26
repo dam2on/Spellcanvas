@@ -116,17 +116,36 @@ const emitMovePieceEvent = function(peerId, piece) {
   });
 }
 
-const emitDeletePieceEvent = function(peerId, piece) {
+const emitDeletePieceEvent = function(peerId, id) {
   var conn = _peer.connect(peerId);
   conn.on('open', function() {
     conn.send({
       event: EventTypes.DeletePiece, 
-      id: piece.id
+      id: id
+    });
+  });
+}
+
+const emitRequestPieceEvent = function(peiceId) {
+  if (_host == null) {
+    console.warn("cannot request piece as host");
+    return;
+  }
+  // fetch piece from host
+  var conn = _peer.conn(_host);
+  conn.on('open', function() {
+    conn.send({
+      event: EventTypes.RequestPiece,
+      id: pieceId
     });
   });
 }
 
 const onAddPieceEvent = function(piece) {
+  // new pieces need their image to load once
+  var img = new Image();
+  img.src = piece.image;
+  document.createElement(img);
   let newPiece = Piece.fromObj(piece);
   PIECES.push(newPiece);
   refreshCanvas();
@@ -134,6 +153,10 @@ const onAddPieceEvent = function(piece) {
 
 const onMovePieceEvent = function(movedPiece) {
   let pieceToMove = PIECES.find(p => p.id == movedPiece.id);
+  if (pieceToMove == null) {
+    requestPieceData(movedPiece.id);
+    return;
+  }
   pieceToMove.x = movedPiece.x;
   pieceToMove.y = movedPiece.y;
   refreshCanvas();
@@ -144,6 +167,11 @@ const onDeletePieceEvent = function(id) {
   let index = PIECES.indexOf(piece);
   PIECES.splice(index, 1);
   refreshCanvas();
+}
+
+const onRequestPieceEvent = function(peerId, id) {
+  let piece = PIECES.find(p => p.id == id);
+  emitAddPieceEvent(peerId, piece);
 }
 
 const initParty = function() {
@@ -180,6 +208,8 @@ const initParty = function() {
         case EventTypes.DeletePiece:
           onDeletePieceEvent(data.id);
           break;
+        case EventTypes.RequestPiece:
+          onRequestPieceEvent(conn.peer, data.id);
         default:
           console.log("unrecognized event type: " + data.event);
           break;
@@ -215,6 +245,7 @@ window.onload = function () {
     }
   });
   can.addEventListener('mouseup', function () {
+    if (draggedPiece == null) return;
     let movedPiece = {...draggedPiece};
 
     if (_host != null) {
