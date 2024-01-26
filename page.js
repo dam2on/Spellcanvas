@@ -150,7 +150,7 @@ const onAddPieceEvent = async function(piece) {
 const onMovePieceEvent = function(movedPiece) {
   let pieceToMove = PIECES.find(p => p.id == movedPiece.id);
   if (pieceToMove == null) {
-    requestPieceData(movedPiece.id);
+    emitRequestPieceEvent(movedPiece.id);
     return;
   }
   pieceToMove.x = movedPiece.x;
