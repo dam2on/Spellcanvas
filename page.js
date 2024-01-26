@@ -1,5 +1,6 @@
 
 PIECES = [];
+_connectedIds = [];
 _playerId = null;
 _peer = null;
 _peerId = null;
@@ -68,10 +69,11 @@ const addGamePiece = function() {
   PIECES.push(piece);
 
   if (_hostId != null) {
-    debugger;
     var conn = _peer.connect(_hostId);
     conn.on('open', function() {
-      conn.send({event: EventTypes.AddPiece, data: piece});
+      let pieceCopy = {...piece};
+      pieceCopy.imgSrc = piece.image.src;
+      conn.send({event: EventTypes.AddPiece, data: pieceCopy});
     })
   }
 }
@@ -86,8 +88,8 @@ const changeBackground = function() {
 }
 
 const onAddPieceEvent = function(data) {
-  debugger;
-  PIECES.push(data);
+  let newPiece = Piece.fromObj(data);
+  PIECES.push(newPiece);
   refreshCanvas();
 }
 
