@@ -245,12 +245,12 @@ window.onload = function () {
 
   var draggedPiece = null;
   can.addEventListener('mousedown', function (args) {
-    draggedPiece = shapeIntersects(args.clientX, args.clientY);
+    draggedPiece = shapeIntersects(args.x, args.y);
   });
   can.addEventListener('mousemove', function (args) {
     if (draggedPiece != null) {
-      draggedPiece.x = args.layerX - parseInt(draggedPiece.width / 2);
-      draggedPiece.y = args.layerY - parseInt(draggedPiece.height / 2);
+      draggedPiece.x = args.x - parseInt(draggedPiece.width / 2);
+      draggedPiece.y = args.y - parseInt(draggedPiece.height / 2);
       refreshCanvas();
     }
   });
