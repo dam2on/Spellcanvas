@@ -193,8 +193,10 @@ const initParty = function() {
     if (mode == 1 && _host != null) {
       // say hello to host
       var conn = _peer.connect(_host);
-      conn.send({
-        event: EventTypes.NewPlayer
+      conn.on('open', function() {
+        conn.send({
+          event: EventTypes.NewPlayer
+        });
       });
     }
   });
