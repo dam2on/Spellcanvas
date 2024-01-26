@@ -72,7 +72,7 @@ const addGamePiece = function() {
     var conn = _peer.connect(_hostId);
     conn.on('open', function() {
       let pieceCopy = {...piece};
-      pieceCopy.imgSrc = piece.image.src;
+      pieceCopy.image = piece.image.src;
       conn.send({event: EventTypes.AddPiece, data: pieceCopy});
     })
   }

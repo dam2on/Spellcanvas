@@ -25,6 +25,6 @@ class Piece {
     }
 
     static fromObj(obj) {
-        return new Piece(obj.guid, obj.ownerId, obj.name, obj.imgSrc, obj.size);
+        return new Piece(obj.guid, obj.ownerId, obj.name, obj.image, obj.size);
     }
 }
