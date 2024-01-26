@@ -148,10 +148,16 @@ const onDeletePieceEvent = function(id) {
 
 const initParty = function() {
   let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
-  _peer = new Peer();
+  let partyId = document.getElementById("input-party-id").value;
 
-  if (mode == 1) {
-    _host = document.getElementById("input-party-id").value;
+  // create party
+  if (mode == 0) {
+    _peer = new Peer(partyId);
+  }
+  // join party
+  else if (mode == 1) {
+    _host = partyId;
+    _peer = new Peer();
   }
 
   _peer.on('open', function(id) {
@@ -172,6 +178,7 @@ const initParty = function() {
           onMovePieceEvent(data.movedPiece);
           break;
         case EventTypes.DeletePiece:
+          onDeletePieceEvent(data.id);
           break;
         default:
           console.log("unrecognized event type: " + data.event);
