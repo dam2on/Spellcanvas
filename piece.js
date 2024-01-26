@@ -1,13 +1,13 @@
 class Piece {
-    constructor(guid, ownerId, name, img, size) {
+    constructor(guid, ownerId, name, img, size, x = 0, y = 0) {
         this.id = guid;
         this.owner = ownerId;
         this.name = name;
         this.size = Number(size);
         this.width = Number(size);
         this.height = Number(size);
-        this.x = 0;
-        this.y = 0;
+        this.x = x;
+        this.y = y;
         this.image = new Image();
 
         if (img instanceof File) {
@@ -25,7 +25,7 @@ class Piece {
     }
 
     static fromObj(obj) {
-        let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size);
+        let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         return new Promise(function(resolve, reject) {
             piece.image.onload = () => resolve(piece);
         });
