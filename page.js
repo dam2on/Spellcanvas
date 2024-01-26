@@ -45,6 +45,15 @@ const refreshCanvas = function () {
 
 }
 
+const changeBackground = function() {
+  const bgImg = document.getElementById("input-bg-img").files[0];
+  Promise.resolve(toBase64(bgImg)).then((result) => {
+    document.getElementById("canvas").style['background-image'] = `url(${result})`;
+    bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
+    refreshCanvas();
+  });
+}
+
 const drawImageScaled = function (img) {
   var canvas = _ctx.canvas ;
   var hRatio = canvas.width  / img.width    ;
@@ -93,12 +102,27 @@ const emitAddPieceEvent = function(peerId, piece) {
   })
 }
 
-const changeBackground = function() {
-  const bgImg = document.getElementById("input-bg-img").files[0];
-  Promise.resolve(toBase64(bgImg)).then((result) => {
-    document.getElementById("canvas").style['background-image'] = `url(${result})`;
-    bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
-    refreshCanvas();
+const emitMovePieceEvent = function(peerId, piece) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function() {
+    conn.send({
+      event: EventTypes.MovePiece, 
+      movedPiece: {
+        id: piece.id,
+        x: piece.x,
+        y: piece.y
+      }
+    });
+  });
+}
+
+const emitDeletePieceEvent = function(peerId, piece) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function() {
+    conn.send({
+      event: EventTypes.DeletePiece, 
+      id: piece.id
+    });
   });
 }
 
@@ -112,6 +136,13 @@ const onMovePieceEvent = function(movedPiece) {
   let pieceToMove = PIECES.find(p => p.id == movedPiece.id);
   pieceToMove.x = movedPiece.x;
   pieceToMove.y = movedPiece.y;
+  refreshCanvas();
+}
+
+const onDeletePieceEvent = function(id) {
+  let piece = PIECES.find(p => p.id == id);
+  let index = PIECES.indexOf(piece);
+  PIECES.splice(index, 1);
   refreshCanvas();
 }
 
@@ -150,20 +181,6 @@ const initParty = function() {
   });
 
   bootstrap.Modal.getInstance(document.getElementById('modal-party')).hide();
-}
-
-const emitMovePieceEvent = function(peerId, piece) {
-  var conn = _peer.connect(peerId);
-  conn.on('open', function() {
-    conn.send({
-      event: EventTypes.MovePiece, 
-      movedPiece: {
-        id: piece.id,
-        x: piece.x,
-        y: piece.y
-      }
-    });
-  });
 }
 
 window.onload = function () {
@@ -206,7 +223,6 @@ window.onload = function () {
   });
 
   can.addEventListener('contextmenu', (e) => {
-    debugger;
     e.preventDefault();
     let piece = shapeIntersects(e.clientX, e.clientY);
     if (piece) {
@@ -214,6 +230,15 @@ window.onload = function () {
         let index = PIECES.indexOf(piece);
         PIECES.splice(index, 1);
         refreshCanvas();
+
+        if (_host != null) {
+          emitDeletePieceEvent(_host, piece.id);
+        }
+        else if (_connectedIds.length > 0) {
+          for (var id of _connectedIds) {
+            emitDeletePieceEvent(id, piece.id);
+          }
+        }
       }
     }
 
