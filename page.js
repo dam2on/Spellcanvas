@@ -126,7 +126,7 @@ const emitDeletePieceEvent = function(peerId, id) {
   });
 }
 
-const emitRequestPieceEvent = function(peiceId) {
+const emitRequestPieceEvent = function(pieceId) {
   if (_host == null) {
     console.warn("cannot request piece as host");
     return;
