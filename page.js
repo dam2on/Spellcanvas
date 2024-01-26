@@ -2,7 +2,7 @@
 PIECES = [];
 _connectedIds = [];
 _peer = null;
-_hostId = null;
+_host = null;
 _ctx = null;
 
 const newGuid = function () {
@@ -10,6 +10,13 @@ const newGuid = function () {
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
   );
 }
+
+const toBase64 = file => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+});
 
 const shapeIntersects = function (x, y) {
   let xInts = false;
@@ -67,8 +74,8 @@ const addGamePiece = function() {
   PIECES.push(piece);
 
   debugger;
-  if (_hostId != null) {
-    emitAddPieceEvent(_hostId, piece);
+  if (_host != null) {
+    emitAddPieceEvent(_host, piece);
   }
   else if (_connectedIds.length > 0) {
     for (var id of _connectedIds) {
@@ -113,7 +120,7 @@ const initParty = function() {
   _peer = new Peer();
 
   if (mode == 1) {
-    _hostId = document.getElementById("input-party-id").value;
+    _host = document.getElementById("input-party-id").value;
   }
 
   _peer.on('open', function(id) {
@@ -122,8 +129,7 @@ const initParty = function() {
 
   _peer.on('connection', function(conn) {
     debugger;
-    if (_connectedIds.indexOf(conn.peer) < 0) {
-      //add new 
+    if (!_host && _connectedIds.indexOf(conn.peer) < 0) {
       _connectedIds.push(conn.peer);
     }
     conn.on('data', function(data) {
@@ -146,12 +152,19 @@ const initParty = function() {
   bootstrap.Modal.getInstance(document.getElementById('modal-party')).hide();
 }
 
-const toBase64 = file => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => resolve(reader.result);
-  reader.onerror = reject;
-});
+const emitMovePieceEvent = function(peerId, piece) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function() {
+    conn.send({
+      event: EventTypes.MovePiece, 
+      movedPiece: {
+        id: piece.id,
+        x: piece.x,
+        y: piece.y
+      }
+    });
+  });
+}
 
 window.onload = function () {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-party')).show(); 
@@ -178,22 +191,15 @@ window.onload = function () {
     }
   });
   can.addEventListener('mouseup', function () {
-    let movedPieceId = draggedPiece.id;
-    let newX = draggedPiece.x;
-    let newY = draggedPiece.y;
+    let movedPiece = {...draggedPiece};
 
-    if (_hostId != null) {
-      var conn = _peer.connect(_hostId);
-      conn.on('open', function() {
-        conn.send({
-          event: EventTypes.MovePiece, 
-          movedPiece: {
-            id: movedPieceId,
-            x: newX,
-            y: newY
-          }
-        });
-      });
+    if (_host != null) {
+      emitMovePieceEvent(_host, movedPiece);
+    }
+    else if (_connectedIds.length > 0) {
+      for (var id of _connectedIds) {
+        emitMovePieceEvent(id, movedPiece);
+      }
     }
 
     draggedPiece = null;
