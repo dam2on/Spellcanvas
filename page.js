@@ -202,7 +202,7 @@ const onChangeBackgroundEvent = function(imgUrl) {
 const onNewPlayerEvent = function(peerId) {
   _connectedIds.push(peerId);
   emitChangeBackgroundEvent(peerId, _bgImgUrl);
-  for (var piece of PIECE) {
+  for (var piece of PIECES) {
     emitAddPieceEvent(peerId, piece);
   }
 }
