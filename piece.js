@@ -29,6 +29,14 @@ class Piece {
         this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
     }
 
+    getX() {
+        return this.x * getCurrentCanvasWidth();
+    }
+
+    getY() {
+        return this.y * getCurrentCanvasHeight();
+    }
+
     static fromObj(obj) {
         let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         return new Promise(function(resolve, reject) {

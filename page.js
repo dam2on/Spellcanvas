@@ -29,9 +29,11 @@ const shapeIntersects = function (x, y) {
   let yInts = false;
 
   for (var shape of this.PIECES) {
-    xInts = x >= shape.x && x <= (shape.x + shape.width);
+    let shapeX = shape.getX();
+    let shapeY = shape.getY();
+    xInts = x >= shapeX && x <= (shapeX + shape.width);
     if (xInts) {
-      yInts = y >= shape.y && y <= (shape.y + shape.height);
+      yInts = y >= shapeY && y <= (shapeY + shape.height);
       if (yInts)
         return shape;
     }
@@ -45,8 +47,8 @@ const refreshCanvas = function () {
   _ctx.clearRect(0, 0, _ctx.canvas.width, _ctx.canvas.height);
 
   for (var piece of PIECES) {
-    _ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
-    _ctx.fillText(piece.name, piece.x + 10, piece.y);
+    _ctx.drawImage(piece.image, piece.getX(), piece.getY(), piece.width, piece.height);
+    _ctx.fillText(piece.name, piece.getX() + 10, piece.getY());
   }
 
 }
@@ -331,6 +333,10 @@ const getCurrentCanvasWidth = function() {
   return Number(getComputedStyle(document.getElementById("canvas")).width.replace("px", ""));
 }
 
+const getCurrentCanvasHeight = function() {
+  return Number(getComputedStyle(document.getElementById("canvas")).height.replace("px", ""));
+}
+
 const onGridChangeEvent = function(gridSize) {
   _gridSizeRatio = gridSize;
   for (var piece of PIECES) {
@@ -373,8 +379,8 @@ window.onload = function () {
   });
   can.addEventListener('mousemove', function (args) {
     if (draggedPiece != null) {
-      draggedPiece.x = args.x - parseInt(draggedPiece.width / 2);
-      draggedPiece.y = args.y - parseInt(draggedPiece.height / 2);
+      draggedPiece.x = (args.x - parseInt(draggedPiece.width / 2)) / getCurrentCanvasWidth();
+      draggedPiece.y = (args.y - parseInt(draggedPiece.height / 2)) / getCurrentCanvasHeight();
       refreshCanvas();
     }
   });
