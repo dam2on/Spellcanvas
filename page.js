@@ -114,6 +114,7 @@ const onAddGamePieceModalAccept = function() {
 }
 
 const emitChangeBackgroundEvent = function(peerId, imgData) {
+  if (imgData == null) return;
   var conn = _peer.connect(peerId);
   conn.on('open', function() {
     conn.send({event: EventTypes.ChangeBackground, img: imgData});
