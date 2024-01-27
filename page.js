@@ -163,6 +163,10 @@ const emitRequestPieceEvent = function(pieceId) {
 }
 
 const onAddPieceEvent = async function(piece) {
+  if (PIECES.find(p => p.id == piece.id) != null) {
+    // redundant piece
+    return;
+  }
   let newPiece = await Piece.fromObj(piece);
   PIECES.push(newPiece);
   refreshCanvas();
@@ -197,6 +201,10 @@ const onChangeBackgroundEvent = function(imgUrl) {
 
 const onNewPlayerEvent = function(peerId) {
   _connectedIds.push(peerId);
+  emitChangeBackgroundEvent(peerId, imgData);
+  for (var piece of PIECE) {
+    emitAddPieceEvent(peerId, piece);
+  }
 }
 
 const initParty = function() {
