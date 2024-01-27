@@ -5,6 +5,7 @@ _bgImgUrl = null;
 _peer = null;
 _host = null;
 _ctx = null;
+_gridSizePx = 0.025
 
 const isHost = function() {
   return _host == null;
@@ -151,6 +152,19 @@ const emitDeletePieceEvent = function(peerId, id) {
   });
 }
 
+const emitGridSizeChangeEvent = function(peerId) {
+  return new Promise(function(resolve, reject) {
+    var conn = _peer.connect(peerId);
+    conn.on('open', function() {
+      conn.send({
+        event: EventTypes.GridChange, 
+        gridSize: _gridSizeRatio
+      });
+      resolve();
+    });
+  })
+}
+
 const emitRequestPieceEvent = function(pieceId) {
   if (_host == null) {
     console.warn("cannot request piece as host");
@@ -203,6 +217,8 @@ const onMovePieceEvent = function(movedPiece) {
 
 const onDeletePieceEvent = function(id) {
   let piece = PIECES.find(p => p.id == id);
+  if (piece == null) return;
+  
   let index = PIECES.indexOf(piece);
   PIECES.splice(index, 1);
   if (isHost()) {
@@ -222,9 +238,10 @@ const onChangeBackgroundEvent = function(imgUrl) {
   setBackground(imgUrl);
 }
 
-const onNewPlayerEvent = function(peerId) {
+const onNewPlayerEvent = async function(peerId) {
   _connectedIds.push(peerId);
   emitChangeBackgroundEvent(peerId, _bgImgUrl);
+  await emitGridSizeChangeEvent(peerId);
   for (var piece of PIECES) {
     emitAddPieceEvent(peerId, piece);
   }
@@ -243,9 +260,14 @@ const initParty = function() {
     _host = partyId;
     _peer = new Peer();
 
-    // hide change bg button
+    // hide buttons for players
     var btnChangeBg = document.getElementById("btn-change-bg");
     btnChangeBg.setAttribute("style", "display: none");
+    btnChangeBg.setAttribute("disabled", "disabled");
+
+    var rangeGridSize = document.getElementById("range-grid-size");
+    rangeGridSize.parentNode.setAttribute("style", "display: none");
+    rangeGridSize.setAttribute("disabled", "disabled");
   }
 
   _peer.on('open', function(id) {
@@ -283,6 +305,9 @@ const initParty = function() {
         case EventTypes.ChangeBackground:
           onChangeBackgroundEvent(data.img);
           break;
+        case EventTypes.GridChange:
+          onGridChangeEvent(data.gridSize);
+          break;
         default:
           console.log("unrecognized event type: " + data.event);
           break;
@@ -291,6 +316,39 @@ const initParty = function() {
   });
 
   bootstrap.Modal.getInstance(document.getElementById('modal-party')).hide();
+}
+
+const onGridSizeInput = function() {
+  if (!isHost()) return;
+  const input = document.getElementById('range-grid-size');
+  const label = document.querySelector('label[for="range-grid-size"]');
+  const value = input.value;
+
+  label.innerHTML = `Grid Size: ${value} <span style="display: inline-block; height: 10px; width: ${value}px; background-color: black"></span>`
+}
+
+const getCurrentCanvasWidth = function() {
+  return Number(getComputedStyle(document.getElementById("canvas")).width.replace("px", ""));
+}
+
+const onGridChangeEvent = function(gridSize) {
+  _gridSizeRatio = gridSize;
+  for (var piece of PIECES) {
+    piece.resize();
+  }
+  refreshCanvas();
+}
+
+const onGridSizeChange = function() {
+  if (!isHost()) return;
+  const input = document.getElementById('range-grid-size');
+  let newGridSize = Number(input.value) / getCurrentCanvasWidth();
+  onGridChangeEvent(newGridSize);
+
+  // broadcast grid change
+  for (var id of _connectedIds) {
+    emitGridSizeChangeEvent(id);
+  }
 }
 
 window.onload = function () {
@@ -304,6 +362,9 @@ window.onload = function () {
   document.getElementById('btn-modal-piece-ok').addEventListener('click', () => onAddGamePieceModalAccept());
   document.getElementById('btn-modal-bg-ok').addEventListener('click', () => onChangeBackgroundModalAccept());
   document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
+  document.getElementById('range-grid-size').addEventListener('input', () => onGridSizeInput());
+  document.getElementById('range-grid-size').addEventListener('change', () => onGridSizeChange());
+
 
   var draggedPiece = null;
   can.addEventListener('mousedown', function (args) {

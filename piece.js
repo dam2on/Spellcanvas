@@ -4,8 +4,8 @@ class Piece {
         this.owner = ownerId;
         this.name = name;
         this.size = Number(size);
-        this.width = Number(size);
-        this.height = Number(size);
+        this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+        this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
         this.x = x;
         this.y = y;
         this.image = new Image();
@@ -22,6 +22,11 @@ class Piece {
         else if (typeof(img) == 'string') {
             this.image.src = img;
         }
+    }
+
+    resize() {
+        this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+        this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
     }
 
     static fromObj(obj) {
