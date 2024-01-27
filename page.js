@@ -6,6 +6,10 @@ _peer = null;
 _host = null;
 _ctx = null;
 
+const isHost = function() {
+  return _host == null;
+}
+
 const newGuid = function () {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
@@ -169,6 +173,13 @@ const onAddPieceEvent = async function(piece) {
   }
   let newPiece = await Piece.fromObj(piece);
   PIECES.push(newPiece);
+
+  if (isHost()) {
+    for (var id of _connectedIds) {
+      emitAddPieceEvent(id, newPiece);
+    }
+  }
+
   refreshCanvas();
 }
 
@@ -180,6 +191,13 @@ const onMovePieceEvent = function(movedPiece) {
   }
   pieceToMove.x = movedPiece.x;
   pieceToMove.y = movedPiece.y;
+
+  if (isHost()) {
+    for (var id of _connectedIds) {
+      emitMovePieceEvent(id, pieceToMove);
+    }
+  }
+
   refreshCanvas();
 }
 
@@ -187,6 +205,11 @@ const onDeletePieceEvent = function(id) {
   let piece = PIECES.find(p => p.id == id);
   let index = PIECES.indexOf(piece);
   PIECES.splice(index, 1);
+  if (isHost()) {
+    for (var peerId of _connectedIds) {
+      emitDeletePieceEvent(peerId, id);
+    }
+  }
   refreshCanvas();
 }
 
@@ -284,7 +307,8 @@ window.onload = function () {
 
   var draggedPiece = null;
   can.addEventListener('mousedown', function (args) {
-    draggedPiece = shapeIntersects(args.x, args.y);
+    if (args.button == 0) // left click
+      draggedPiece = shapeIntersects(args.x, args.y);
   });
   can.addEventListener('mousemove', function (args) {
     if (draggedPiece != null) {
