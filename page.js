@@ -5,7 +5,7 @@ _bgImgUrl = null;
 _peer = null;
 _host = null;
 _ctx = null;
-_gridSizePx = 0.025
+_gridSizeRatio = 0.025
 
 const isHost = function() {
   return _host == null;
