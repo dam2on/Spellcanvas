@@ -201,7 +201,7 @@ const onChangeBackgroundEvent = function(imgUrl) {
 
 const onNewPlayerEvent = function(peerId) {
   _connectedIds.push(peerId);
-  emitChangeBackgroundEvent(peerId, imgData);
+  emitChangeBackgroundEvent(peerId, _bgImgUrl);
   for (var piece of PIECE) {
     emitAddPieceEvent(peerId, piece);
   }
