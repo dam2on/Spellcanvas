@@ -1,6 +1,7 @@
 
 PIECES = [];
 _connectedIds = [];
+_bgImgUrl = null;
 _peer = null;
 _host = null;
 _ctx = null;
@@ -45,13 +46,25 @@ const refreshCanvas = function () {
 
 }
 
-const changeBackground = function() {
+const onChangeBackgroundModalAccept = function() {
+  if (_host != null) {
+    console.warn("only host can change bg");
+    return;
+  }
   const bgImg = document.getElementById("input-bg-img").files[0];
-  Promise.resolve(toBase64(bgImg)).then((result) => {
-    document.getElementById("canvas").style['background-image'] = `url(${result})`;
+  return Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
+    setBackground(dataUrl);
     bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
-    refreshCanvas();
+    for (var id of _connectedIds) {
+      emitChangeBackgroundEvent(id, dataUrl);
+    }
   });
+}
+
+const setBackground = function(imgUrl) {
+  _bgImgUrl = imgUrl;
+  document.getElementById("canvas").style['background-image'] = `url(${_bgImgUrl})`;
+  refreshCanvas();
 }
 
 const drawImageScaled = function (img) {
@@ -66,7 +79,7 @@ const drawImageScaled = function (img) {
                      centerShift_x,centerShift_y,img.width*ratio, img.height*ratio);  
 }
 
-const addGamePiece = function() {
+const onAddGamePieceModalAccept = function() {
   const modalPieceInputs = document.getElementById('form-modal-piece').getElementsByTagName('input');
   const name = modalPieceInputs[0].value;
   const img = modalPieceInputs[1].files[0];
@@ -92,6 +105,14 @@ const addGamePiece = function() {
     }
   }
 }
+
+const emitChangeBackgroundEvent = function(peerId, imgData) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function() {
+    conn.send({event: EventTypes.ChangeBackground, img: imgData});
+  });
+}
+
 
 const emitAddPieceEvent = function(peerId, piece) {
   var conn = _peer.connect(peerId);
@@ -170,6 +191,10 @@ const onRequestPieceEvent = function(peerId, id) {
   emitAddPieceEvent(peerId, piece);
 }
 
+const onChangeBackgroundEvent = function(imgUrl) {
+  setBackground(imgUrl);
+}
+
 const onNewPlayerEvent = function(peerId) {
   _connectedIds.push(peerId);
 }
@@ -178,11 +203,13 @@ const initParty = function() {
   let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
   let partyId = document.getElementById("input-party-id").value;
 
-  // create party
   if (mode == 0) {
+    // host mode
     _peer = new Peer(partyId);
+    var btnChangeBg = document.getElementById("btn-change-bg");
+    btnChangeBg.setAttribute("style", "display: none");
   }
-  // join party
+    // player mode
   else if (mode == 1) {
     _host = partyId;
     _peer = new Peer();
@@ -220,6 +247,9 @@ const initParty = function() {
         case EventTypes.NewPlayer:
           onNewPlayerEvent(conn.peer);
           break;
+        case EventTypes.NewPlayer:
+          onChangeBackgroundEvent(data.img);
+          break;
         default:
           console.log("unrecognized event type: " + data.event);
           break;
@@ -236,11 +266,10 @@ window.onload = function () {
   var can = document.getElementById('canvas');
   _ctx = can.getContext('2d');
   can.width = window.innerWidth;
-
   can.height = window.innerHeight;
 
-  document.getElementById('btn-modal-piece-ok').addEventListener('click', () => addGamePiece());
-  document.getElementById('btn-modal-bg-ok').addEventListener('click', () => changeBackground());
+  document.getElementById('btn-modal-piece-ok').addEventListener('click', () => onAddGamePieceModalAccept());
+  document.getElementById('btn-modal-bg-ok').addEventListener('click', () => onChangeBackgroundModalAccept());
   document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
 
   var draggedPiece = null;
