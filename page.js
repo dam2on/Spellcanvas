@@ -206,13 +206,15 @@ const initParty = function() {
   if (mode == 0) {
     // host mode
     _peer = new Peer(partyId);
-    var btnChangeBg = document.getElementById("btn-change-bg");
-    btnChangeBg.setAttribute("style", "display: none");
   }
     // player mode
   else if (mode == 1) {
     _host = partyId;
     _peer = new Peer();
+
+    // hide change bg button
+    var btnChangeBg = document.getElementById("btn-change-bg");
+    btnChangeBg.setAttribute("style", "display: none");
   }
 
   _peer.on('open', function(id) {
@@ -247,7 +249,7 @@ const initParty = function() {
         case EventTypes.NewPlayer:
           onNewPlayerEvent(conn.peer);
           break;
-        case EventTypes.NewPlayer:
+        case EventTypes.ChangeBackground:
           onChangeBackgroundEvent(data.img);
           break;
         default:
