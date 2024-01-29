@@ -4,6 +4,7 @@ const EventTypes = {
     MovePiece: 'move piece',
     DeletePiece: 'delete piece',
     RequestPiece: 'request peice',
+    UpdatePiece: 'update piece',
     ChangeBackground: 'change background',
     GridChange: 'grid change'
   }

@@ -6,8 +6,10 @@ class Piece {
         this.size = Number(size);
         this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
         this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+        this.statusConditions = [];
         this.x = x;
         this.y = y;
+        this.dead = false;
         this.image = new Image();
 
         if (img instanceof File) {
@@ -22,6 +24,15 @@ class Piece {
         else if (typeof(img) == 'string') {
             this.image.src = img;
         }
+    }
+
+    updateSize(size) {
+        this.size = size;
+        this.resize();
+    }
+
+    updateStatusConditions(statusListString) {
+        this.statusConditions = statusListString.split(',');
     }
 
     resize() {

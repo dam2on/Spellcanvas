@@ -5,9 +5,10 @@ _bgImgUrl = null;
 _peer = null;
 _host = null;
 _ctx = null;
-_gridSizeRatio = 0.025
+_gridSizeRatio = 0.025;
+_pieceInMenu = null;
 
-const isHost = function() {
+const isHost = function () {
   return _host == null;
 }
 
@@ -53,7 +54,7 @@ const refreshCanvas = function () {
 
 }
 
-const onChangeBackgroundModalAccept = function() {
+const onChangeBackgroundModalAccept = function () {
   if (_host != null) {
     console.warn("only host can change bg");
     return;
@@ -68,25 +69,25 @@ const onChangeBackgroundModalAccept = function() {
   });
 }
 
-const setBackground = function(imgUrl) {
+const setBackground = function (imgUrl) {
   _bgImgUrl = imgUrl;
   document.getElementById("canvas").style['background-image'] = `url(${_bgImgUrl})`;
   refreshCanvas();
 }
 
 const drawImageScaled = function (img) {
-  var canvas = _ctx.canvas ;
-  var hRatio = canvas.width  / img.width    ;
-  var vRatio =  canvas.height / img.height  ;
-  var ratio  = Math.min ( hRatio, vRatio );
-  var centerShift_x = ( canvas.width - img.width*ratio ) / 2;
-  var centerShift_y = ( canvas.height - img.height*ratio ) / 2;  
-  _ctx.clearRect(0,0,canvas.width, canvas.height);
-  _ctx.drawImage(img, 0,0, img.width, img.height,
-                     centerShift_x,centerShift_y,img.width*ratio, img.height*ratio);  
+  var canvas = _ctx.canvas;
+  var hRatio = canvas.width / img.width;
+  var vRatio = canvas.height / img.height;
+  var ratio = Math.min(hRatio, vRatio);
+  var centerShift_x = (canvas.width - img.width * ratio) / 2;
+  var centerShift_y = (canvas.height - img.height * ratio) / 2;
+  _ctx.clearRect(0, 0, canvas.width, canvas.height);
+  _ctx.drawImage(img, 0, 0, img.width, img.height,
+    centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
 }
 
-const onAddGamePieceModalAccept = function() {
+const onAddGamePieceModalAccept = function () {
   const modalPieceInputs = document.getElementById('form-modal-piece').getElementsByTagName('input');
   const name = modalPieceInputs[0].value;
   const img = modalPieceInputs[1].files[0];
@@ -113,29 +114,29 @@ const onAddGamePieceModalAccept = function() {
   }
 }
 
-const emitChangeBackgroundEvent = function(peerId, imgData) {
+const emitChangeBackgroundEvent = function (peerId, imgData) {
   if (imgData == null) return;
   var conn = _peer.connect(peerId);
-  conn.on('open', function() {
-    conn.send({event: EventTypes.ChangeBackground, img: imgData});
+  conn.on('open', function () {
+    conn.send({ event: EventTypes.ChangeBackground, img: imgData });
   });
 }
 
 
-const emitAddPieceEvent = function(peerId, piece) {
+const emitAddPieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
-  conn.on('open', function() {
-    let pieceCopy = {...piece};
+  conn.on('open', function () {
+    let pieceCopy = { ...piece };
     pieceCopy.image = piece.image.src;
-    conn.send({event: EventTypes.AddPiece, piece: pieceCopy});
+    conn.send({ event: EventTypes.AddPiece, piece: pieceCopy });
   })
 }
 
-const emitMovePieceEvent = function(peerId, piece) {
+const emitMovePieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
-  conn.on('open', function() {
+  conn.on('open', function () {
     conn.send({
-      event: EventTypes.MovePiece, 
+      event: EventTypes.MovePiece,
       movedPiece: {
         id: piece.id,
         x: piece.x,
@@ -145,22 +146,33 @@ const emitMovePieceEvent = function(peerId, piece) {
   });
 }
 
-const emitDeletePieceEvent = function(peerId, id) {
+const emitDeletePieceEvent = function (peerId, id) {
   var conn = _peer.connect(peerId);
-  conn.on('open', function() {
+  conn.on('open', function () {
     conn.send({
-      event: EventTypes.DeletePiece, 
+      event: EventTypes.DeletePiece,
       id: id
     });
   });
 }
 
-const emitGridSizeChangeEvent = function(peerId) {
-  return new Promise(function(resolve, reject) {
+const emitUpdatePieceEvent = function (peerId, piece) {
+  let pieceCopy = {...piece};
+  var conn = _peer.connect(peerId);
+  conn.on('open', function () {
+    conn.send({
+      event: EventTypes.UpdatePiece,
+      piece: pieceCopy
+    });
+  });
+}
+
+const emitGridSizeChangeEvent = function (peerId) {
+  return new Promise(function (resolve, reject) {
     var conn = _peer.connect(peerId);
-    conn.on('open', function() {
+    conn.on('open', function () {
       conn.send({
-        event: EventTypes.GridChange, 
+        event: EventTypes.GridChange,
         gridSize: _gridSizeRatio
       });
       resolve();
@@ -168,14 +180,14 @@ const emitGridSizeChangeEvent = function(peerId) {
   })
 }
 
-const emitRequestPieceEvent = function(pieceId) {
+const emitRequestPieceEvent = function (pieceId) {
   if (_host == null) {
     console.warn("cannot request piece as host");
     return;
   }
   // fetch piece from host
   var conn = _peer.connect(_host);
-  conn.on('open', function() {
+  conn.on('open', function () {
     conn.send({
       event: EventTypes.RequestPiece,
       id: pieceId
@@ -183,7 +195,7 @@ const emitRequestPieceEvent = function(pieceId) {
   });
 }
 
-const onAddPieceEvent = async function(piece) {
+const onAddPieceEvent = async function (piece) {
   if (PIECES.find(p => p.id == piece.id) != null) {
     // redundant piece
     return;
@@ -200,7 +212,7 @@ const onAddPieceEvent = async function(piece) {
   refreshCanvas();
 }
 
-const onMovePieceEvent = function(movedPiece) {
+const onMovePieceEvent = function (movedPiece) {
   let pieceToMove = PIECES.find(p => p.id == movedPiece.id);
   if (pieceToMove == null) {
     emitRequestPieceEvent(movedPiece.id);
@@ -218,10 +230,10 @@ const onMovePieceEvent = function(movedPiece) {
   refreshCanvas();
 }
 
-const onDeletePieceEvent = function(id) {
+const onDeletePieceEvent = function (id) {
   let piece = PIECES.find(p => p.id == id);
   if (piece == null) return;
-  
+
   let index = PIECES.indexOf(piece);
   PIECES.splice(index, 1);
   if (isHost()) {
@@ -232,16 +244,32 @@ const onDeletePieceEvent = function(id) {
   refreshCanvas();
 }
 
-const onRequestPieceEvent = function(peerId, id) {
+const onRequestPieceEvent = function (peerId, id) {
   let piece = PIECES.find(p => p.id == id);
   emitAddPieceEvent(peerId, piece);
 }
 
-const onChangeBackgroundEvent = function(imgUrl) {
+const onChangeBackgroundEvent = function (imgUrl) {
   setBackground(imgUrl);
 }
 
-const onNewPlayerEvent = async function(peerId) {
+const onUpdatePieceEvent = function(piece) {
+  let localPiece = PIECES.find(p => p.id == piece.id);
+  localPiece.name = piece.name;
+  localPiece.size = piece.size;
+  localPiece.statusConditions = piece.statusConditions;
+  localPiece.dead = piece.dead;
+
+  if (isHost()) {
+    for (var id of _connectedIds) {
+      emitUpdatePieceEvent(id, localPiece);
+    }
+  }
+
+  refreshCanvas();
+}
+
+const onNewPlayerEvent = async function (peerId) {
   _connectedIds.push(peerId);
   emitChangeBackgroundEvent(peerId, _bgImgUrl);
   await emitGridSizeChangeEvent(peerId);
@@ -250,7 +278,7 @@ const onNewPlayerEvent = async function(peerId) {
   }
 }
 
-const initParty = function() {
+const initParty = function () {
   let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
   let partyId = document.getElementById("input-party-id").value;
 
@@ -258,7 +286,7 @@ const initParty = function() {
     // host mode
     _peer = new Peer(partyId);
   }
-    // player mode
+  // player mode
   else if (mode == 1) {
     _host = partyId;
     _peer = new Peer();
@@ -273,12 +301,12 @@ const initParty = function() {
     rangeGridSize.setAttribute("disabled", "disabled");
   }
 
-  _peer.on('open', function(id) {
+  _peer.on('open', function (id) {
     console.log('My peer ID is: ' + id);
     if (mode == 1 && _host != null) {
       // say hello to host
       var conn = _peer.connect(_host);
-      conn.on('open', function() {
+      conn.on('open', function () {
         conn.send({
           event: EventTypes.NewPlayer
         });
@@ -286,8 +314,8 @@ const initParty = function() {
     }
   });
 
-  _peer.on('connection', function(conn) {
-    conn.on('data', function(data) {
+  _peer.on('connection', function (conn) {
+    conn.on('data', function (data) {
       debugger;
       switch (data.event) {
         case EventTypes.AddPiece:
@@ -321,24 +349,24 @@ const initParty = function() {
   bootstrap.Modal.getInstance(document.getElementById('modal-party')).hide();
 }
 
-const onGridSizeInput = function() {
+const onGridSizeInput = function () {
   if (!isHost()) return;
   const input = document.getElementById('range-grid-size');
   const label = document.querySelector('label[for="range-grid-size"]');
   const value = input.value;
 
-  label.innerHTML = `Grid Size: ${value} <span style="display: inline-block; height: 10px; width: ${value}px; background-color: black"></span>`
+  label.innerHTML = `Grid Size: ${value}</span>`
 }
 
-const getCurrentCanvasWidth = function() {
+const getCurrentCanvasWidth = function () {
   return Number(getComputedStyle(document.getElementById("canvas")).width.replace("px", ""));
 }
 
-const getCurrentCanvasHeight = function() {
+const getCurrentCanvasHeight = function () {
   return Number(getComputedStyle(document.getElementById("canvas")).height.replace("px", ""));
 }
 
-const onGridChangeEvent = function(gridSize) {
+const onGridChangeEvent = function (gridSize) {
   _gridSizeRatio = gridSize;
   for (var piece of PIECES) {
     piece.resize();
@@ -346,7 +374,7 @@ const onGridChangeEvent = function(gridSize) {
   refreshCanvas();
 }
 
-const onGridSizeChange = function() {
+const onGridSizeChange = function () {
   if (!isHost()) return;
   const input = document.getElementById('range-grid-size');
   let newGridSize = Number(input.value) / getCurrentCanvasWidth();
@@ -359,18 +387,64 @@ const onGridSizeChange = function() {
 }
 
 window.onload = function () {
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-party')).show(); 
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-party')).show();
 
   var can = document.getElementById('canvas');
   _ctx = can.getContext('2d');
   can.width = window.innerWidth;
   can.height = window.innerHeight;
 
+
+  document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
+    _pieceInMenu = null;
+  });
   document.getElementById('btn-modal-piece-ok').addEventListener('click', () => onAddGamePieceModalAccept());
   document.getElementById('btn-modal-bg-ok').addEventListener('click', () => onChangeBackgroundModalAccept());
   document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
   document.getElementById('range-grid-size').addEventListener('input', () => onGridSizeInput());
   document.getElementById('range-grid-size').addEventListener('change', () => onGridSizeChange());
+  document.getElementById("btn-update-piece").addEventListener("click", () => {
+    if (_pieceInMenu == null) return;
+    const name = document.getElementById("piece-menu-name").value;
+    const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
+    const statusConds = document.getElementById("piece-menu-status-conditions").value;
+    const dead = document.getElementById("piece-menu-dead").value;
+    _pieceInMenu.name = name;
+    _pieceInMenu.updateSize(size);
+    _pieceInMenu.updateStatusConditions(statusConds);
+    _pieceInMenu.dead = dead;
+
+    if (isHost()) {
+      for(var id of _connectedIds) {
+        emitUpdatePieceEvent(id, _pieceInMenu);
+      }
+    }
+    else {
+      emitUpdatePieceEvent(_host, _pieceInMenu);
+    }
+
+    refreshCanvas();
+
+  });
+  document.getElementById("btn-delete-piece").addEventListener("click", () => {
+    if (_pieceInMenu == null) return;
+    if (confirm("Delete piece: " + _pieceInMenu.name + "?")) {
+      let index = PIECES.indexOf(_pieceInMenu);
+      PIECES.splice(index, 1);
+      refreshCanvas();
+
+      if (_host != null) {
+        emitDeletePieceEvent(_host, _pieceInMenu.id);
+      }
+      else if (_connectedIds.length > 0) {
+        for (var id of _connectedIds) {
+          emitDeletePieceEvent(id, _pieceInMenu.id);
+        }
+      }
+
+      new bootstrap.Offcanvas(document.getElementById('piece-menu')).hide();
+    }
+  });
 
 
   var draggedPiece = null;
@@ -387,7 +461,7 @@ window.onload = function () {
   });
   can.addEventListener('mouseup', function () {
     if (draggedPiece == null) return;
-    let movedPiece = {...draggedPiece};
+    let movedPiece = { ...draggedPiece };
 
     if (_host != null) {
       emitMovePieceEvent(_host, movedPiece);
@@ -403,23 +477,20 @@ window.onload = function () {
 
   can.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-    let piece = shapeIntersects(e.clientX, e.clientY);
-    if (piece) {
-      if (confirm("Delete piece: " + piece.name + "?")) {
-        let index = PIECES.indexOf(piece);
-        PIECES.splice(index, 1);
-        refreshCanvas();
-
-        if (_host != null) {
-          emitDeletePieceEvent(_host, piece.id);
-        }
-        else if (_connectedIds.length > 0) {
-          for (var id of _connectedIds) {
-            emitDeletePieceEvent(id, piece.id);
-          }
-        }
+    _pieceInMenu = shapeIntersects(e.clientX, e.clientY);
+    if (_pieceInMenu) {
+      // open piece submenu
+      const pieceMenu = new bootstrap.Offcanvas(document.getElementById("piece-menu"));
+      pieceMenu.show();
+      document.getElementById("piece-menu-name").value = _pieceInMenu.name;
+      document.getElementById("piece-menu-image").src = _pieceInMenu.image.src;
+      document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
+      document.querySelectorAll("input[name='radio-piece-menu-size']").forEach(x => x.removeAttribute("checked"));
+      document.querySelector(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).setAttribute("checked", "checked");
+      $("#piece-menu-status-conditions").tagsinput('removeAll');
+      for (var cond of _pieceInMenu.statusConditions) {
+        $("#piece-menu-status-conditions").tagsinput('add', cond);
       }
     }
-
-  })
+  });
 }
