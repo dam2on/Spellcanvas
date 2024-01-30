@@ -7,6 +7,7 @@ _host = null;
 _ctx = null;
 _gridSizeRatio = 0.025;
 _pieceInMenu = null;
+_canvasTextMargin = 4;
 
 const isHost = function () {
   return _host == null;
@@ -43,13 +44,57 @@ const shapeIntersects = function (x, y) {
   return null;
 }
 
+const getTextDims = function(str) {
+  const textDims = _ctx.measureText(str);
+  return {
+    width: Math.ceil(textDims.width),
+    height: textDims.actualBoundingBoxAscent
+  }
+}
+
 const refreshCanvas = function () {
 
   _ctx.clearRect(0, 0, _ctx.canvas.width, _ctx.canvas.height);
+  const deadImage = document.getElementById("image-dead");
 
   for (var piece of PIECES) {
     _ctx.drawImage(piece.image, piece.getX(), piece.getY(), piece.width, piece.height);
-    _ctx.fillText(piece.name, piece.getX() + 10, piece.getY());
+
+    // dead overlay
+    if (piece.dead) {
+      _ctx.globalAlpha = 0.5;
+      _ctx.drawImage(deadImage, piece.getX(), piece.getY(), piece.width, piece.height);
+      _ctx.globalAlpha = 1;
+    }
+
+    _ctx.font = "18px Arial";
+    let nameTextDims = getTextDims(piece.name);
+    _ctx.fillStyle = "#000";
+    _ctx.fillRect(piece.getX() - _canvasTextMargin + (piece.width - nameTextDims.width) / 2, 
+    piece.getY() - nameTextDims.height - _canvasTextMargin, 
+    nameTextDims.width + 2 * _canvasTextMargin, 
+    nameTextDims.height + 2 * _canvasTextMargin)
+    _ctx.fillStyle = "#fff";
+    _ctx.fillText(piece.name, piece.getX() + (piece.width - nameTextDims.width) / 2, piece.getY());
+
+    // add status conditions
+    if (piece.statusConditions.length > 0) {
+      _ctx.font = "12px Arial";
+      let statusConX = piece.getX();
+      let statusConY = piece.height + piece.getY();
+      for (var i = 0; i < piece.statusConditions.length; i++) {
+        let currentConDims = getTextDims(piece.statusConditions[i]);
+        if (i > 0 && (statusConX + currentConDims.width > piece.getX() + piece.width)) {
+          statusConY += currentConDims.height + _canvasTextMargin;
+          statusConX = piece.getX();
+        }
+        _ctx.fillStyle = "#f00";
+        _ctx.fillRect(statusConX, statusConY - currentConDims.height, currentConDims.width, currentConDims.height)
+        _ctx.fillStyle = "#fff";
+        _ctx.fillText(piece.statusConditions[i], statusConX, statusConY);
+        statusConX += currentConDims.width + _canvasTextMargin;
+      }
+    }
   }
 
 }
@@ -103,7 +148,6 @@ const onAddGamePieceModalAccept = function () {
 
   PIECES.push(piece);
 
-  debugger;
   if (_host != null) {
     emitAddPieceEvent(_host, piece);
   }
@@ -332,6 +376,9 @@ const initParty = function () {
         case EventTypes.MovePiece:
           onMovePieceEvent(data.movedPiece);
           break;
+        case EventTypes.UpdatePiece:
+          onUpdatePieceEvent(data.piece);
+          break;
         case EventTypes.DeletePiece:
           onDeletePieceEvent(data.id);
           break;
@@ -404,23 +451,34 @@ window.onload = function () {
 
 
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
+    // reset piece form
     _pieceInMenu = null;
+    $("#piece-menu-status-conditions").tagsinput("removeAll");
+    const imgInput = document.getElementById("piece-menu-image-input");
+    imgInput.value = null;
+    imgInput.type = "text";
+    imgInput.type = "file";
   });
   document.getElementById('btn-modal-piece-ok').addEventListener('click', () => onAddGamePieceModalAccept());
   document.getElementById('btn-modal-bg-ok').addEventListener('click', () => onChangeBackgroundModalAccept());
   document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
   document.getElementById('range-grid-size').addEventListener('input', () => onGridSizeInput());
   document.getElementById('range-grid-size').addEventListener('change', () => onGridSizeChange());
-  document.getElementById("btn-update-piece").addEventListener("click", () => {
+  document.getElementById("btn-update-piece").addEventListener("click", async () => {
     if (_pieceInMenu == null) return;
     const name = document.getElementById("piece-menu-name").value;
     const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
     const statusConds = document.getElementById("piece-menu-status-conditions").value;
-    const dead = document.getElementById("piece-menu-dead").value;
+    const dead = document.getElementById("piece-menu-dead").checked;
+    const image = document.getElementById("piece-menu-image-input").files[0];
     _pieceInMenu.name = name;
+    _pieceInMenu.dead = dead;
     _pieceInMenu.updateSize(size);
     _pieceInMenu.updateStatusConditions(statusConds);
-    _pieceInMenu.dead = dead;
+    if (image != null) {
+      await _pieceInMenu.updateImage(image);
+      _pieceInMenu.imageUpdated = true;
+    }
 
     if (isHost()) {
       for(var id of _connectedIds) {
@@ -432,7 +490,7 @@ window.onload = function () {
     }
 
     refreshCanvas();
-
+    bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
   });
   document.getElementById("btn-delete-piece").addEventListener("click", () => {
     if (_pieceInMenu == null) return;
@@ -450,7 +508,7 @@ window.onload = function () {
         }
       }
 
-      new bootstrap.Offcanvas(document.getElementById('piece-menu')).hide();
+      bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
     }
   });
 

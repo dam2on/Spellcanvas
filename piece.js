@@ -11,20 +11,7 @@ class Piece {
         this.y = y;
         this.dead = false;
         this.imageUpdated = false;
-        this.image = new Image();
-
-        if (img instanceof File) {
-            // load image
-            let reader = new FileReader();
-            reader.onload = (event) => {
-                this.image.src = event.target.result;
-            };
-          
-            reader.readAsDataURL(img);
-        }
-        else if (typeof(img) == 'string') {
-            this.image.src = img;
-        }
+        this.updateImage(img);
     }
 
     updateStatusConditions(statusListString) {
@@ -37,6 +24,26 @@ class Piece {
         }
         this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
         this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+    }
+
+    updateImage(img) {
+        this.image = new Image();
+        return new Promise((resolve,reject) => {
+            if (img instanceof File) {
+                // load image
+                let reader = new FileReader();
+                reader.onload = (event) => {
+                    this.image.src = event.target.result;
+                    resolve(event.target.result);
+                };
+                
+                reader.readAsDataURL(img);
+            }
+            else if (typeof(img) == 'string') {
+                this.image.src = img;
+                resolve(img);
+            }
+        });
     }
 
     getX() {
