@@ -48,7 +48,7 @@ const getTextDims = function(str) {
   const textDims = _ctx.measureText(str);
   return {
     width: Math.ceil(textDims.width),
-    height: Math.abs(textDims.actualBoundingBoxAscent) + Math.abs(textDims.actualBoundingBoxDescent)
+    height: Math.ceil(Math.abs(textDims.actualBoundingBoxAscent) + Math.abs(textDims.actualBoundingBoxDescent))
   }
 }
 
