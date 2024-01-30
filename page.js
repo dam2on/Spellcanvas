@@ -7,7 +7,7 @@ _host = null;
 _ctx = null;
 _gridSizeRatio = 0.025;
 _pieceInMenu = null;
-_canvasTextMargin = 4;
+_canvasTextMargin = 3;
 
 const isHost = function () {
   return _host == null;
@@ -48,13 +48,14 @@ const getTextDims = function(str) {
   const textDims = _ctx.measureText(str);
   return {
     width: Math.ceil(textDims.width),
-    height: textDims.actualBoundingBoxAscent
+    height: Math.abs(textDims.actualBoundingBoxAscent) + Math.abs(textDims.actualBoundingBoxDescent)
   }
 }
 
 const refreshCanvas = function () {
 
   _ctx.clearRect(0, 0, _ctx.canvas.width, _ctx.canvas.height);
+  _ctx.textBaseline = "bottom";
   const deadImage = document.getElementById("image-dead");
 
   for (var piece of PIECES) {
@@ -67,15 +68,20 @@ const refreshCanvas = function () {
       _ctx.globalAlpha = 1;
     }
 
-    _ctx.font = "18px Arial";
-    let nameTextDims = getTextDims(piece.name);
-    _ctx.fillStyle = "#000";
-    _ctx.fillRect(piece.getX() - _canvasTextMargin + (piece.width - nameTextDims.width) / 2, 
-    piece.getY() - nameTextDims.height - _canvasTextMargin, 
-    nameTextDims.width + 2 * _canvasTextMargin, 
-    nameTextDims.height + 2 * _canvasTextMargin)
-    _ctx.fillStyle = "#fff";
-    _ctx.fillText(piece.name, piece.getX() + (piece.width - nameTextDims.width) / 2, piece.getY());
+    if (piece.name) {
+      _ctx.font = "18px Arial";
+      let nameTextDims = getTextDims(piece.name);
+      _ctx.fillStyle = "#000";
+      _ctx.beginPath();
+      _ctx.roundRect(piece.getX() - _canvasTextMargin + (piece.width - nameTextDims.width) / 2, 
+      piece.getY() - _canvasTextMargin - nameTextDims.height, 
+      nameTextDims.width + 2 * _canvasTextMargin, 
+      nameTextDims.height + 2 * _canvasTextMargin, 
+      3);
+      _ctx.fill();
+      _ctx.fillStyle = "#fff";
+      _ctx.fillText(piece.name, piece.getX() + (piece.width - nameTextDims.width) / 2, piece.getY());
+    }
 
     // add status conditions
     if (piece.statusConditions.length > 0) {
@@ -85,14 +91,16 @@ const refreshCanvas = function () {
       for (var i = 0; i < piece.statusConditions.length; i++) {
         let currentConDims = getTextDims(piece.statusConditions[i]);
         if (i > 0 && (statusConX + currentConDims.width > piece.getX() + piece.width)) {
-          statusConY += currentConDims.height + _canvasTextMargin;
+          statusConY += currentConDims.height + (3 * _canvasTextMargin);
           statusConX = piece.getX();
         }
         _ctx.fillStyle = "#f00";
-        _ctx.fillRect(statusConX, statusConY - currentConDims.height, currentConDims.width, currentConDims.height)
+        _ctx.beginPath();
+        _ctx.roundRect(statusConX, statusConY, currentConDims.width + 2 * _canvasTextMargin, currentConDims.height + 2 * _canvasTextMargin, 3);
+        _ctx.fill();
         _ctx.fillStyle = "#fff";
-        _ctx.fillText(piece.statusConditions[i], statusConX, statusConY);
-        statusConX += currentConDims.width + _canvasTextMargin;
+        _ctx.fillText(piece.statusConditions[i], statusConX + _canvasTextMargin, statusConY + currentConDims.height + _canvasTextMargin);
+        statusConX += currentConDims.width + (3 * _canvasTextMargin);
       }
     }
   }
