@@ -158,6 +158,13 @@ const emitDeletePieceEvent = function (peerId, id) {
 
 const emitUpdatePieceEvent = function (peerId, piece) {
   let pieceCopy = {...piece};
+  if (!pieceCopy.imageUpdated) {
+    // dont send image
+    pieceCopy.image = undefined;
+  }
+  else {
+    pieceCopy.image = piece.image.src;
+  }
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
     conn.send({
@@ -253,12 +260,13 @@ const onChangeBackgroundEvent = function (imgUrl) {
   setBackground(imgUrl);
 }
 
-const onUpdatePieceEvent = function(piece) {
+const onUpdatePieceEvent = async function(piece) {
   let localPiece = PIECES.find(p => p.id == piece.id);
-  localPiece.name = piece.name;
-  localPiece.size = piece.size;
-  localPiece.statusConditions = piece.statusConditions;
-  localPiece.dead = piece.dead;
+  if (!piece.imageUpdated) {
+    // use same image
+    piece.image = localPiece.image;
+  }
+  localPiece = await Piece.fromObj(piece);
 
   if (isHost()) {
     for (var id of _connectedIds) {
@@ -369,7 +377,7 @@ const getCurrentCanvasHeight = function () {
 const onGridChangeEvent = function (gridSize) {
   _gridSizeRatio = gridSize;
   for (var piece of PIECES) {
-    piece.resize();
+    piece.updateSize();
   }
   refreshCanvas();
 }
