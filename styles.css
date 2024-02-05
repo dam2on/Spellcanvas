@@ -35,14 +35,7 @@ input[type="range"]::-webkit-slider-thumb {
 .menu-btn {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-}
-
-.modal-backdrop {
-    z-index: 1049;
-}
-
-#modal-piece, #modal-bg, #modal-party {
-    z-index: 1800;
+    border-bottom-right-radius: 0;
 }
 
 .bootstrap-tagsinput {
@@ -98,4 +91,8 @@ input[type="range"]::-webkit-slider-thumb {
   }
   .bootstrap-tagsinput .tag [data-role="remove"]:hover:active {
     box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  }
+
+  .video-background {
+    z-index: -100 !important;
   }

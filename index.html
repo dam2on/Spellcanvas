@@ -5,52 +5,44 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://kit.fontawesome.com/7a940114f5.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.min.js" integrity="sha512-9UR1ynHntZdqHnwXKTaOm1s6V9fExqejKvg5XMawEMToW4sSw+3jtLrYfZPijvnwnnE8Uol1O9BcAskoxgec+g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.min.js"
+        integrity="sha512-9UR1ynHntZdqHnwXKTaOm1s6V9fExqejKvg5XMawEMToW4sSw+3jtLrYfZPijvnwnnE8Uol1O9BcAskoxgec+g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" src="https://unpkg.com/youtube-background/jquery.youtube-background.min.js"></script>
     <script type="text/javascript" src="piece.js"></script>
     <script type="text/javascript" src="page.js"></script>
     <script type="text/javascript" src="enums.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/tubular@latest/dist/tubular-bundle.min.css" />
 </head>
 
 <body>
-    <div class="container-fluid px-0">
-        <!-- background-image: url(img/bg.png); -->
-        <canvas id="canvas" width="500" height="500" style="
-        background-image: url(img/bg.png);
-        background-position: center; 
-        background-repeat: no-repeat; 
-        background-size: cover;"></canvas>
+    <div id="video" class="video-background">
     </div>
-    <div class="container-fluid">
-        <div class="form-group mb-3">
-            <label for="range-grid-size" class="form-label">Grid Size: 50</span></label>
-            <input type="range" id="range-grid-size" min="1" max="200" step="1" value="50"
-                style="width: 199px !important;">
-        </div>
-        <div class="form-group mb-2">
-            <button id="btn-change-bg" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-bg">Change
-                Background</button>
-        </div>
-        <div class="form-group mb-2">
-            <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-piece">Add Piece</button>
-        </div>
-    </div>
+
+    <canvas id="canvas" style="
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: transparent;
+    background-image: url(img/bg.png);
+    background-position: 0 0; 
+    background-repeat: no-repeat;
+    background-size: cover;"></canvas>
     <!-- Side Menus -->
-    <!-- <div class="offcanvas offcanvas-start" tabindex="-1" id="main-menu">
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="main-menu">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title" id="main-menu-label">Menu</h5>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div>
-            <a class="btn btn-secondary menu-btn" data-bs-toggle="offcanvas" href="#main-menu" role="button" style="position: relative; left: 399px;"
-                aria-controls="main-menu">
-                <i class="fa-solid fa-bars"></i>
-            </a>
         </div>
         <div class="offcanvas-body">
             <div class="form-group mb-3">
@@ -59,41 +51,52 @@
                     style="width: 199px !important;">
             </div>
             <div class="form-group mb-2">
-                <button id="btn-change-bg" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-bg">Change
+                <button id="btn-change-bg" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#modal-bg">Set
                     Background</button>
             </div>
             <div class="form-group mb-2">
-                <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-piece">Add Piece</button>
+                <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#modal-piece">Add Piece</button>
+            </div>
+            <div class="form-group">
+                <ul id="list-connected-party-members"></ul>
             </div>
         </div>
-    </div> -->
+        <div>
+            <a class="btn btn-secondary menu-btn" data-bs-toggle="offcanvas" href="#main-menu" role="button"
+                style="position: relative; left: 399px;" aria-controls="main-menu">
+                <i class="fa-solid fa-gear"></i>
+            </a>
+        </div>
+    </div>
     <div class="offcanvas offcanvas-end" tabindex="-1" id="piece-menu" aria-labelledby="piece-menu-header">
         <div class="offcanvas-header">
-          <h5 class="offcanvas-title" id="piece-menu-header">Piece Details</h5>
-          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <h5 class="offcanvas-title" id="piece-menu-header">Piece Details</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
             <div class="form-group">
                 <label>Name</label>
-                <input id="piece-menu-name" class="form-control"/>
+                <input id="piece-menu-name" class="form-control" />
             </div>
             <div class="form-group text-center my-2">
-                <img id="piece-menu-image" style="width: 65%;"/>
+                <img id="piece-menu-image" style="width: 65%;" />
                 <div class="text-center mt-2">
-                    <input id="piece-menu-image-input" type="file"/>
+                    <input id="piece-menu-image-input" type="file" />
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label>Size</label>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.25">
+                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.5">
                     <label class="form-check-label">
                         Tiny
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.75">
+                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.9">
                     <label class="form-check-label">
                         Small
                     </label>
@@ -125,7 +128,7 @@
             </div>
             <div class="form-group">
                 <label>Status Conditions</label>
-                <input class="form-control" id="piece-menu-status-conditions" data-role="tagsinput"/>
+                <input class="form-control" id="piece-menu-status-conditions" data-role="tagsinput" />
             </div>
             <div class="form-group">
                 <label for="#piece-menu-dead">Dead?</label>
@@ -136,7 +139,7 @@
                 <button id="btn-delete-piece" class="btn btn-danger">Delete</button>
             </div>
         </div>
-      </div>
+    </div>
     <!-- Modals -->
     <div class="modal" id="modal-piece" tabindex="-1">
         <div class="modal-dialog">
@@ -154,18 +157,17 @@
                         <div class="mb-3">
                             <label for="#input-piece-art" class="form-label">Image</label>
                             <input id="input-piece-art" type="file" />
-                            <!-- <button id="btn-default-piece-art" class="btn btn-secondary">Use Default Image</button> -->
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="radio-piece-size"
-                                id="radio-piece-size-ty" value="0.25">
+                                id="radio-piece-size-ty" value="0.5">
                             <label class="form-check-label" for="radio-piece-size-ty">
                                 Tiny
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="radio-piece-size"
-                                id="radio-piece-size-sm" value="0.75">
+                                id="radio-piece-size-sm" value="0.9">
                             <label class="form-check-label" for="radio-piece-size-sm">
                                 Small
                             </label>
@@ -211,14 +213,33 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Change Background Image</h5>
+                    <h5 class="modal-title">Set Background</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="form-modal-bg">
+                        <h3>Background Type:</h3>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="radio-bg-type" id="radio-bg-image"
+                                value="0" checked>
+                            <label class="form-check-label" for="radio-bg-image">
+                                Image
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="radio-bg-type" id="radio-bg-video"
+                                value="1">
+                            <label class="form-check-label" for="radio-bg-video">
+                                Video
+                            </label>
+                        </div>
+                        <div class="mb-3" style="display: none;">
+                            <label class="form-label" for="#input-bg-video">Video Link</label>
+                            <input id="input-bg-video" class="form-control" type="url" />
+                        </div>
                         <div class="mb-3">
-                            <label for="#input-bg-img" class="form-label">Background Image</label>
-                            <input id="input-bg-img" type="file" />
+                            <label class="form-label" for="#input-bg-image">Background Image</label>
+                            <input id="input-bg-image" type="file" />
                         </div>
                     </form>
                 </div>
@@ -237,7 +258,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="form-modal-bg">
+                    <form id="form-modal-party">
                         <label class="form-label">I would like to</label>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="radio-party" id="radio-party-create"
@@ -254,8 +275,12 @@
                             </label>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="#input-piece-name">Party ID</label>
+                            <label class="form-label" for="#input-party-id">Party ID</label>
                             <input id="input-party-id" class="form-control" type="text" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="#input-player-name">Player Name</label>
+                            <input id="input-player-name" class="form-control" type="text" />
                         </div>
                     </form>
                 </div>
@@ -266,9 +291,9 @@
             </div>
         </div>
     </div>
-    <!-- Pre-loaded images -->
+    <!-- Pre loaded images -->
     <div style="display: none;">
-        <img id="image-dead" src="img/dead.png"/>
+        <img id="image-dead" src="img/dead.png" />
     </div>
 </body>
 

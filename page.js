@@ -2,7 +2,9 @@
 PIECES = [];
 _connectedIds = [];
 _bgImgUrl = null;
+_bgVideo = null;
 _peer = null;
+_playerName = null;
 _host = null;
 _ctx = null;
 _gridSizeRatio = 0.025;
@@ -44,12 +46,47 @@ const shapeIntersects = function (x, y) {
   return null;
 }
 
-const getTextDims = function(str) {
+const getTextDims = function (str) {
   const textDims = _ctx.measureText(str);
   return {
     width: Math.ceil(textDims.width),
+    top: textDims.actualBoundingBoxAscent,
+    bottom: textDims.actualBoundingBoxDescent,
     height: Math.ceil(Math.abs(textDims.actualBoundingBoxAscent) + Math.abs(textDims.actualBoundingBoxDescent))
   }
+}
+
+const getFontSizeByPiece = function (pieceSize) {
+  const fontSizes = { name: "18px", statuses: "12px" };
+  switch (pieceSize) {
+    case PieceSizes.Tiny:
+      fontSizes.name = "9px";
+      fontSizes.statuses = "9px";
+      break;
+    case PieceSizes.Small:
+      fontSizes.name = "10px";
+      fontSizes.statuses = "9px";
+      break;
+    case PieceSizes.Medium:
+      fontSizes.name = "12px";
+      fontSizes.statuses = "10px";
+      break;
+    case PieceSizes.Large:
+      fontSizes.name = "14px";
+      fontSizes.statuses = "11px";
+      break;
+    case PieceSizes.Huge:
+      fontSizes.name = "16px";
+      fontSizes.statuses = "12px";
+      break;
+    case PieceSizes.Gargantuan:
+      break;
+    default:
+      console.warn("piece size: " + pieceSize + " not recognized as standard size");
+      break;
+  }
+
+  return fontSizes;
 }
 
 const refreshCanvas = function () {
@@ -68,38 +105,41 @@ const refreshCanvas = function () {
       _ctx.globalAlpha = 1;
     }
 
+    const fontSize = getFontSizeByPiece(piece.size);
+
     if (piece.name) {
-      _ctx.font = "18px Arial";
+      _ctx.font = fontSize.name + " Arial";
       let nameTextDims = getTextDims(piece.name);
-      _ctx.fillStyle = "#000";
+      _ctx.fillStyle = "#36454F"; // charcoal
       _ctx.beginPath();
-      _ctx.roundRect(piece.getX() - _canvasTextMargin + (piece.width - nameTextDims.width) / 2, 
-      piece.getY() - _canvasTextMargin - nameTextDims.height, 
-      nameTextDims.width + 2 * _canvasTextMargin, 
-      nameTextDims.height + 2 * _canvasTextMargin, 
-      3);
+      _ctx.roundRect(piece.getX() - _canvasTextMargin + (piece.width - nameTextDims.width) / 2,
+        piece.getY() - _canvasTextMargin - nameTextDims.height,
+        nameTextDims.width + 2 * _canvasTextMargin,
+        nameTextDims.height + 2 * _canvasTextMargin,
+        3);
       _ctx.fill();
-      _ctx.fillStyle = "#fff";
+      _ctx.fillStyle = "#f9f9f9"; // off white
       _ctx.fillText(piece.name, piece.getX() + (piece.width - nameTextDims.width) / 2, piece.getY());
     }
 
     // add status conditions
     if (piece.statusConditions.length > 0) {
-      _ctx.font = "12px Arial";
+      _ctx.font = fontSize.statuses + " Arial";
+      const anyLetterHeight = getTextDims("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ").height;
       let statusConX = piece.getX();
       let statusConY = piece.height + piece.getY();
       for (var i = 0; i < piece.statusConditions.length; i++) {
         let currentConDims = getTextDims(piece.statusConditions[i]);
         if (i > 0 && (statusConX + currentConDims.width > piece.getX() + piece.width)) {
-          statusConY += currentConDims.height + (3 * _canvasTextMargin);
+          statusConY += anyLetterHeight + (3 * _canvasTextMargin);
           statusConX = piece.getX();
         }
-        _ctx.fillStyle = "#f00";
+        _ctx.fillStyle = "#880808"; // blood red
         _ctx.beginPath();
-        _ctx.roundRect(statusConX, statusConY, currentConDims.width + 2 * _canvasTextMargin, currentConDims.height + 2 * _canvasTextMargin, 3);
+        _ctx.roundRect(statusConX, statusConY, currentConDims.width + 2 * _canvasTextMargin, anyLetterHeight + 2 * _canvasTextMargin, 3);
         _ctx.fill();
-        _ctx.fillStyle = "#fff";
-        _ctx.fillText(piece.statusConditions[i], statusConX + _canvasTextMargin, statusConY + currentConDims.height + _canvasTextMargin);
+        _ctx.fillStyle = "#f9f9f9"; // off white
+        _ctx.fillText(piece.statusConditions[i], statusConX + _canvasTextMargin, statusConY + anyLetterHeight + _canvasTextMargin);
         statusConX += currentConDims.width + (3 * _canvasTextMargin);
       }
     }
@@ -107,25 +147,46 @@ const refreshCanvas = function () {
 
 }
 
-const onChangeBackgroundModalAccept = function () {
-  if (_host != null) {
+const onBackgroundTypeChange = function() {
+  const bgType = Number(document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value);
+  if (bgType == 1) {
+    document.getElementById("input-bg-image").parentNode.setAttribute("style", "display: none;");
+    document.getElementById("input-bg-video").parentNode.removeAttribute("style");
+  }
+  else {
+    document.getElementById("input-bg-video").parentNode.setAttribute("style", "display: none;");
+    document.getElementById("input-bg-image").parentNode.removeAttribute("style");
+  }
+}
+
+const onChangeBackgroundSubmit = function () {
+  if (!isHost()) {
     console.warn("only host can change bg");
     return;
   }
-  const bgImg = document.getElementById("input-bg-img").files[0];
-  return Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
-    setBackground(dataUrl);
-    bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
-    for (var id of _connectedIds) {
-      emitChangeBackgroundEvent(id, dataUrl);
-    }
-  });
-}
 
-const setBackground = function (imgUrl) {
-  _bgImgUrl = imgUrl;
-  document.getElementById("canvas").style['background-image'] = `url(${_bgImgUrl})`;
-  refreshCanvas();
+  const bgType = Number(document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value);
+
+  if (bgType == 1) {
+    // video
+    const videoUrl = document.getElementById('input-bg-video').value;
+    onChangeBackgroundEvent(videoUrl, true);
+    for (var id of _connectedIds) {
+      emitChangeBackgroundEvent(id, videoUrl, true);
+    }
+  }
+  else {
+    // image
+    const bgImg = document.getElementById("input-bg-image").files[0];
+    Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
+      onChangeBackgroundEvent(dataUrl);
+      for (var id of _connectedIds) {
+        emitChangeBackgroundEvent(id, dataUrl);
+      }
+    });
+  }
+
+  bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
 }
 
 const drawImageScaled = function (img) {
@@ -140,7 +201,7 @@ const drawImageScaled = function (img) {
     centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
 }
 
-const onAddGamePieceModalAccept = function () {
+const onAddPieceSubmit = function () {
   const modalPieceInputs = document.getElementById('form-modal-piece').getElementsByTagName('input');
   const name = modalPieceInputs[0].value;
   const img = modalPieceInputs[1].files[0];
@@ -166,11 +227,69 @@ const onAddGamePieceModalAccept = function () {
   }
 }
 
-const emitChangeBackgroundEvent = function (peerId, imgData) {
-  if (imgData == null) return;
+const onUpdatePieceSubmit = async function () {
+  if (_pieceInMenu == null) return;
+  const name = document.getElementById("piece-menu-name").value;
+  const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
+  const statusConds = document.getElementById("piece-menu-status-conditions").value;
+  const dead = document.getElementById("piece-menu-dead").checked;
+  const image = document.getElementById("piece-menu-image-input").files[0];
+  _pieceInMenu.name = name;
+  _pieceInMenu.dead = dead;
+  _pieceInMenu.updateSize(size);
+  _pieceInMenu.updateStatusConditions(statusConds);
+  if (image != null) {
+    await _pieceInMenu.updateImage(image);
+    _pieceInMenu.imageUpdated = true;
+  }
+
+  if (isHost()) {
+    for (var id of _connectedIds) {
+      emitUpdatePieceEvent(id, _pieceInMenu);
+    }
+  }
+  else {
+    emitUpdatePieceEvent(_host, _pieceInMenu);
+  }
+
+  refreshCanvas();
+  bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
+}
+
+const onDeletePieceSubmit = function () {
+  if (_pieceInMenu == null) return;
+  if (confirm("Delete piece: " + _pieceInMenu.name + "?")) {
+    let index = PIECES.indexOf(_pieceInMenu);
+    PIECES.splice(index, 1);
+    refreshCanvas();
+
+    if (_host != null) {
+      emitDeletePieceEvent(_host, _pieceInMenu.id);
+    }
+    else if (_connectedIds.length > 0) {
+      for (var id of _connectedIds) {
+        emitDeletePieceEvent(id, _pieceInMenu.id);
+      }
+    }
+
+    bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
+  }
+}
+
+const onConnectedToHostEvent = function(host) {
+  if (isHost()) {
+    console.warn("only non-host can recieve this 'connected to host' event");
+    return;
+  }
+
+  alert(`Successfully connected to ${host}'s party!`);
+}
+
+const emitChangeBackgroundEvent = function (peerId, data, isVideo = false) {
+  if (data == null) return;
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
-    conn.send({ event: EventTypes.ChangeBackground, img: imgData });
+    conn.send({ event: EventTypes.ChangeBackground, url: data, isVideo: isVideo });
   });
 }
 
@@ -209,7 +328,7 @@ const emitDeletePieceEvent = function (peerId, id) {
 }
 
 const emitUpdatePieceEvent = function (peerId, piece) {
-  let pieceCopy = {...piece};
+  let pieceCopy = { ...piece };
   if (!pieceCopy.imageUpdated) {
     // dont send image
     pieceCopy.image = undefined;
@@ -240,7 +359,7 @@ const emitGridSizeChangeEvent = function (peerId) {
 }
 
 const emitRequestPieceEvent = function (pieceId) {
-  if (_host == null) {
+  if (isHost()) {
     console.warn("cannot request piece as host");
     return;
   }
@@ -252,6 +371,36 @@ const emitRequestPieceEvent = function (pieceId) {
       id: pieceId
     });
   });
+}
+
+const emitConnectedToHostEvent = function (peerId) {
+  if (!isHost()) {
+    console.warn("only host can send 'connected to host' event");
+    return;
+  }
+
+  var conn = _peer.connect(peerId);
+  conn.on('open', function () {
+    conn.send({
+      event: EventTypes.ConnectedToHost,
+      host: _playerName
+    });
+  });
+}
+
+const onChangeBackgroundEvent = function (data, isVideo = false) {
+  if (isVideo) {
+    $("#canvas").css("background-image", "");
+    $("#video").attr("data-vbg", data);
+    _bgVideo = new VideoBackgrounds('[data-vbg]');
+  }
+  else {
+    _bgImgUrl = data;
+    _bgVideo?.destroy(_bgVideo.elements[0]);
+    $("#canvas").css('background-image', `url(${_bgImgUrl})`);
+  }
+
+  refreshCanvas();
 }
 
 const onAddPieceEvent = async function (piece) {
@@ -308,17 +457,15 @@ const onRequestPieceEvent = function (peerId, id) {
   emitAddPieceEvent(peerId, piece);
 }
 
-const onChangeBackgroundEvent = function (imgUrl) {
-  setBackground(imgUrl);
-}
-
-const onUpdatePieceEvent = async function(piece) {
+const onUpdatePieceEvent = async function (piece) {
   let localPiece = PIECES.find(p => p.id == piece.id);
+  const index = PIECES.indexOf(localPiece);
   if (!piece.imageUpdated) {
     // use same image
     piece.image = localPiece.image;
   }
   localPiece = await Piece.fromObj(piece);
+  PIECES.splice(index, 1, localPiece);
 
   if (isHost()) {
     for (var id of _connectedIds) {
@@ -329,8 +476,18 @@ const onUpdatePieceEvent = async function(piece) {
   refreshCanvas();
 }
 
-const onNewPlayerEvent = async function (peerId) {
+const onNewPlayerEvent = async function (peerId, player) {
+  if (!isHost()) {
+    console.warn("only host should receive new player events");
+    return;
+  }
   _connectedIds.push(peerId);
+  $("#list-connected-party-members").append(
+    `<li class="list-group-item d-flex justify-content-between align-items-center">${player}
+    <i class="text-success fa-solid fa-circle fa-sm"></i>
+  </li>`)
+
+  emitConnectedToHostEvent(peerId);
   emitChangeBackgroundEvent(peerId, _bgImgUrl);
   await emitGridSizeChangeEvent(peerId);
   for (var piece of PIECES) {
@@ -338,16 +495,25 @@ const onNewPlayerEvent = async function (peerId) {
   }
 }
 
+const onGridChangeEvent = function (gridSize) {
+  _gridSizeRatio = gridSize;
+  for (var piece of PIECES) {
+    piece.updateSize();
+  }
+  refreshCanvas();
+}
+
 const initParty = function () {
   let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
   let partyId = document.getElementById("input-party-id").value;
+  _playerName = document.getElementById("input-player-name").value;
 
   if (mode == 0) {
     // host mode
     _peer = new Peer(partyId);
   }
-  // player mode
   else if (mode == 1) {
+    // player mode
     _host = partyId;
     _peer = new Peer();
 
@@ -359,16 +525,20 @@ const initParty = function () {
     var rangeGridSize = document.getElementById("range-grid-size");
     rangeGridSize.parentNode.setAttribute("style", "display: none");
     rangeGridSize.setAttribute("disabled", "disabled");
+
+    var listPartyMembers = document.getElementById("list-connected-party-members");
+    listPartyMembers.parentNode.setAttribute("style", "display: none");
   }
 
   _peer.on('open', function (id) {
     console.log('My peer ID is: ' + id);
-    if (mode == 1 && _host != null) {
+    if (!isHost()) {
       // say hello to host
       var conn = _peer.connect(_host);
       conn.on('open', function () {
         conn.send({
-          event: EventTypes.NewPlayer
+          event: EventTypes.NewPlayer,
+          player: _playerName
         });
       });
     }
@@ -376,7 +546,6 @@ const initParty = function () {
 
   _peer.on('connection', function (conn) {
     conn.on('data', function (data) {
-      debugger;
       switch (data.event) {
         case EventTypes.AddPiece:
           onAddPieceEvent(data.piece);
@@ -394,13 +563,16 @@ const initParty = function () {
           onRequestPieceEvent(conn.peer, data.id);
           break;
         case EventTypes.NewPlayer:
-          onNewPlayerEvent(conn.peer);
+          onNewPlayerEvent(conn.peer, data.player);
           break;
         case EventTypes.ChangeBackground:
-          onChangeBackgroundEvent(data.img);
+          onChangeBackgroundEvent(data.url, data.isVideo);
           break;
         case EventTypes.GridChange:
           onGridChangeEvent(data.gridSize);
+          break;
+        case EventTypes.ConnectedToHost:
+          onConnectedToHostEvent(data.host);
           break;
         default:
           console.log("unrecognized event type: " + data.event);
@@ -429,14 +601,6 @@ const getCurrentCanvasHeight = function () {
   return Number(getComputedStyle(document.getElementById("canvas")).height.replace("px", ""));
 }
 
-const onGridChangeEvent = function (gridSize) {
-  _gridSizeRatio = gridSize;
-  for (var piece of PIECES) {
-    piece.updateSize();
-  }
-  refreshCanvas();
-}
-
 const onGridSizeChange = function () {
   if (!isHost()) return;
   const input = document.getElementById('range-grid-size');
@@ -453,10 +617,20 @@ window.onload = function () {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-party')).show();
 
   var can = document.getElementById('canvas');
-  _ctx = can.getContext('2d');
   can.width = window.innerWidth;
   can.height = window.innerHeight;
+  _ctx = can.getContext('2d');
 
+  var ro = new ResizeObserver(e => {
+    let previousWidth = _ctx.canvas.width;
+
+    _ctx.canvas.width = window.innerWidth;
+    _ctx.canvas.height = window.innerHeight;
+    refreshCanvas();
+  });
+  
+  // Observe one or multiple elements
+  ro.observe(document.body);
 
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
@@ -467,59 +641,20 @@ window.onload = function () {
     imgInput.type = "text";
     imgInput.type = "file";
   });
-  document.getElementById('btn-modal-piece-ok').addEventListener('click', () => onAddGamePieceModalAccept());
-  document.getElementById('btn-modal-bg-ok').addEventListener('click', () => onChangeBackgroundModalAccept());
+  document.getElementById('btn-modal-piece-ok').addEventListener('click', () => onAddPieceSubmit());
+  document.getElementById('btn-modal-bg-ok').addEventListener('click', () => onChangeBackgroundSubmit());
+  document.getElementById("btn-update-piece").addEventListener("click", () => onUpdatePieceSubmit());
   document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
   document.getElementById('range-grid-size').addEventListener('input', () => onGridSizeInput());
   document.getElementById('range-grid-size').addEventListener('change', () => onGridSizeChange());
-  document.getElementById("btn-update-piece").addEventListener("click", async () => {
-    if (_pieceInMenu == null) return;
-    const name = document.getElementById("piece-menu-name").value;
-    const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
-    const statusConds = document.getElementById("piece-menu-status-conditions").value;
-    const dead = document.getElementById("piece-menu-dead").checked;
-    const image = document.getElementById("piece-menu-image-input").files[0];
-    _pieceInMenu.name = name;
-    _pieceInMenu.dead = dead;
-    _pieceInMenu.updateSize(size);
-    _pieceInMenu.updateStatusConditions(statusConds);
-    if (image != null) {
-      await _pieceInMenu.updateImage(image);
-      _pieceInMenu.imageUpdated = true;
-    }
-
-    if (isHost()) {
-      for(var id of _connectedIds) {
-        emitUpdatePieceEvent(id, _pieceInMenu);
-      }
-    }
-    else {
-      emitUpdatePieceEvent(_host, _pieceInMenu);
-    }
-
-    refreshCanvas();
-    bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
+  document.getElementById('btn-delete-piece').addEventListener("click", () => onDeletePieceSubmit());
+  $('input[type="radio"][name="radio-bg-type"]').on('change', () => onBackgroundTypeChange());
+  document.getElementById("modal-piece").addEventListener('shown.bs.modal', function () {
+    bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
   });
-  document.getElementById("btn-delete-piece").addEventListener("click", () => {
-    if (_pieceInMenu == null) return;
-    if (confirm("Delete piece: " + _pieceInMenu.name + "?")) {
-      let index = PIECES.indexOf(_pieceInMenu);
-      PIECES.splice(index, 1);
-      refreshCanvas();
-
-      if (_host != null) {
-        emitDeletePieceEvent(_host, _pieceInMenu.id);
-      }
-      else if (_connectedIds.length > 0) {
-        for (var id of _connectedIds) {
-          emitDeletePieceEvent(id, _pieceInMenu.id);
-        }
-      }
-
-      bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
-    }
+  document.getElementById("modal-bg").addEventListener('shown.bs.modal', function () {
+    bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
   });
-
 
   var draggedPiece = null;
   can.addEventListener('mousedown', function (args) {

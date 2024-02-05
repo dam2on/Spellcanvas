@@ -20,16 +20,16 @@ class Piece {
 
     updateSize(size = undefined) {
         if (size != null) {
-            this.size = size;
+            this.size = Number(size);
         }
         this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
         this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
     }
 
     updateImage(img) {
-        this.image = new Image();
         return new Promise((resolve,reject) => {
             if (img instanceof File) {
+                this.image = new Image();
                 // load image
                 let reader = new FileReader();
                 reader.onload = (event) => {
@@ -40,10 +40,16 @@ class Piece {
                 reader.readAsDataURL(img);
             }
             else if (typeof(img) == 'string') {
+                this.image = new Image();
                 this.image.src = img;
                 resolve(img);
             }
-        });
+            else if (img instanceof Image) {
+                // nothing to do
+                this.image = img;
+                resolve(img);
+            }
+        }); 
     }
 
     getX() {
@@ -54,14 +60,13 @@ class Piece {
         return this.y * getCurrentCanvasHeight();
     }
 
-    static fromObj(obj) {
+    static async fromObj(obj) {
         let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         piece.dead = obj.dead;
         if (obj.statusConditions != null) {
             piece.statusConditions = obj.statusConditions;
         }
-        return new Promise(function(resolve, reject) {
-            piece.image.onload = () => resolve(piece);
-        });
+
+        return piece;
     }
 }

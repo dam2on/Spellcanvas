@@ -6,14 +6,15 @@ const EventTypes = {
     RequestPiece: 'request peice',
     UpdatePiece: 'update piece',
     ChangeBackground: 'change background',
-    GridChange: 'grid change'
+    GridChange: 'grid change',
+    ConnectedToHost: 'connected to host'
   }
 
 const PieceSizes = {
-    Tiny: '0.25',
-    Small: '0.75',
-    Medium: '1',
-    Large: '2',
-    Huge: '3',
-    Gargantuan: '4',
+    Tiny: 0.5,
+    Small: 0.9,
+    Medium: 1,
+    Large: 2,
+    Huge: 3,
+    Gargantuan: 4,
   }
