@@ -15,6 +15,7 @@ class Piece {
     }
 
     updateStatusConditions(statusListString) {
+        if (statusListString == "") return;
         this.statusConditions = statusListString.split(',');
     }
 
