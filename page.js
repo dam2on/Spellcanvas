@@ -263,16 +263,34 @@ const onDeletePieceSubmit = function () {
     PIECES.splice(index, 1);
     refreshCanvas();
 
-    if (_host != null) {
-      emitDeletePieceEvent(_host, _pieceInMenu.id);
-    }
-    else if (_connectedIds.length > 0) {
+    if (isHost()) {
       for (var id of _connectedIds) {
         emitDeletePieceEvent(id, _pieceInMenu.id);
       }
     }
+    else {
+      emitDeletePieceEvent(_host, _pieceInMenu.id);
+    }
 
     bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
+  }
+}
+
+const onResetPiecesSubmit = function() {
+  if (!isHost()) return;
+  if (confirm("Are you sure you want to remove all pieces from the board?")) {
+    onResetPiecesEvent();
+  }
+}
+
+const onResetPiecesEvent = function() {
+  PIECES = [];
+  refreshCanvas();
+
+  if (isHost()) {
+    for (var id of _connectedIds) {
+      emitResetPiecesEvent(id);
+    }
   }
 }
 
@@ -323,6 +341,15 @@ const emitDeletePieceEvent = function (peerId, id) {
     conn.send({
       event: EventTypes.DeletePiece,
       id: id
+    });
+  });
+}
+
+const emitResetPiecesEvent = function (peerId) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function () {
+    conn.send({
+      event: EventTypes.ResetPieces
     });
   });
 }
@@ -497,6 +524,7 @@ const onNewPlayerEvent = async function (peerId, player) {
 
 const onGridChangeEvent = function (gridSize) {
   _gridSizeRatio = gridSize;
+  console.log(_gridSizeRatio);
   for (var piece of PIECES) {
     piece.updateSize();
   }
@@ -525,6 +553,10 @@ const initParty = function () {
     var rangeGridSize = document.getElementById("range-grid-size");
     rangeGridSize.parentNode.setAttribute("style", "display: none");
     rangeGridSize.setAttribute("disabled", "disabled");
+
+    var btnResetPieces = document.getElementById("btn-reset-pieces");
+    btnResetPieces.parentNode.setAttribute("style", "display: none");
+    btnResetPieces.setAttribute("disabled", "disabled");
 
     var listPartyMembers = document.getElementById("list-connected-party-members");
     listPartyMembers.parentNode.setAttribute("style", "display: none");
@@ -558,6 +590,9 @@ const initParty = function () {
           break;
         case EventTypes.DeletePiece:
           onDeletePieceEvent(data.id);
+          break;
+        case EventTypes.ResetPieces:
+          onResetPiecesEvent();
           break;
         case EventTypes.RequestPiece:
           onRequestPieceEvent(conn.peer, data.id);
@@ -622,10 +657,9 @@ window.onload = function () {
   _ctx = can.getContext('2d');
 
   var ro = new ResizeObserver(e => {
-    let previousWidth = _ctx.canvas.width;
-
     _ctx.canvas.width = window.innerWidth;
     _ctx.canvas.height = window.innerHeight;
+
     refreshCanvas();
   });
   
@@ -648,6 +682,7 @@ window.onload = function () {
   document.getElementById('range-grid-size').addEventListener('input', () => onGridSizeInput());
   document.getElementById('range-grid-size').addEventListener('change', () => onGridSizeChange());
   document.getElementById('btn-delete-piece').addEventListener("click", () => onDeletePieceSubmit());
+  document.getElementById('btn-reset-pieces').addEventListener("click", () => onResetPiecesSubmit());
   $('input[type="radio"][name="radio-bg-type"]').on('change', () => onBackgroundTypeChange());
   document.getElementById("modal-piece").addEventListener('shown.bs.modal', function () {
     bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();

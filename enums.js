@@ -7,7 +7,8 @@ const EventTypes = {
     UpdatePiece: 'update piece',
     ChangeBackground: 'change background',
     GridChange: 'grid change',
-    ConnectedToHost: 'connected to host'
+    ConnectedToHost: 'connected to host',
+    ResetPieces: 'reset pieces'
   }
 
 const PieceSizes = {
