@@ -16,10 +16,13 @@
         integrity="sha512-9UR1ynHntZdqHnwXKTaOm1s6V9fExqejKvg5XMawEMToW4sSw+3jtLrYfZPijvnwnnE8Uol1O9BcAskoxgec+g=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="https://unpkg.com/youtube-background/jquery.youtube-background.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shepherd.js/11.2.0/js/shepherd.min.js" integrity="sha512-U3ol6Fd79i+gmjM7piIkZVLcdiCCc+FUuKhyjsJblTNdhm0fjUeXByy8pR60oWUhMOx4yBmuyBj0EQyQE/d5JQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="piece.js"></script>
+    <script type="text/javascript" src="tour.js"></script>
     <script type="text/javascript" src="page.js"></script>
     <script type="text/javascript" src="enums.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shepherd.js/7.1.2/css/shepherd.min.css" integrity="sha512-k4DlYDc0mf1H92BOi4i/3VKmE2y5T5CuMAFGepXwYD39pmzeoJ7vIUM57esJkGtDNrWcX0V74cHPB/78415VdQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/tubular@latest/dist/tubular-bundle.min.css" />
 </head>
 
@@ -42,7 +45,7 @@
     <!-- Side Menus -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="main-menu">
         <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="main-menu-label">Settings</h5>
+            <h3 class="offcanvas-title" id="main-menu-label">Settings</h5>
         </div>
         <div class="offcanvas-body">
             <div class="form-group mb-3">
@@ -53,11 +56,13 @@
                             data-bs-toggle="popover" data-bs-content="Copied!">Copy</button>
                 </div>
                 <div>
-                    <label for="list-group"><h3>Party Members</h3></label>
+                    <label for="list-group"><h4>Party Members</h3></label>
                     <span style="display: block;" id="empty-party-msg"><em>No one's here yet</em></span>
                     <ul class="list-group" id="list-connected-party-members"></ul>
                 </div>
             </div>
+
+            <h4>Game Board Controls</h3>
             <div class="form-group mb-3">
                 <button id="btn-change-bg" class="btn btn-primary" data-bs-toggle="modal"
                     data-bs-target="#modal-bg">Set
@@ -65,15 +70,15 @@
             </div>
             <div class="form-group mb-3">
                 <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal"
-                    data-bs-target="#modal-piece">Add Piece</button>
+                    data-bs-target="#modal-piece">Add Game Piece</button>
             </div>
-            <div class="form-group mb-3">
+            <div class="form-group mb-5">
                 <label for="range-grid-size" class="form-label">Grid Size: 50</span></label>
                 <input type="range" id="range-grid-size" min="1" max="200" step="1" value="50"
                     style="width: 199px !important;">
             </div>
             <div class="form-group mb-3">
-                <button id="btn-reset-pieces" class="btn btn-danger">Reset Pieces</button>
+                <button id="btn-reset-pieces" class="btn btn-danger">Clear Game Pieces</button>
             </div>
         </div>
         <div>

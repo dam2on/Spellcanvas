@@ -211,6 +211,7 @@ const onAddPieceSubmit = function () {
   piece.image.addEventListener('load', () => {
     _ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
     bootstrap.Modal.getInstance(document.getElementById('modal-piece')).hide();
+    newGamePieceTour();
     modalPieceInputs[0].value = null;
     modalPieceInputs[1].value = null;
   });
@@ -603,6 +604,7 @@ const initParty = function () {
       initInviteLink();
       initPeerEvents();
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
+      initMainMenuTour();
     });
   }
   else {
@@ -635,6 +637,8 @@ const initParty = function () {
 
       $("#modal-player").on('hidden.bs.modal', function() {
         _playerName = $("#input-player-name").val();
+        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("main-menu")).show();
+        initMainMenuTour(false);
   
         var conn = _peer.connect(_host);
         conn.on('open', function () {
