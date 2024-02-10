@@ -15,8 +15,12 @@ class Piece {
     }
 
     updateStatusConditions(statusListString) {
-        if (statusListString == "") return;
-        this.statusConditions = statusListString.split(',');
+        if (statusListString == "") {
+            this.statusConditions = [];
+        }
+        else {
+            this.statusConditions = statusListString.split(',');
+        }
     }
 
     updateSize(size = undefined) {

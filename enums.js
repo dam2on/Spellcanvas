@@ -19,3 +19,10 @@ const PieceSizes = {
     Huge: 3,
     Gargantuan: 4,
   }
+
+const AreaType = {
+  Line: 'line',
+  Circle: 'circle',
+  Cone: 'cone',
+  Square: 'square'
+}

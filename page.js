@@ -96,6 +96,11 @@ const refreshCanvas = function () {
   const deadImage = document.getElementById("image-dead");
 
   for (var piece of PIECES) {
+    if (piece instanceof Area) {
+      piece.draw(_ctx);
+      continue;
+    }
+
     _ctx.drawImage(piece.image, piece.getX(), piece.getY(), piece.width, piece.height);
 
     // dead overlay
@@ -147,7 +152,7 @@ const refreshCanvas = function () {
 
 }
 
-const onBackgroundTypeChange = function() {
+const onBackgroundTypeChange = function () {
   const bgType = Number(document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value);
   if (bgType == 1) {
     document.getElementById("input-bg-image").parentNode.setAttribute("style", "display: none;");
@@ -277,14 +282,14 @@ const onDeletePieceSubmit = function () {
   }
 }
 
-const onResetPiecesSubmit = function() {
+const onResetPiecesSubmit = function () {
   if (!isHost()) return;
   if (confirm("Are you sure you want to remove all pieces from the board?")) {
     onResetPiecesEvent();
   }
 }
 
-const onResetPiecesEvent = function() {
+const onResetPiecesEvent = function () {
   PIECES = [];
   refreshCanvas();
 
@@ -295,7 +300,7 @@ const onResetPiecesEvent = function() {
   }
 }
 
-const onConnectedToHostEvent = function(host) {
+const onConnectedToHostEvent = function (host) {
   if (isHost()) {
     console.warn("only non-host can recieve this 'connected to host' event");
     return;
@@ -537,21 +542,21 @@ const onGridChangeEvent = function (gridSize) {
   refreshCanvas();
 }
 
-const initInviteLink = function() {
+const initInviteLink = function () {
   $('#input-party-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + `?party=${encodeURI(_host)}`);
-  $("#btn-copy-party-link").click(async function() {
+  $("#btn-copy-party-link").click(async function () {
     var popover = bootstrap.Popover.getOrCreateInstance(this);
     await navigator.clipboard.writeText($('#input-party-link').val());
     popover.show();
   });
 
-  $("#btn-copy-party-link").on('blur focusout', function() {
+  $("#btn-copy-party-link").on('blur focusout', function () {
     var popover = bootstrap.Popover.getOrCreateInstance(this);
     popover.hide();
   });
 }
 
-const initPeerEvents = function() {
+const initPeerEvents = function () {
   _peer.on('connection', function (conn) {
     conn.on('data', function (data) {
       switch (data.event) {
@@ -635,11 +640,11 @@ const initParty = function () {
       var playerModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-player'));
       playerModal.show();
 
-      $("#modal-player").on('hidden.bs.modal', function() {
+      $("#modal-player").on('hidden.bs.modal', function () {
         _playerName = $("#input-player-name").val();
         bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("main-menu")).show();
         initMainMenuTour(false);
-  
+
         var conn = _peer.connect(_host);
         conn.on('open', function () {
           conn.send({
@@ -681,6 +686,8 @@ const onGridSizeChange = function () {
   }
 }
 
+
+
 window.onload = function () {
   initParty();
 
@@ -695,7 +702,7 @@ window.onload = function () {
 
     refreshCanvas();
   });
-  
+
   // Observe one or multiple elements
   ro.observe(document.body);
 
@@ -724,6 +731,8 @@ window.onload = function () {
   });
 
   var draggedPiece = null;
+  var drawShape = new Area(AreaType.Cone, 4);
+  // PIECES.push(drawShape);
   can.addEventListener('mousedown', function (args) {
     if (args.button == 0) // left click
       draggedPiece = shapeIntersects(args.x, args.y);
@@ -732,6 +741,17 @@ window.onload = function () {
     if (draggedPiece != null) {
       draggedPiece.x = (args.x - parseInt(draggedPiece.width / 2)) / getCurrentCanvasWidth();
       draggedPiece.y = (args.y - parseInt(draggedPiece.height / 2)) / getCurrentCanvasHeight();
+      refreshCanvas();
+    }
+    else {
+      drawShape.x = args.x;
+      drawShape.y = args.y;
+      refreshCanvas();
+    }
+  });
+  can.addEventListener('wheel', function (args) {
+    if (drawShape != null) {
+      drawShape.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
       refreshCanvas();
     }
   });
@@ -761,8 +781,8 @@ window.onload = function () {
       document.getElementById("piece-menu-name").value = _pieceInMenu.name;
       document.getElementById("piece-menu-image").src = _pieceInMenu.image.src;
       document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
-      document.querySelectorAll("input[name='radio-piece-menu-size']").forEach(x => x.removeAttribute("checked"));
-      document.querySelector(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).setAttribute("checked", "checked");
+      $('input[name="radio-piece-menu-size"]').prop('checked',false);
+      $(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).prop("checked", true);
       $("#piece-menu-status-conditions").tagsinput('removeAll');
       for (var cond of _pieceInMenu.statusConditions) {
         $("#piece-menu-status-conditions").tagsinput('add', cond);
