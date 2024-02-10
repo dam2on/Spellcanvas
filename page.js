@@ -538,7 +538,7 @@ const onGridChangeEvent = function (gridSize) {
 }
 
 const initInviteLink = function() {
-  $('#input-party-link').val(window.location.origin + window.location.pathname + `?party=${encodeURI(_host)}`);
+  $('#input-party-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + `?party=${encodeURI(_host)}`);
   $("#btn-copy-party-link").click(async function() {
     var popover = bootstrap.Popover.getOrCreateInstance(this);
     await navigator.clipboard.writeText($('#input-party-link').val());
