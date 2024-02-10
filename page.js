@@ -12,7 +12,7 @@ _pieceInMenu = null;
 _canvasTextMargin = 3;
 
 const isHost = function () {
-  return _host == null;
+  return _peer.id == _host;
 }
 
 const newGuid = function () {
@@ -217,7 +217,7 @@ const onAddPieceSubmit = function () {
 
   PIECES.push(piece);
 
-  if (_host != null) {
+  if (!isHost()) {
     emitAddPieceEvent(_host, piece);
   }
   else if (_connectedIds.length > 0) {
@@ -508,7 +508,12 @@ const onNewPlayerEvent = async function (peerId, player) {
     console.warn("only host should receive new player events");
     return;
   }
+
+  if (player == null || player == "") {
+    player = "Player " + (_connectedIds.length + 1);
+  }
   _connectedIds.push(peerId);
+  $("#empty-party-msg").hide();
   $("#list-connected-party-members").append(
     `<li class="list-group-item d-flex justify-content-between align-items-center">${player}
     <i class="text-success fa-solid fa-circle fa-sm"></i>
@@ -531,51 +536,21 @@ const onGridChangeEvent = function (gridSize) {
   refreshCanvas();
 }
 
-const initParty = function () {
-  let mode = Number(document.querySelector('input[name="radio-party"]:checked').value);
-  let partyId = document.getElementById("input-party-id").value;
-  _playerName = document.getElementById("input-player-name").value;
-
-  if (mode == 0) {
-    // host mode
-    _peer = new Peer(partyId);
-  }
-  else if (mode == 1) {
-    // player mode
-    _host = partyId;
-    _peer = new Peer();
-
-    // hide buttons for players
-    var btnChangeBg = document.getElementById("btn-change-bg");
-    btnChangeBg.setAttribute("style", "display: none");
-    btnChangeBg.setAttribute("disabled", "disabled");
-
-    var rangeGridSize = document.getElementById("range-grid-size");
-    rangeGridSize.parentNode.setAttribute("style", "display: none");
-    rangeGridSize.setAttribute("disabled", "disabled");
-
-    var btnResetPieces = document.getElementById("btn-reset-pieces");
-    btnResetPieces.parentNode.setAttribute("style", "display: none");
-    btnResetPieces.setAttribute("disabled", "disabled");
-
-    var listPartyMembers = document.getElementById("list-connected-party-members");
-    listPartyMembers.parentNode.setAttribute("style", "display: none");
-  }
-
-  _peer.on('open', function (id) {
-    console.log('My peer ID is: ' + id);
-    if (!isHost()) {
-      // say hello to host
-      var conn = _peer.connect(_host);
-      conn.on('open', function () {
-        conn.send({
-          event: EventTypes.NewPlayer,
-          player: _playerName
-        });
-      });
-    }
+const initInviteLink = function() {
+  $('#input-party-link').val(window.location.origin + window.location.pathname + `?party=${encodeURI(_host)}`);
+  $("#btn-copy-party-link").click(async function() {
+    var popover = bootstrap.Popover.getOrCreateInstance(this);
+    await navigator.clipboard.writeText($('#input-party-link').val());
+    popover.show();
   });
 
+  $("#btn-copy-party-link").on('blur focusout', function() {
+    var popover = bootstrap.Popover.getOrCreateInstance(this);
+    popover.hide();
+  });
+}
+
+const initPeerEvents = function() {
   _peer.on('connection', function (conn) {
     conn.on('data', function (data) {
       switch (data.event) {
@@ -615,8 +590,62 @@ const initParty = function () {
       }
     });
   });
+}
 
-  bootstrap.Modal.getInstance(document.getElementById('modal-party')).hide();
+const initParty = function () {
+  _peer = new Peer();
+
+  let partyId = new URLSearchParams(window.location.search).get("party");
+  if (partyId == null) {
+    // host mode
+    _peer.on('open', function (id) {
+      _host = id;
+      initInviteLink();
+      initPeerEvents();
+      bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
+    });
+  }
+  else {
+    // player mode
+    _host = partyId;
+    initInviteLink();
+
+    // hide buttons for players
+    var btnChangeBg = document.getElementById("btn-change-bg");
+    btnChangeBg.setAttribute("style", "display: none");
+    btnChangeBg.setAttribute("disabled", "disabled");
+
+    var rangeGridSize = document.getElementById("range-grid-size");
+    rangeGridSize.parentNode.setAttribute("style", "display: none");
+    rangeGridSize.setAttribute("disabled", "disabled");
+
+    var btnResetPieces = document.getElementById("btn-reset-pieces");
+    btnResetPieces.parentNode.setAttribute("style", "display: none");
+    btnResetPieces.setAttribute("disabled", "disabled");
+
+    var listPartyMembers = document.getElementById("list-connected-party-members");
+    listPartyMembers.parentNode.setAttribute("style", "display: none");
+
+    // initial peer open
+    _peer.on('open', function (id) {
+      console.log('My peer ID is: ' + id);
+      initPeerEvents();
+      var playerModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-player'));
+      playerModal.show();
+
+      $("#modal-player").on('hidden.bs.modal', function() {
+        _playerName = $("#input-player-name").val();
+  
+        var conn = _peer.connect(_host);
+        conn.on('open', function () {
+          conn.send({
+            event: EventTypes.NewPlayer,
+            player: _playerName
+          });
+        });
+      });
+    });
+  }
 }
 
 const onGridSizeInput = function () {
@@ -649,7 +678,7 @@ const onGridSizeChange = function () {
 }
 
 window.onload = function () {
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-party')).show();
+  initParty();
 
   var can = document.getElementById('canvas');
   can.width = window.innerWidth;
@@ -678,7 +707,6 @@ window.onload = function () {
   document.getElementById('btn-modal-piece-ok').addEventListener('click', () => onAddPieceSubmit());
   document.getElementById('btn-modal-bg-ok').addEventListener('click', () => onChangeBackgroundSubmit());
   document.getElementById("btn-update-piece").addEventListener("click", () => onUpdatePieceSubmit());
-  document.getElementById('btn-modal-party-ok').addEventListener('click', () => initParty());
   document.getElementById('range-grid-size').addEventListener('input', () => onGridSizeInput());
   document.getElementById('range-grid-size').addEventListener('change', () => onGridSizeChange());
   document.getElementById('btn-delete-piece').addEventListener("click", () => onDeletePieceSubmit());
@@ -707,7 +735,7 @@ window.onload = function () {
     if (draggedPiece == null) return;
     let movedPiece = { ...draggedPiece };
 
-    if (_host != null) {
+    if (!isHost()) {
       emitMovePieceEvent(_host, movedPiece);
     }
     else if (_connectedIds.length > 0) {

@@ -24,46 +24,56 @@
 </head>
 
 <body>
+    <!-- Main Scene -->
     <div id="video" class="video-background">
     </div>
-
     <canvas id="canvas" style="
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: transparent;
-    background-image: url(img/bg.png);
-    background-position: 0 0; 
-    background-repeat: no-repeat;
-    background-size: cover;"></canvas>
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: transparent;
+        background-image: url(img/bg.png);
+        background-position: 0 0; 
+        background-repeat: no-repeat;
+        background-size: cover;">
+    </canvas>
     <!-- Side Menus -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="main-menu">
         <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="main-menu-label">Menu</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <h5 class="offcanvas-title" id="main-menu-label">Settings</h5>
         </div>
         <div class="offcanvas-body">
+            <div class="form-group mb-3">
+                <label for="input-party-link">Invite Link</label>
+                <div class="input-group mb-3">
+                    <input id="input-party-link" disabled type="text" class="form-control">
+                    <button id="btn-copy-party-link" class="btn btn-secondary" type="button"
+                            data-bs-toggle="popover" data-bs-content="Copied!">Copy</button>
+                </div>
+                <div>
+                    <label for="list-group"><h3>Party Members</h3></label>
+                    <span style="display: block;" id="empty-party-msg"><em>No one's here yet</em></span>
+                    <ul class="list-group" id="list-connected-party-members"></ul>
+                </div>
+            </div>
+            <div class="form-group mb-3">
+                <button id="btn-change-bg" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#modal-bg">Set
+                    Background</button>
+            </div>
+            <div class="form-group mb-3">
+                <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#modal-piece">Add Piece</button>
+            </div>
             <div class="form-group mb-3">
                 <label for="range-grid-size" class="form-label">Grid Size: 50</span></label>
                 <input type="range" id="range-grid-size" min="1" max="200" step="1" value="50"
                     style="width: 199px !important;">
             </div>
-            <div class="form-group mb-2">
-                <button id="btn-change-bg" class="btn btn-primary" data-bs-toggle="modal"
-                    data-bs-target="#modal-bg">Set
-                    Background</button>
-            </div>
-            <div class="form-group mb-2">
-                <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal"
-                    data-bs-target="#modal-piece">Add Piece</button>
-            </div>
-            <div class="form-group mb-2">
+            <div class="form-group mb-3">
                 <button id="btn-reset-pieces" class="btn btn-danger">Reset Pieces</button>
-            </div>
-            <div class="form-group">
-                <ul id="list-connected-party-members"></ul>
             </div>
         </div>
         <div>
@@ -253,7 +263,7 @@
             </div>
         </div>
     </div>
-    <div class="modal" id="modal-party" tabindex="-1">
+    <!-- <div class="modal" id="modal-party" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -290,6 +300,23 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="btn-modal-party-ok">Accept</button>
+                </div>
+            </div>
+        </div>
+    </div> -->
+    <div class="modal" id="modal-player" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <form id="form-modal-player">
+                        <div class="mb-3">
+                            <label class="form-label" for="input-player-name">What do you go by?</label>
+                            <input id="input-player-name" class="form-control" type="text" />
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Enter</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
