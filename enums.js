@@ -8,8 +8,17 @@ const EventTypes = {
     ChangeBackground: 'change background',
     GridChange: 'grid change',
     ConnectedToHost: 'connected to host',
-    ResetPieces: 'reset pieces'
+    ResetPieces: 'reset pieces',
+    PlayerReconnected: 'player reconnected'
   }
+
+const StorageKeys = {
+  Player: 'player',
+  HostId: 'hostId',
+  BackgroundData: 'background',
+  Pieces: 'pieces',
+  Party: 'party'
+}
 
 const PieceSizes = {
     Tiny: 0.5,

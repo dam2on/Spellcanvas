@@ -106,3 +106,20 @@ input[type="range"]::-webkit-slider-thumb {
   .video-background {
     z-index: -100 !important;
   }
+
+  .drawer {
+    height: 0;
+    bottom: 0;
+    right: 2em;
+    position: fixed;
+    transition: 0.27s;
+    background: #5c636a;
+  }
+
+  .drawer-toggle {
+    box-shadow: none !important;
+    position: relative;
+    top: -2.35em;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }

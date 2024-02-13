@@ -1,15 +1,16 @@
 
-PIECES = [];
-_connectedIds = [];
-_bgImgUrl = null;
-_bgVideo = null;
+_pieces = [];
+_player = null;
+_areaCheck = null;
+_party = [];
+_bgData = null;
 _peer = null;
-_playerName = null;
 _host = null;
 _ctx = null;
 _gridSizeRatio = 0.025;
 _pieceInMenu = null;
 _canvasTextMargin = 3;
+
 
 const isHost = function () {
   return _peer.id == _host;
@@ -32,7 +33,7 @@ const shapeIntersects = function (x, y) {
   let xInts = false;
   let yInts = false;
 
-  for (var shape of this.PIECES) {
+  for (var shape of this._pieces) {
     let shapeX = shape.getX();
     let shapeY = shape.getY();
     xInts = x >= shapeX && x <= (shapeX + shape.width);
@@ -95,12 +96,7 @@ const refreshCanvas = function () {
   _ctx.textBaseline = "bottom";
   const deadImage = document.getElementById("image-dead");
 
-  for (var piece of PIECES) {
-    if (piece instanceof Area) {
-      piece.draw(_ctx);
-      continue;
-    }
-
+  for (var piece of _pieces) {
     _ctx.drawImage(piece.image, piece.getX(), piece.getY(), piece.width, piece.height);
 
     // dead overlay
@@ -128,13 +124,13 @@ const refreshCanvas = function () {
     }
 
     // add status conditions
-    if (piece.statusConditions.length > 0) {
+    if (piece.conditions.length > 0) {
       _ctx.font = fontSize.statuses + " Arial";
       const anyLetterHeight = getTextDims("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ").height;
       let statusConX = piece.getX();
       let statusConY = piece.height + piece.getY();
-      for (var i = 0; i < piece.statusConditions.length; i++) {
-        let currentConDims = getTextDims(piece.statusConditions[i]);
+      for (var i = 0; i < piece.conditions.length; i++) {
+        let currentConDims = getTextDims(piece.conditions[i]);
         if (i > 0 && (statusConX + currentConDims.width > piece.getX() + piece.width)) {
           statusConY += anyLetterHeight + (3 * _canvasTextMargin);
           statusConX = piece.getX();
@@ -144,12 +140,38 @@ const refreshCanvas = function () {
         _ctx.roundRect(statusConX, statusConY, currentConDims.width + 2 * _canvasTextMargin, anyLetterHeight + 2 * _canvasTextMargin, 3);
         _ctx.fill();
         _ctx.fillStyle = "#f9f9f9"; // off white
-        _ctx.fillText(piece.statusConditions[i], statusConX + _canvasTextMargin, statusConY + anyLetterHeight + _canvasTextMargin);
+        _ctx.fillText(piece.conditions[i], statusConX + _canvasTextMargin, statusConY + anyLetterHeight + _canvasTextMargin);
         statusConX += currentConDims.width + (3 * _canvasTextMargin);
       }
     }
   }
 
+  if (_areaCheck instanceof Area) {
+    _areaCheck.draw(_ctx);
+  }
+}
+
+const savePieces = async function() {
+  const piecesJson = [];
+  for (var piece of _pieces) {
+    let pieceCopy = { ...piece };
+    pieceCopy.image = piece.image.src;
+    piecesJson.push(pieceCopy);
+  }
+
+  await localforage.setItem(StorageKeys.Pieces, piecesJson);
+}
+
+const drawImageScaled = function (img) {
+  var canvas = _ctx.canvas;
+  var hRatio = canvas.width / img.width;
+  var vRatio = canvas.height / img.height;
+  var ratio = Math.min(hRatio, vRatio);
+  var centerShift_x = (canvas.width - img.width * ratio) / 2;
+  var centerShift_y = (canvas.height - img.height * ratio) / 2;
+  _ctx.clearRect(0, 0, canvas.width, canvas.height);
+  _ctx.drawImage(img, 0, 0, img.width, img.height,
+    centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
 }
 
 const onBackgroundTypeChange = function () {
@@ -176,8 +198,8 @@ const onChangeBackgroundSubmit = function () {
     // video
     const videoUrl = document.getElementById('input-bg-video').value;
     onChangeBackgroundEvent(videoUrl, true);
-    for (var id of _connectedIds) {
-      emitChangeBackgroundEvent(id, videoUrl, true);
+    for (var player of _party) {
+      emitChangeBackgroundEvent(player.id);
     }
   }
   else {
@@ -185,8 +207,8 @@ const onChangeBackgroundSubmit = function () {
     const bgImg = document.getElementById("input-bg-image").files[0];
     Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
       onChangeBackgroundEvent(dataUrl);
-      for (var id of _connectedIds) {
-        emitChangeBackgroundEvent(id, dataUrl);
+      for (var player of _party) {
+        emitChangeBackgroundEvent(player.id);
       }
     });
   }
@@ -194,19 +216,30 @@ const onChangeBackgroundSubmit = function () {
   bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
 }
 
-const drawImageScaled = function (img) {
-  var canvas = _ctx.canvas;
-  var hRatio = canvas.width / img.width;
-  var vRatio = canvas.height / img.height;
-  var ratio = Math.min(hRatio, vRatio);
-  var centerShift_x = (canvas.width - img.width * ratio) / 2;
-  var centerShift_y = (canvas.height - img.height * ratio) / 2;
-  _ctx.clearRect(0, 0, canvas.width, canvas.height);
-  _ctx.drawImage(img, 0, 0, img.width, img.height,
-    centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+const onDrawerToggle = function () {
+  const toolDrawer = $(".drawer");
+  if (toolDrawer.css("height") == "0px") {
+    toolDrawer.css("height", "200px");
+  }
+  else {
+    toolDrawer.css("height", 0);
+  }
 }
 
-const onAddPieceSubmit = function () {
+const onAreaToggle = function (args) {
+  if ($('#btn-area-toggle').is(":checked")) {
+    const type = $('input[name="radio-area-shape"]:checked').val();
+    if (type !== undefined) {
+      _areaCheck = new Area(type, 4);
+    }
+  }
+  else {
+    _areaCheck = null;
+    refreshCanvas();
+  }
+}
+
+const onAddPieceSubmit = async function () {
   const modalPieceInputs = document.getElementById('form-modal-piece').getElementsByTagName('input');
   const name = modalPieceInputs[0].value;
   const img = modalPieceInputs[1].files[0];
@@ -216,19 +249,21 @@ const onAddPieceSubmit = function () {
   piece.image.addEventListener('load', () => {
     _ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
     bootstrap.Modal.getInstance(document.getElementById('modal-piece')).hide();
-    newGamePieceTour();
+    initGamePieceTour();
     modalPieceInputs[0].value = null;
     modalPieceInputs[1].value = null;
+    modalPieceInputs[1].type = "text";
+    modalPieceInputs[1].type = "file";
   });
 
-  PIECES.push(piece);
+  _pieces.push(piece);
 
   if (!isHost()) {
     emitAddPieceEvent(_host, piece);
   }
-  else if (_connectedIds.length > 0) {
-    for (var id of _connectedIds) {
-      emitAddPieceEvent(id, piece);
+  else if (_party.length > 0) {
+    for (var player of _party) {
+      emitAddPieceEvent(player.id, piece);
     }
   }
 }
@@ -243,15 +278,17 @@ const onUpdatePieceSubmit = async function () {
   _pieceInMenu.name = name;
   _pieceInMenu.dead = dead;
   _pieceInMenu.updateSize(size);
-  _pieceInMenu.updateStatusConditions(statusConds);
+  _pieceInMenu.updateConditions(statusConds);
   if (image != null) {
     await _pieceInMenu.updateImage(image);
     _pieceInMenu.imageUpdated = true;
   }
 
   if (isHost()) {
-    for (var id of _connectedIds) {
-      emitUpdatePieceEvent(id, _pieceInMenu);
+    await savePieces();
+
+    for (var player of _party) {
+      emitUpdatePieceEvent(player.id, _pieceInMenu);
     }
   }
   else {
@@ -265,13 +302,13 @@ const onUpdatePieceSubmit = async function () {
 const onDeletePieceSubmit = function () {
   if (_pieceInMenu == null) return;
   if (confirm("Delete piece: " + _pieceInMenu.name + "?")) {
-    let index = PIECES.indexOf(_pieceInMenu);
-    PIECES.splice(index, 1);
+    let index = _pieces.indexOf(_pieceInMenu);
+    _pieces.splice(index, 1);
     refreshCanvas();
 
     if (isHost()) {
-      for (var id of _connectedIds) {
-        emitDeletePieceEvent(id, _pieceInMenu.id);
+      for (var player of _party) {
+        emitDeletePieceEvent(player.id, _pieceInMenu.id);
       }
     }
     else {
@@ -290,12 +327,12 @@ const onResetPiecesSubmit = function () {
 }
 
 const onResetPiecesEvent = function () {
-  PIECES = [];
+  _pieces = [];
   refreshCanvas();
 
   if (isHost()) {
-    for (var id of _connectedIds) {
-      emitResetPiecesEvent(id);
+    for (var player of _party) {
+      emitResetPiecesEvent(player.id);
     }
   }
 }
@@ -309,11 +346,13 @@ const onConnectedToHostEvent = function (host) {
   alert(`Successfully connected to ${host}'s party!`);
 }
 
-const emitChangeBackgroundEvent = function (peerId, data, isVideo = false) {
-  if (data == null) return;
+const emitChangeBackgroundEvent = function (peerId) {
+  if (_bgData == null) return;
+  const isVideo = _bgData instanceof VideoBackgrounds;
+
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
-    conn.send({ event: EventTypes.ChangeBackground, url: data, isVideo: isVideo });
+    conn.send({ event: EventTypes.ChangeBackground, url: isVideo ? _bgData.elements[0].dataset.vbg : _bgData, isVideo: isVideo});
   });
 }
 
@@ -416,7 +455,7 @@ const emitConnectedToHostEvent = function (peerId) {
   conn.on('open', function () {
     conn.send({
       event: EventTypes.ConnectedToHost,
-      host: _playerName
+      host: "host"
     });
   });
 }
@@ -425,36 +464,37 @@ const onChangeBackgroundEvent = function (data, isVideo = false) {
   if (isVideo) {
     $("#canvas").css("background-image", "");
     $("#video").attr("data-vbg", data);
-    _bgVideo = new VideoBackgrounds('[data-vbg]');
+    _bgData = new VideoBackgrounds('[data-vbg]');
   }
   else {
-    _bgImgUrl = data;
-    _bgVideo?.destroy(_bgVideo.elements[0]);
-    $("#canvas").css('background-image', `url(${_bgImgUrl})`);
+    _bgData?.destroy(_bgData.elements[0]);
+    _bgData = data;
+    $("#canvas").css('background-image', `url(${_bgData})`);
   }
 
   refreshCanvas();
 }
 
 const onAddPieceEvent = async function (piece) {
-  if (PIECES.find(p => p.id == piece.id) != null) {
+  if (_pieces.find(p => p.id == piece.id) != null) {
     // redundant piece
     return;
   }
   let newPiece = await Piece.fromObj(piece);
-  PIECES.push(newPiece);
+  _pieces.push(newPiece);
 
   if (isHost()) {
-    for (var id of _connectedIds) {
-      emitAddPieceEvent(id, newPiece);
+    await savePieces();
+    for (var player of _party) {
+      emitAddPieceEvent(player.id, newPiece);
     }
   }
 
   refreshCanvas();
 }
 
-const onMovePieceEvent = function (movedPiece) {
-  let pieceToMove = PIECES.find(p => p.id == movedPiece.id);
+const onMovePieceEvent = async function (movedPiece) {
+  let pieceToMove = _pieces.find(p => p.id == movedPiece.id);
   if (pieceToMove == null) {
     emitRequestPieceEvent(movedPiece.id);
     return;
@@ -463,8 +503,10 @@ const onMovePieceEvent = function (movedPiece) {
   pieceToMove.y = movedPiece.y;
 
   if (isHost()) {
-    for (var id of _connectedIds) {
-      emitMovePieceEvent(id, pieceToMove);
+    await savePieces();
+
+    for (var player of _party) {
+      emitMovePieceEvent(player.id, pieceToMove);
     }
   }
 
@@ -472,85 +514,89 @@ const onMovePieceEvent = function (movedPiece) {
 }
 
 const onDeletePieceEvent = function (id) {
-  let piece = PIECES.find(p => p.id == id);
+  let piece = _pieces.find(p => p.id == id);
   if (piece == null) return;
 
-  let index = PIECES.indexOf(piece);
-  PIECES.splice(index, 1);
+  let index = _pieces.indexOf(piece);
+  _pieces.splice(index, 1);
   if (isHost()) {
-    for (var peerId of _connectedIds) {
-      emitDeletePieceEvent(peerId, id);
+    for (var player of _party) {
+      emitDeletePieceEvent(player.id, id);
     }
   }
   refreshCanvas();
 }
 
 const onRequestPieceEvent = function (peerId, id) {
-  let piece = PIECES.find(p => p.id == id);
+  let piece = _pieces.find(p => p.id == id);
   emitAddPieceEvent(peerId, piece);
 }
 
 const onUpdatePieceEvent = async function (piece) {
-  let localPiece = PIECES.find(p => p.id == piece.id);
-  const index = PIECES.indexOf(localPiece);
+  let localPiece = _pieces.find(p => p.id == piece.id);
+  const index = _pieces.indexOf(localPiece);
   if (!piece.imageUpdated) {
     // use same image
     piece.image = localPiece.image;
   }
   localPiece = await Piece.fromObj(piece);
-  PIECES.splice(index, 1, localPiece);
+  _pieces.splice(index, 1, localPiece);
 
   if (isHost()) {
-    for (var id of _connectedIds) {
-      emitUpdatePieceEvent(id, localPiece);
+    for (var player of _party) {
+      emitUpdatePieceEvent(player.id, localPiece);
     }
   }
 
   refreshCanvas();
 }
 
-const onNewPlayerEvent = async function (peerId, player) {
+const onNewPlayerEvent = async function (player, isReconnect = false) {
   if (!isHost()) {
     console.warn("only host should receive new player events");
     return;
   }
 
-  if (player == null || player == "") {
-    player = "Player " + (_connectedIds.length + 1);
-  }
-  _connectedIds.push(peerId);
-  $("#empty-party-msg").hide();
-  $("#list-connected-party-members").append(
-    `<li class="list-group-item d-flex justify-content-between align-items-center">${player}
-    <i class="text-success fa-solid fa-circle fa-sm"></i>
-  </li>`)
+  player = Player.fromObj(player);
 
-  emitConnectedToHostEvent(peerId);
-  emitChangeBackgroundEvent(peerId, _bgImgUrl);
-  await emitGridSizeChangeEvent(peerId);
-  for (var piece of PIECES) {
-    emitAddPieceEvent(peerId, piece);
+  if (!isReconnect) {
+    _party.push(player);
+    $("#empty-party-msg").hide();
+    $("#list-connected-party-members").append(
+      `<li class="list-group-item d-flex justify-content-between align-items-center">${player.name}
+      <i class="text-success fa-solid fa-circle fa-sm"></i>
+    </li>`)
+  }
+
+  emitConnectedToHostEvent(player.id);
+  emitChangeBackgroundEvent(player.id);
+  await emitGridSizeChangeEvent(player.id);
+  for (var piece of _pieces) {
+    emitAddPieceEvent(player.id, piece);
   }
 }
 
 const onGridChangeEvent = function (gridSize) {
   _gridSizeRatio = gridSize;
   console.log(_gridSizeRatio);
-  for (var piece of PIECES) {
+  for (var piece of _pieces) {
     piece.updateSize();
+  }
+  if (_areaCheck instanceof Area) {
+    _areaCheck.updateSize();
   }
   refreshCanvas();
 }
 
 const initInviteLink = function () {
-  $('#input-party-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + `?party=${encodeURI(_host)}`);
-  $("#btn-copy-party-link").click(async function () {
+  $('#input-invite-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + `?host=${encodeURI(_host)}`);
+  $("#btn-copy-invite-link").click(async function () {
     var popover = bootstrap.Popover.getOrCreateInstance(this);
-    await navigator.clipboard.writeText($('#input-party-link').val());
+    await navigator.clipboard.writeText($('#input-invite-link').val());
     popover.show();
   });
 
-  $("#btn-copy-party-link").on('blur focusout', function () {
+  $("#btn-copy-invite-link").on('blur focusout', function () {
     var popover = bootstrap.Popover.getOrCreateInstance(this);
     popover.hide();
   });
@@ -579,7 +625,10 @@ const initPeerEvents = function () {
           onRequestPieceEvent(conn.peer, data.id);
           break;
         case EventTypes.NewPlayer:
-          onNewPlayerEvent(conn.peer, data.player);
+          onNewPlayerEvent(data.player);
+          break;
+        case EventTypes.PlayerReconnected:
+          onNewPlayerEvent(data.player, true);
           break;
         case EventTypes.ChangeBackground:
           onChangeBackgroundEvent(data.url, data.isVideo);
@@ -596,16 +645,65 @@ const initPeerEvents = function () {
       }
     });
   });
+
+  _peer.on('close', function(e, a) {
+    console.log('peer closed');
+    debugger;
+  });
+
+  _peer.on('disconnect', function(e, a) {
+    console.log('peer disconnect');
+    debugger;
+  });
 }
 
-const initParty = function () {
-  _peer = new Peer();
+const restoreHostSession = async function() {
+  debugger;
+  const restorePiecesPromise = new Promise(async function(resolve, reject) {
+    const val = await localforage.getItem(StorageKeys.Pieces);
+    if (val != null) {
+      for (var pieceJson of val) {
+        const piece = await Piece.fromObj(pieceJson);
+        _pieces.push(piece);
+      }
+    }
 
-  let partyId = new URLSearchParams(window.location.search).get("party");
-  if (partyId == null) {
+    resolve();
+  })
+  const restoreBackgroundPromise = new Promise(async function(resolve, reject) {
+    await localforage.getItem(StorageKeys.BackgroundData);
+    resolve();
+  });
+  const restorePartyPromise = new Promise(async function(resolve, reject) {
+    await localforage.getItem(StorageKeys.Party);
+    resolve();
+  });
+
+
+  await Promise.all([restorePartyPromise, restoreBackgroundPromise, restorePiecesPromise]).then(() => refreshCanvas());
+}
+
+const initParty = async function () {
+  let hostQueryParam = new URLSearchParams(window.location.search).get("host");
+  const existingHostId = await localforage.getItem(StorageKeys.HostId);
+
+  if (hostQueryParam == null) {
     // host mode
-    _peer.on('open', function (id) {
+
+    if (existingHostId != null) {
+      _peer = new Peer(existingHostId);
+      _peer.reconnect();
+    }
+    else {
+      _peer = new Peer();
+    }
+
+    _peer.on('open', async function (id) {
       _host = id;
+      await localforage.setItem(StorageKeys.HostId, _host);
+      if (existingHostId != null) {
+        await restoreHostSession();
+      }
       initInviteLink();
       initPeerEvents();
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
@@ -614,7 +712,17 @@ const initParty = function () {
   }
   else {
     // player mode
-    _host = partyId;
+    const existingPlayer = await localforage.getItem(StorageKeys.Player);
+    if (existingHostId != null && existingHostId == hostQueryParam && existingPlayer != null) {
+      _player = existingPlayer;
+      _peer = new Peer(_player.id);
+    }
+    else {
+      _peer = new Peer();
+      await localforage.setItem(StorageKeys.HostId, hostQueryParam);
+    }
+
+    _host = hostQueryParam;
     initInviteLink();
 
     // hide buttons for players
@@ -637,22 +745,36 @@ const initParty = function () {
     _peer.on('open', function (id) {
       console.log('My peer ID is: ' + id);
       initPeerEvents();
-      var playerModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-player'));
-      playerModal.show();
-
-      $("#modal-player").on('hidden.bs.modal', function () {
-        _playerName = $("#input-player-name").val();
-        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("main-menu")).show();
-        initMainMenuTour(false);
-
+      if (_player != null) {
         var conn = _peer.connect(_host);
         conn.on('open', function () {
           conn.send({
-            event: EventTypes.NewPlayer,
-            player: _playerName
+            event: EventTypes.PlayerReconnected,
+            player: _player
           });
         });
-      });
+      }
+      else {
+        var playerModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-player'));
+        playerModal.show();
+
+        $("#modal-player").on('hidden.bs.modal', async function () {
+          const playerName = $("#input-player-name").val();
+          bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("main-menu")).show();
+          initMainMenuTour(false);
+
+          _player = new Player(id, playerName);
+          await localforage.setItem(StorageKeys.Player, _player);
+
+          var conn = _peer.connect(_host);
+          conn.on('open', function () {
+            conn.send({
+              event: EventTypes.NewPlayer,
+              player: _player
+            });
+          });
+        });
+      }
     });
   }
 }
@@ -681,15 +803,13 @@ const onGridSizeChange = function () {
   onGridChangeEvent(newGridSize);
 
   // broadcast grid change
-  for (var id of _connectedIds) {
-    emitGridSizeChangeEvent(id);
+  for (var player of _party) {
+    emitGridSizeChangeEvent(player.id);
   }
 }
 
-
-
-window.onload = function () {
-  initParty();
+window.onload = async function () {
+  await initParty();
 
   var can = document.getElementById('canvas');
   can.width = window.innerWidth;
@@ -715,24 +835,28 @@ window.onload = function () {
     imgInput.type = "text";
     imgInput.type = "file";
   });
-  document.getElementById('btn-modal-piece-ok').addEventListener('click', () => onAddPieceSubmit());
-  document.getElementById('btn-modal-bg-ok').addEventListener('click', () => onChangeBackgroundSubmit());
-  document.getElementById("btn-update-piece").addEventListener("click", () => onUpdatePieceSubmit());
-  document.getElementById('range-grid-size').addEventListener('input', () => onGridSizeInput());
-  document.getElementById('range-grid-size').addEventListener('change', () => onGridSizeChange());
-  document.getElementById('btn-delete-piece').addEventListener("click", () => onDeletePieceSubmit());
-  document.getElementById('btn-reset-pieces').addEventListener("click", () => onResetPiecesSubmit());
-  $('input[type="radio"][name="radio-bg-type"]').on('change', () => onBackgroundTypeChange());
+  document.getElementById('btn-drawer-toggle').addEventListener('click', onDrawerToggle);
+  document.getElementById('btn-area-toggle').addEventListener('change', onAreaToggle);
+  $('input[type="radio"][name="radio-area-shape"]').on('change', onAreaToggle);
+  document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
+  document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);
+  document.getElementById("btn-update-piece").addEventListener("click", onUpdatePieceSubmit);
+  document.getElementById('range-grid-size').addEventListener('input', onGridSizeInput);
+  document.getElementById('range-grid-size').addEventListener('change', onGridSizeChange);
+  document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
+  document.getElementById('btn-reset-pieces').addEventListener("click", onResetPiecesSubmit);
+  $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
   document.getElementById("modal-piece").addEventListener('shown.bs.modal', function () {
+    // TODO: Clear image input
     bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
   });
   document.getElementById("modal-bg").addEventListener('shown.bs.modal', function () {
+    // TODO: Clear image input
     bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
   });
 
   var draggedPiece = null;
-  var drawShape = new Area(AreaType.Cone, 4);
-  // PIECES.push(drawShape);
+  // _areaCheck = new Area(AreaType.Cone, 12);
   can.addEventListener('mousedown', function (args) {
     if (args.button == 0) // left click
       draggedPiece = shapeIntersects(args.x, args.y);
@@ -743,29 +867,35 @@ window.onload = function () {
       draggedPiece.y = (args.y - parseInt(draggedPiece.height / 2)) / getCurrentCanvasHeight();
       refreshCanvas();
     }
-    else {
-      drawShape.x = args.x;
-      drawShape.y = args.y;
+    else if (_areaCheck != null) {
+      _areaCheck.x = args.x;
+      _areaCheck.y = args.y;
       refreshCanvas();
     }
   });
   can.addEventListener('wheel', function (args) {
-    if (drawShape != null) {
-      drawShape.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
+    if (_areaCheck != null) {
+      _areaCheck.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
+      refreshCanvas();
+    }
+    else if (draggedPiece != null) {
+      draggedPiece.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
       refreshCanvas();
     }
   });
-  can.addEventListener('mouseup', function () {
+  can.addEventListener('mouseup', async function () {
     if (draggedPiece == null) return;
     let movedPiece = { ...draggedPiece };
 
-    if (!isHost()) {
-      emitMovePieceEvent(_host, movedPiece);
-    }
-    else if (_connectedIds.length > 0) {
-      for (var id of _connectedIds) {
-        emitMovePieceEvent(id, movedPiece);
+    if (isHost()) {
+      for (var player of _party) {
+        emitMovePieceEvent(player.id, movedPiece);
       }
+
+      await savePieces();
+    }
+    else {
+      emitMovePieceEvent(_host, movedPiece);
     }
 
     draggedPiece = null;
@@ -781,10 +911,10 @@ window.onload = function () {
       document.getElementById("piece-menu-name").value = _pieceInMenu.name;
       document.getElementById("piece-menu-image").src = _pieceInMenu.image.src;
       document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
-      $('input[name="radio-piece-menu-size"]').prop('checked',false);
+      $('input[name="radio-piece-menu-size"]').prop('checked', false);
       $(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).prop("checked", true);
       $("#piece-menu-status-conditions").tagsinput('removeAll');
-      for (var cond of _pieceInMenu.statusConditions) {
+      for (var cond of _pieceInMenu.conditions) {
         $("#piece-menu-status-conditions").tagsinput('add', cond);
       }
     }

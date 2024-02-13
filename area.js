@@ -1,30 +1,10 @@
 class Area {
-    constructor(type, dimension) {
+    constructor(type, size) {
+        this.type = type;
         this.x = 0;
         this.y = 0;
         this.rotation = 0;
-
-        switch (type) {
-            case AreaType.Line:
-                this.width = _gridSizeRatio * getCurrentCanvasWidth() * dimension;
-                this.height = this.width / dimension;
-                break;
-            case AreaType.Circle:
-                this.width = _gridSizeRatio * getCurrentCanvasWidth() * dimension / 2;
-                break;
-            case AreaType.Cone:
-                this.width = _gridSizeRatio * getCurrentCanvasWidth() * dimension;
-                break;
-            case AreaType.Square:
-                this.width = _gridSizeRatio * getCurrentCanvasWidth() * dimension;
-                this.height = _gridSizeRatio * getCurrentCanvasWidth() * dimension;
-                break;
-            default:
-                console.warn("area type not recognized: " + type);
-                break;
-        }
-
-        this.type = type;
+        this.updateSize(size);
     }
 
     draw(ctx) {
@@ -63,5 +43,29 @@ class Area {
         }
         ctx.fillStyle = currentFillStyle;
         ctx.strokeStyle = currentStrokeStyle;
+    }
+
+    updateSize(size = undefined) {
+        if (size != undefined)
+            this.size = Number(size);
+        switch (this.type) {
+            case AreaType.Line:
+                this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+                this.height = this.width / size;
+                break;
+            case AreaType.Circle:
+                this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size / 2;
+                break;
+            case AreaType.Cone:
+                this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+                break;
+            case AreaType.Square:
+                this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+                this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+                break;
+            default:
+                console.warn("area type not recognized: " + type);
+                break;
+        }
     }
 }

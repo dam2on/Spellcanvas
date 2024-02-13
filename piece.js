@@ -6,7 +6,8 @@ class Piece {
         this.size = Number(size);
         this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
         this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
-        this.statusConditions = [];
+        this.conditions = [];
+        this.rotation = 0;
         this.x = x;
         this.y = y;
         this.dead = false;
@@ -14,12 +15,12 @@ class Piece {
         this.updateImage(img);
     }
 
-    updateStatusConditions(statusListString) {
+    updateConditions(statusListString) {
         if (statusListString == "") {
-            this.statusConditions = [];
+            this.conditions = [];
         }
         else {
-            this.statusConditions = statusListString.split(',');
+            this.conditions = statusListString.split(',');
         }
     }
 
@@ -68,8 +69,8 @@ class Piece {
     static async fromObj(obj) {
         let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         piece.dead = obj.dead;
-        if (obj.statusConditions != null) {
-            piece.statusConditions = obj.statusConditions;
+        if (obj.conditions != null) {
+            piece.conditions = obj.conditions;
         }
 
         return piece;

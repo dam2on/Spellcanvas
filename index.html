@@ -17,10 +17,12 @@
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="https://unpkg.com/youtube-background/jquery.youtube-background.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shepherd.js/11.2.0/js/shepherd.min.js" integrity="sha512-U3ol6Fd79i+gmjM7piIkZVLcdiCCc+FUuKhyjsJblTNdhm0fjUeXByy8pR60oWUhMOx4yBmuyBj0EQyQE/d5JQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js" integrity="sha512-+BMamP0e7wn39JGL8nKAZ3yAQT2dL5oaXWr4ZYlTGkKOaoXM/Yj7c4oy50Ngz5yoUutAG17flueD4F6QpTlPng==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="piece.js"></script>
+    <script type="text/javascript" src="player.js"></script>
     <script type="text/javascript" src="area.js"></script>
     <script type="text/javascript" src="tour.js"></script>
-    <script type="text/javascript" src="page.js"></script>
+    <script type="text/javascript" src="index.js"></script>
     <script type="text/javascript" src="enums.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shepherd.js/7.1.2/css/shepherd.min.css" integrity="sha512-k4DlYDc0mf1H92BOi4i/3VKmE2y5T5CuMAFGepXwYD39pmzeoJ7vIUM57esJkGtDNrWcX0V74cHPB/78415VdQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -43,6 +45,44 @@
         background-repeat: no-repeat;
         background-size: cover;">
     </canvas>
+    <div class="drawer px-2 text-center">
+        <a id="btn-drawer-toggle" href="javascript:void(0)" class="btn btn-secondary drawer-toggle"><i class="fa-solid fa-toolbox"></i></a>
+        <div class="drawer-content">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="btn-area-toggle">
+                <label class="form-check-label" for="btn-area-toggle">Enable</label>
+              </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="radio-area-shape"
+                    id="radio-area-shape-line" value="line">
+                <label class="form-check-label">
+                    Line
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="radio-area-shape"
+                    id="radio-area-shape-circle" value="circle">
+                <label class="form-check-label">
+                    Circle
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="radio-area-shape"
+                    id="radio-area-shape-square" value="square">
+                <label class="form-check-label">
+                    Square
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="radio-area-shape"
+                    id="radio-area-shape-cone" value="cone">
+                <label class="form-check-label">
+                    Cone
+                </label>
+            </div>
+
+        </div>
+    </div>
     <!-- Side Menus -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="main-menu">
         <div class="offcanvas-header">
@@ -50,10 +90,10 @@
         </div>
         <div class="offcanvas-body">
             <div class="form-group mb-3">
-                <label for="input-party-link">Invite Link</label>
+                <label for="input-invite-link">Invite Link</label>
                 <div class="input-group mb-3">
-                    <input id="input-party-link" disabled type="text" class="form-control">
-                    <button id="btn-copy-party-link" class="btn btn-secondary" type="button"
+                    <input id="input-invite-link" disabled type="text" class="form-control">
+                    <button id="btn-copy-invite-link" class="btn btn-secondary" type="button"
                             data-bs-toggle="popover" data-bs-content="Copied!">Copy</button>
                 </div>
                 <div>

@@ -1,5 +1,5 @@
-const newGamePieceTour = function() {
-    const tour = new Shepherd.Tour({
+const initGamePieceTour = function() {
+    const newGamePieceTour = new Shepherd.Tour({
         defaultStepOptions: {
             cancelIcon: {
                 enabled: true
@@ -9,7 +9,7 @@ const newGamePieceTour = function() {
         }
     });
 
-    tour.addStep({
+    newGamePieceTour.addStep({
         title: 'Game Piece',
         text: 'Click & drag to move a piece around. Alternatively, right-click to view piece settings!',
         attachTo: {
@@ -52,7 +52,7 @@ const initMainMenuTour = function (isHost = true) {
         title: 'Invite Players',
         text: 'Copy and send this link to invite players to your party!',
         attachTo: {
-            element: document.getElementById("btn-copy-party-link"),
+            element: document.getElementById("btn-copy-invite-link"),
             on: 'right'
         },
         buttons: [
