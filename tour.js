@@ -37,7 +37,9 @@ const initGamePieceTour = function() {
     newGamePieceTour.start();
 }
 
+
 const initMainMenuTour = function (isHost = true) {
+    let blinkingTimeout;
     const tour = new Shepherd.Tour({
         defaultStepOptions: {
             cancelIcon: {
@@ -76,7 +78,7 @@ const initMainMenuTour = function (isHost = true) {
     if (isHost) {
         tour.addStep({
             title: 'Current Party',
-            text: 'See who has joined your party!',
+            text: 'Click party members to view more details!',
             attachTo: {
                 element: document.getElementById("empty-party-msg"),
                 on: 'right'
@@ -100,7 +102,7 @@ const initMainMenuTour = function (isHost = true) {
         });
     
         tour.addStep({
-            title: 'Change Background',
+            title: 'Set Background',
             text: 'Upload an image or provide a YouTube video link to set as the background!',
             attachTo: {
                 element: document.getElementById("btn-change-bg"),
@@ -196,6 +198,7 @@ const initMainMenuTour = function (isHost = true) {
                 {
                     action() {
                         bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
+                        $('.menu-toggle').addClass('blinking');
                         return this.next();
                     },
                     text: 'Next'
@@ -206,16 +209,43 @@ const initMainMenuTour = function (isHost = true) {
     }
 
     tour.addStep({
-        title: 'Toggle Settings Menu',
-        text: 'Open up the settings menu!',
+        title: 'Hover Me!',
+        text: 'Open settings menu',
         attachTo: {
-            element: document.querySelector("a.menu-btn"),
+            element: document.querySelector(".menu-toggle"),
             on: 'right'
         },
         buttons: [
             {
                 action() {
                     bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).show();
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
+                    $('.menu-toggle').removeClass('blinking');
+                    return this.next();
+                },
+                text: 'Next'
+            }
+        ],
+        id: 'creating'
+    });
+
+    tour.addStep({
+        title: 'Or Click Me!',
+        text: 'Open settings menu',
+        attachTo: {
+            element: document.querySelector("a.menu-btn"),
+            on: 'top'
+        },
+        buttons: [
+            {
+                action() {
+                    $('.menu-toggle').addClass('blinking');
                     return this.back();
                 },
                 classes: 'shepherd-button-secondary',
@@ -233,8 +263,17 @@ const initMainMenuTour = function (isHost = true) {
 
 
     $('#main-menu').on('hide.bs.offcanvas', function() {
-        // cancel tour if menu is closed and not on the last step
-        if (tour.currentStep != tour.steps[tour.steps.length-1]) {
+        // cancel tour if menu is closed and not on the last step two steps
+        if (tour.steps.indexOf(tour.currentStep) < tour.steps.length-2) {
+            $('.menu-toggle').removeClass('blinking');
+            tour.cancel();
+        }
+    });
+
+    $('#main-menu').on('show.bs.offcanvas', function() {
+        // cancel tour if menu gets opened on last step
+        if (tour.steps.indexOf(tour.currentStep) < tour.steps.length-2) {
+            $('.menu-toggle').removeClass('blinking');
             tour.cancel();
         }
     });

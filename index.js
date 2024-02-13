@@ -10,6 +10,7 @@ _ctx = null;
 _gridSizeRatio = 0.025;
 _pieceInMenu = null;
 _canvasTextMargin = 3;
+_draggedPiece = null;
 
 
 const isHost = function () {
@@ -151,7 +152,7 @@ const refreshCanvas = function () {
   }
 }
 
-const savePieces = async function() {
+const savePieces = async function () {
   const piecesJson = [];
   for (var piece of _pieces) {
     let pieceCopy = { ...piece };
@@ -175,14 +176,19 @@ const drawImageScaled = function (img) {
 }
 
 const onBackgroundTypeChange = function () {
-  const bgType = Number(document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value);
-  if (bgType == 1) {
-    document.getElementById("input-bg-image").parentNode.setAttribute("style", "display: none;");
-    document.getElementById("input-bg-video").parentNode.removeAttribute("style");
-  }
-  else {
-    document.getElementById("input-bg-video").parentNode.setAttribute("style", "display: none;");
-    document.getElementById("input-bg-image").parentNode.removeAttribute("style");
+  const bgType = document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value;
+  switch (bgType) {
+    case BackgroundType.Image:
+      document.getElementById("input-bg-video").parentNode.setAttribute("style", "display: none;");
+      document.getElementById("input-bg-image").parentNode.removeAttribute("style");
+      break;
+    case BackgroundType.Video:
+      document.getElementById("input-bg-image").parentNode.setAttribute("style", "display: none;");
+      document.getElementById("input-bg-video").parentNode.removeAttribute("style");
+      break;
+    default:
+      console.warn("background type not recognized: " + bgType);
+      break;
   }
 }
 
@@ -192,25 +198,28 @@ const onChangeBackgroundSubmit = function () {
     return;
   }
 
-  const bgType = Number(document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value);
+  const bgType = document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value;
 
-  if (bgType == 1) {
-    // video
-    const videoUrl = document.getElementById('input-bg-video').value;
-    onChangeBackgroundEvent(videoUrl, true);
-    for (var player of _party) {
-      emitChangeBackgroundEvent(player.id);
-    }
-  }
-  else {
-    // image
-    const bgImg = document.getElementById("input-bg-image").files[0];
-    Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
-      onChangeBackgroundEvent(dataUrl);
+  switch (bgType) {
+    case BackgroundType.Image:
+      const bgImg = document.getElementById('input-bg-image').files[0];
+      Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
+        onChangeBackgroundEvent(dataUrl);
+        for (var player of _party) {
+          emitChangeBackgroundEvent(player.id);
+        }
+      });
+      break;
+    case BackgroundType.Video:
+      const videoUrl = document.getElementById('input-bg-video').value;
+      onChangeBackgroundEvent(videoUrl, true);
       for (var player of _party) {
         emitChangeBackgroundEvent(player.id);
       }
-    });
+      break;
+    default:
+      console.warn("background type not recognized: " + bgType);
+      break;
   }
 
   bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
@@ -352,7 +361,7 @@ const emitChangeBackgroundEvent = function (peerId) {
 
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
-    conn.send({ event: EventTypes.ChangeBackground, url: isVideo ? _bgData.elements[0].dataset.vbg : _bgData, isVideo: isVideo});
+    conn.send({ event: EventTypes.ChangeBackground, url: isVideo ? _bgData.elements[0].dataset.vbg : _bgData, isVideo: isVideo });
   });
 }
 
@@ -559,14 +568,20 @@ const onNewPlayerEvent = async function (player, isReconnect = false) {
 
   player = Player.fromObj(player);
 
+
   if (!isReconnect) {
     _party.push(player);
-    $("#empty-party-msg").hide();
-    $("#list-connected-party-members").append(
-      `<li class="list-group-item d-flex justify-content-between align-items-center">${player.name}
-      <i class="text-success fa-solid fa-circle fa-sm"></i>
-    </li>`)
   }
+
+  $("#empty-party-msg").hide();
+  $("#list-connected-party-members").clear(); /// ???
+  for (var p of _party) {
+    $("#list-connected-party-members").append(
+      `<li class="list-group-item d-flex justify-content-between align-items-center">${p.name}
+      <i class="text-success fa-solid fa-circle fa-sm"></i>
+    </li>`);
+  }
+
 
   emitConnectedToHostEvent(player.id);
   emitChangeBackgroundEvent(player.id);
@@ -646,20 +661,20 @@ const initPeerEvents = function () {
     });
   });
 
-  _peer.on('close', function(e, a) {
+  _peer.on('close', function (e, a) {
     console.log('peer closed');
     debugger;
   });
 
-  _peer.on('disconnect', function(e, a) {
+  _peer.on('disconnect', function (e, a) {
     console.log('peer disconnect');
     debugger;
   });
 }
 
-const restoreHostSession = async function() {
+const restoreHostSession = async function () {
   debugger;
-  const restorePiecesPromise = new Promise(async function(resolve, reject) {
+  const restorePiecesPromise = new Promise(async function (resolve, reject) {
     const val = await localforage.getItem(StorageKeys.Pieces);
     if (val != null) {
       for (var pieceJson of val) {
@@ -670,11 +685,11 @@ const restoreHostSession = async function() {
 
     resolve();
   })
-  const restoreBackgroundPromise = new Promise(async function(resolve, reject) {
+  const restoreBackgroundPromise = new Promise(async function (resolve, reject) {
     await localforage.getItem(StorageKeys.BackgroundData);
     resolve();
   });
-  const restorePartyPromise = new Promise(async function(resolve, reject) {
+  const restorePartyPromise = new Promise(async function (resolve, reject) {
     await localforage.getItem(StorageKeys.Party);
     resolve();
   });
@@ -808,6 +823,11 @@ const onGridSizeChange = function () {
   }
 }
 
+const onMenuToggleHover = function () {
+
+
+}
+
 window.onload = async function () {
   await initParty();
 
@@ -826,6 +846,16 @@ window.onload = async function () {
   // Observe one or multiple elements
   ro.observe(document.body);
 
+  let menuToggleTimeout;
+  $('.menu-toggle').on('mouseover', function () {
+    if (_draggedPiece == null)
+      menuToggleTimeout = setTimeout(() => {
+        bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).show();
+      }, 450);
+  });
+  $('.menu-toggle').on('mouseout', function () {
+    clearTimeout(menuToggleTimeout);
+  });
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
     _pieceInMenu = null;
@@ -840,7 +870,7 @@ window.onload = async function () {
   $('input[type="radio"][name="radio-area-shape"]').on('change', onAreaToggle);
   document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
   document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);
-  document.getElementById("btn-update-piece").addEventListener("click", onUpdatePieceSubmit);
+  document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
   document.getElementById('range-grid-size').addEventListener('input', onGridSizeInput);
   document.getElementById('range-grid-size').addEventListener('change', onGridSizeChange);
   document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
@@ -855,16 +885,15 @@ window.onload = async function () {
     bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
   });
 
-  var draggedPiece = null;
   // _areaCheck = new Area(AreaType.Cone, 12);
   can.addEventListener('mousedown', function (args) {
     if (args.button == 0) // left click
-      draggedPiece = shapeIntersects(args.x, args.y);
+      _draggedPiece = shapeIntersects(args.x, args.y);
   });
   can.addEventListener('mousemove', function (args) {
-    if (draggedPiece != null) {
-      draggedPiece.x = (args.x - parseInt(draggedPiece.width / 2)) / getCurrentCanvasWidth();
-      draggedPiece.y = (args.y - parseInt(draggedPiece.height / 2)) / getCurrentCanvasHeight();
+    if (_draggedPiece != null) {
+      _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / getCurrentCanvasWidth();
+      _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / getCurrentCanvasHeight();
       refreshCanvas();
     }
     else if (_areaCheck != null) {
@@ -878,14 +907,14 @@ window.onload = async function () {
       _areaCheck.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
       refreshCanvas();
     }
-    else if (draggedPiece != null) {
-      draggedPiece.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
+    else if (_draggedPiece != null) {
+      _draggedPiece.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
       refreshCanvas();
     }
   });
   can.addEventListener('mouseup', async function () {
-    if (draggedPiece == null) return;
-    let movedPiece = { ...draggedPiece };
+    if (_draggedPiece == null) return;
+    let movedPiece = { ..._draggedPiece };
 
     if (isHost()) {
       for (var player of _party) {
@@ -898,7 +927,7 @@ window.onload = async function () {
       emitMovePieceEvent(_host, movedPiece);
     }
 
-    draggedPiece = null;
+    _draggedPiece = null;
   });
 
   can.addEventListener('contextmenu', (e) => {

@@ -123,3 +123,27 @@ input[type="range"]::-webkit-slider-thumb {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
   }
+
+  .menu-toggle {
+    width: 2.4em;
+    position: absolute;
+    height: 100vh;
+  }
+
+  /* The animation code */
+
+
+  .blinking {
+   -webkit-animation: blinkingAnimation 1.8s infinite; /* Safari 4+ */
+    -moz-animation:    blinkingAnimation 1.8s infinite; /* Fx 5+ */
+    -o-animation:      blinkingAnimation 1.8s infinite; /* Opera 12+ */
+    animation:         blinkingAnimation 1.8s infinite; /* IE 10+, Fx 29+ */
+  }
+
+  @keyframes blinkingAnimation {
+    0% {background-color: transparent;}
+    6% {background-color: #ffeeaaB0;}
+    29% {background-color: transparent;}
+    35% {background-color: #ffeeaaB0;}
+    58% {background-color: transparent;}
+  }

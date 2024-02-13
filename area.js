@@ -10,8 +10,8 @@ class Area {
     draw(ctx) {
         const currentFillStyle = ctx.fillStyle;
         const currentStrokeStyle = ctx.strokeStyle;
-        ctx.fillStyle = "#f4ecc280";
-        ctx.strokeStyle = "#f4ecc280";
+        ctx.fillStyle = "#ffeeaaC8";
+        ctx.strokeStyle = "#ffeeaaC8";
 
         switch (this.type) {
             case AreaType.Line:
