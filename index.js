@@ -192,6 +192,27 @@ const onSpellSizeChange = function (args) {
   _spellRuler.updateSize(Number($(this).val()) / 5);
 }
 
+const onQuickAdd = function(args) {
+  const piece = new Piece(newGuid(), _peer.id, "orc", $(this).find('img')[0].src, PieceSizes.Medium);
+  piece.image.addEventListener('load', async () => {
+    piece.draw(_ctx);
+    await savePieces();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
+    initGamePieceTour(piece);
+  });
+
+  _pieces.push(piece);
+
+  if (isHost()) {
+    for (var player of _party) {
+      emitAddPieceEvent(player.id, piece);
+    }
+  }
+  else {
+    emitAddPieceEvent(_host, piece);
+  }
+}
+
 const onAddPieceSubmit = async function () {
   const modalPieceInputs = document.getElementById('form-modal-piece').getElementsByTagName('input');
   const name = modalPieceInputs[0].value;
@@ -915,6 +936,7 @@ window.onload = async function () {
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
+  $('.quick-add').on('click', onQuickAdd);
   document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange)
   document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
   document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);

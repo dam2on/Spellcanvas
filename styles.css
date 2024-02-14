@@ -6,6 +6,14 @@ body,
   color: #f7f7f7 !important;
 }
 
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-footer {
+  border-top: none;
+}
+
 input[type="range"] {
   -webkit-appearance: none;
   display: block;
