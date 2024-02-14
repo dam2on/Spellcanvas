@@ -116,12 +116,8 @@ input[type="range"]::-webkit-slider-thumb {
     background: #5c636a;
   }
 
-  .drawer-toggle {
+  .no-focus {
     box-shadow: none !important;
-    position: relative;
-    top: -2.35em;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
   }
 
   .menu-toggle {
@@ -129,9 +125,6 @@ input[type="range"]::-webkit-slider-thumb {
     position: absolute;
     height: 100vh;
   }
-
-  /* The animation code */
-
 
   .blinking {
    -webkit-animation: blinkingAnimation 1.8s infinite; /* Safari 4+ */

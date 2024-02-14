@@ -1,4 +1,21 @@
-const initGamePieceTour = function() {
+const markTutorialComplete = async function(tutorialId) {
+    let tutorial = await localforage.getItem(StorageKeys.Tutorial);
+    if (tutorial == null) {
+        tutorial = {};
+    }
+    tutorial[tutorialId] = true;
+    await localforage.setItem(StorageKeys.Tutorial, tutorial);
+}
+
+const isTutorialComplete = async function(tutorialId) {
+    return false; // remove after testing
+    const tutorial = await localforage.getItem(StorageKeys.Tutorial);
+    return !!(tutorial ?? {})[tutorialId];
+}
+
+const initGamePieceTour = async function(piece) {
+    const tourId = 'gamePieceTour';
+
     const newGamePieceTour = new Shepherd.Tour({
         defaultStepOptions: {
             cancelIcon: {
@@ -11,11 +28,11 @@ const initGamePieceTour = function() {
 
     newGamePieceTour.addStep({
         title: 'Game Piece',
-        text: 'Click & drag to move a piece around. Alternatively, right-click to view piece settings!',
-        attachTo: {
-            element: document.getElementById("canvas"),
-            on: 'right'
-        },
+        text: 'Click & drag to move a piece around. Right-click to view details!',
+        // attachTo: {
+        //     element: document.getElementById("canvas"),
+        //     on: 'right'
+        // },
         buttons: [
             {
                 action() {
@@ -26,20 +43,38 @@ const initGamePieceTour = function() {
             },
             {
                 action() {
+                    piece.click();
+                    Promise.resolve(markTutorialComplete(tourId));
                     return this.next();
                 },
-                text: 'Next'
+                text: 'OK'
             }
         ],
         id: 'creating'
     });
 
-    newGamePieceTour.start();
+    $('#piece-menu').on('show.bs.offcanvas', async function() {
+        // cancel tour if menu gets opened
+        newGamePieceTour.cancel();
+        await markTutorialComplete(tourId);
+    });
+
+    $('#canvas').on('mousedown', async function() {
+        // cancel tour if menu gets opened
+        newGamePieceTour.cancel();
+        await markTutorialComplete(tourId);
+    });
+
+    if (!await isTutorialComplete(tourId)) {
+        newGamePieceTour.start();
+    }
 }
 
 
-const initMainMenuTour = function (isHost = true) {
+const initMainMenuTour = async function (isHost = true) {
     let blinkingTimeout;
+    const tourId = 'mainMenu';
+
     const tour = new Shepherd.Tour({
         defaultStepOptions: {
             cancelIcon: {
@@ -132,6 +167,31 @@ const initMainMenuTour = function (isHost = true) {
         text: 'Create interactive game pieces to represent NPCs, Players, or other elements!',
         attachTo: {
             element: document.getElementById("btn-add-piece"),
+            on: 'right'
+        },
+        buttons: [
+            {
+                action() {
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
+                    return this.next();
+                },
+                text: 'Next'
+            }
+        ],
+        id: 'creating'
+    });
+
+    tour.addStep({
+        title: 'Area Range Checker',
+        text: 'Useful for checking spell coverage!',
+        attachTo: {
+            element: document.getElementById("area-range-checker"),
             on: 'right'
         },
         buttons: [
@@ -253,30 +313,36 @@ const initMainMenuTour = function (isHost = true) {
             },
             {
                 action() {
+                    Promise.resolve(markTutorialComplete(tourId));
                     return this.next();
                 },
-                text: 'Done!'
+                text: 'OK'
             }
         ],
         id: 'creating'
     });
 
 
-    $('#main-menu').on('hide.bs.offcanvas', function() {
+    $('#main-menu').on('hide.bs.offcanvas', async function() {
         // cancel tour if menu is closed and not on the last step two steps
         if (tour.steps.indexOf(tour.currentStep) < tour.steps.length-2) {
             $('.menu-toggle').removeClass('blinking');
             tour.cancel();
+            await markTutorialComplete(tourId);
         }
     });
 
-    $('#main-menu').on('show.bs.offcanvas', function() {
+    $('#main-menu').on('show.bs.offcanvas', async function() {
         // cancel tour if menu gets opened on last step
         if (tour.steps.indexOf(tour.currentStep) < tour.steps.length-2) {
             $('.menu-toggle').removeClass('blinking');
             tour.cancel();
+            await markTutorialComplete(tourId);
         }
     });
 
-    tour.start();
+    if (!await isTutorialComplete(tourId)) {
+        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
+        tour.start();
+    }
 }

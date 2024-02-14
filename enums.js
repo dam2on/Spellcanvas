@@ -19,10 +19,12 @@ const BackgroundType = {
 
 const StorageKeys = {
   Player: 'player',
-  HostId: 'hostId',
-  BackgroundData: 'background',
+  HostId: 'host id',
+  Background: 'background',
   Pieces: 'pieces',
-  Party: 'party'
+  Party: 'party',
+  Tutorial: 'tutorial',
+  GridRatio: 'grid ratio'
 }
 
 const PieceSizes = {

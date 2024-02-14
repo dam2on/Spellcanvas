@@ -1,17 +1,18 @@
 
 _pieces = [];
-_player = null;
-_areaCheck = null;
 _party = [];
-_bgData = null;
+_background = null;
+
+_player = null;
+_spellRuler = null;
 _peer = null;
 _host = null;
 _ctx = null;
-_gridSizeRatio = 0.025;
 _pieceInMenu = null;
-_canvasTextMargin = 3;
 _draggedPiece = null;
 
+_canvasTextMargin = 3;
+_gridSizeRatio = 0.025;
 
 const isHost = function () {
   return _peer.id == _host;
@@ -48,49 +49,6 @@ const shapeIntersects = function (x, y) {
   return null;
 }
 
-const getTextDims = function (str) {
-  const textDims = _ctx.measureText(str);
-  return {
-    width: Math.ceil(textDims.width),
-    top: textDims.actualBoundingBoxAscent,
-    bottom: textDims.actualBoundingBoxDescent,
-    height: Math.ceil(Math.abs(textDims.actualBoundingBoxAscent) + Math.abs(textDims.actualBoundingBoxDescent))
-  }
-}
-
-const getFontSizeByPiece = function (pieceSize) {
-  const fontSizes = { name: "18px", statuses: "12px" };
-  switch (pieceSize) {
-    case PieceSizes.Tiny:
-      fontSizes.name = "9px";
-      fontSizes.statuses = "9px";
-      break;
-    case PieceSizes.Small:
-      fontSizes.name = "10px";
-      fontSizes.statuses = "9px";
-      break;
-    case PieceSizes.Medium:
-      fontSizes.name = "12px";
-      fontSizes.statuses = "10px";
-      break;
-    case PieceSizes.Large:
-      fontSizes.name = "14px";
-      fontSizes.statuses = "11px";
-      break;
-    case PieceSizes.Huge:
-      fontSizes.name = "16px";
-      fontSizes.statuses = "12px";
-      break;
-    case PieceSizes.Gargantuan:
-      break;
-    default:
-      console.warn("piece size: " + pieceSize + " not recognized as standard size");
-      break;
-  }
-
-  return fontSizes;
-}
-
 const refreshCanvas = function () {
 
   _ctx.clearRect(0, 0, _ctx.canvas.width, _ctx.canvas.height);
@@ -98,57 +56,11 @@ const refreshCanvas = function () {
   const deadImage = document.getElementById("image-dead");
 
   for (var piece of _pieces) {
-    _ctx.drawImage(piece.image, piece.getX(), piece.getY(), piece.width, piece.height);
-
-    // dead overlay
-    if (piece.dead) {
-      _ctx.globalAlpha = 0.5;
-      _ctx.drawImage(deadImage, piece.getX(), piece.getY(), piece.width, piece.height);
-      _ctx.globalAlpha = 1;
-    }
-
-    const fontSize = getFontSizeByPiece(piece.size);
-
-    if (piece.name) {
-      _ctx.font = fontSize.name + " Arial";
-      let nameTextDims = getTextDims(piece.name);
-      _ctx.fillStyle = "#36454F"; // charcoal
-      _ctx.beginPath();
-      _ctx.roundRect(piece.getX() - _canvasTextMargin + (piece.width - nameTextDims.width) / 2,
-        piece.getY() - _canvasTextMargin - nameTextDims.height,
-        nameTextDims.width + 2 * _canvasTextMargin,
-        nameTextDims.height + 2 * _canvasTextMargin,
-        3);
-      _ctx.fill();
-      _ctx.fillStyle = "#f9f9f9"; // off white
-      _ctx.fillText(piece.name, piece.getX() + (piece.width - nameTextDims.width) / 2, piece.getY());
-    }
-
-    // add status conditions
-    if (piece.conditions.length > 0) {
-      _ctx.font = fontSize.statuses + " Arial";
-      const anyLetterHeight = getTextDims("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ").height;
-      let statusConX = piece.getX();
-      let statusConY = piece.height + piece.getY();
-      for (var i = 0; i < piece.conditions.length; i++) {
-        let currentConDims = getTextDims(piece.conditions[i]);
-        if (i > 0 && (statusConX + currentConDims.width > piece.getX() + piece.width)) {
-          statusConY += anyLetterHeight + (3 * _canvasTextMargin);
-          statusConX = piece.getX();
-        }
-        _ctx.fillStyle = "#880808"; // blood red
-        _ctx.beginPath();
-        _ctx.roundRect(statusConX, statusConY, currentConDims.width + 2 * _canvasTextMargin, anyLetterHeight + 2 * _canvasTextMargin, 3);
-        _ctx.fill();
-        _ctx.fillStyle = "#f9f9f9"; // off white
-        _ctx.fillText(piece.conditions[i], statusConX + _canvasTextMargin, statusConY + anyLetterHeight + _canvasTextMargin);
-        statusConX += currentConDims.width + (3 * _canvasTextMargin);
-      }
-    }
+    piece.draw(_ctx);
   }
 
-  if (_areaCheck instanceof Area) {
-    _areaCheck.draw(_ctx);
+  if (_spellRuler instanceof Area) {
+    _spellRuler.draw(_ctx);
   }
 }
 
@@ -204,7 +116,8 @@ const onChangeBackgroundSubmit = function () {
     case BackgroundType.Image:
       const bgImg = document.getElementById('input-bg-image').files[0];
       Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
-        onChangeBackgroundEvent(dataUrl);
+        _background = new Background(BackgroundType.Image, dataUrl);
+        onChangeBackgroundEvent();
         for (var player of _party) {
           emitChangeBackgroundEvent(player.id);
         }
@@ -212,7 +125,8 @@ const onChangeBackgroundSubmit = function () {
       break;
     case BackgroundType.Video:
       const videoUrl = document.getElementById('input-bg-video').value;
-      onChangeBackgroundEvent(videoUrl, true);
+      _background = new Background(BackgroundType.Video, videoUrl);
+      onChangeBackgroundEvent();
       for (var player of _party) {
         emitChangeBackgroundEvent(player.id);
       }
@@ -222,30 +136,47 @@ const onChangeBackgroundSubmit = function () {
       break;
   }
 
-  bootstrap.Modal.getInstance(document.getElementById('modal-bg')).hide();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).hide();
 }
 
-const onDrawerToggle = function () {
-  const toolDrawer = $(".drawer");
-  if (toolDrawer.css("height") == "0px") {
-    toolDrawer.css("height", "200px");
+const onSpellRulerToggle = function (args) {
+  const type = $(this).val();
+  const sizeInput = $('#input-spell-size');
+  const sizeLabel = $('label[for="input-spell-size"]');
+
+  if (_spellRuler != null && type == _spellRuler.type) {
+    _spellRuler = null;
+    sizeInput.hide();
+    sizeLabel.hide();
+    $(this).blur();
+    $(this).focusout();
   }
   else {
-    toolDrawer.css("height", 0);
-  }
-}
+    _spellRuler = new Area(type, $('#input-spell-size').val() / 5);
+    sizeInput.show();
+    sizeLabel.show();
+    switch (type) {
+      case AreaType.Circle: 
+        sizeLabel.html("ft (radius)");
+        break;
+      default:
+        sizeLabel.html("ft");
+        break;
+    }
 
-const onAreaToggle = function (args) {
-  if ($('#btn-area-toggle').is(":checked")) {
-    const type = $('input[name="radio-area-shape"]:checked').val();
-    if (type !== undefined) {
-      _areaCheck = new Area(type, 4);
+    for(var at of $('#spell-ruler').find('input.btn-check')) {
+      if (at != this) {
+        $(at).prop('checked', false);
+      }
     }
   }
-  else {
-    _areaCheck = null;
-    refreshCanvas();
-  }
+}
+
+const onSpellSizeChange = function(args) {
+  if (_spellRuler == null) return;
+
+  // a typical tabletop grid is 5 ft
+  _spellRuler.updateSize(Number($(this).val()) / 5);
 }
 
 const onAddPieceSubmit = async function () {
@@ -256,9 +187,9 @@ const onAddPieceSubmit = async function () {
 
   const piece = new Piece(newGuid(), _peer.id, name, img, size);
   piece.image.addEventListener('load', () => {
-    _ctx.drawImage(piece.image, piece.x, piece.y, piece.width, piece.height);
-    bootstrap.Modal.getInstance(document.getElementById('modal-piece')).hide();
-    initGamePieceTour();
+    piece.draw(_ctx);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
+    initGamePieceTour(piece);
     modalPieceInputs[0].value = null;
     modalPieceInputs[1].value = null;
     modalPieceInputs[1].type = "text";
@@ -305,7 +236,7 @@ const onUpdatePieceSubmit = async function () {
   }
 
   refreshCanvas();
-  bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
+  bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
 }
 
 const onDeletePieceSubmit = function () {
@@ -324,7 +255,7 @@ const onDeletePieceSubmit = function () {
       emitDeletePieceEvent(_host, _pieceInMenu.id);
     }
 
-    bootstrap.Offcanvas.getInstance(document.getElementById('piece-menu')).hide();
+    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
   }
 }
 
@@ -356,15 +287,13 @@ const onConnectedToHostEvent = function (host) {
 }
 
 const emitChangeBackgroundEvent = function (peerId) {
-  if (_bgData == null) return;
-  const isVideo = _bgData instanceof VideoBackgrounds;
+  if (_background == null) return;
 
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
-    conn.send({ event: EventTypes.ChangeBackground, url: isVideo ? _bgData.elements[0].dataset.vbg : _bgData, isVideo: isVideo });
+    conn.send({ event: EventTypes.ChangeBackground, background: _background });
   });
 }
-
 
 const emitAddPieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
@@ -469,19 +398,16 @@ const emitConnectedToHostEvent = function (peerId) {
   });
 }
 
-const onChangeBackgroundEvent = function (data, isVideo = false) {
-  if (isVideo) {
-    $("#canvas").css("background-image", "");
-    $("#video").attr("data-vbg", data);
-    _bgData = new VideoBackgrounds('[data-vbg]');
-  }
-  else {
-    _bgData?.destroy(_bgData.elements[0]);
-    _bgData = data;
-    $("#canvas").css('background-image', `url(${_bgData})`);
+const onChangeBackgroundEvent = async function (obj = null) {
+  if (obj != null) {
+    _background = Background.fromObj(obj);
   }
 
-  refreshCanvas();
+  _background.apply();
+
+  if (isHost()) {
+    await localforage.setItem(StorageKeys.Background, _background);
+  }
 }
 
 const onAddPieceEvent = async function (piece) {
@@ -493,10 +419,10 @@ const onAddPieceEvent = async function (piece) {
   _pieces.push(newPiece);
 
   if (isHost()) {
-    await savePieces();
     for (var player of _party) {
       emitAddPieceEvent(player.id, newPiece);
     }
+    await savePieces();
   }
 
   refreshCanvas();
@@ -512,11 +438,11 @@ const onMovePieceEvent = async function (movedPiece) {
   pieceToMove.y = movedPiece.y;
 
   if (isHost()) {
-    await savePieces();
-
     for (var player of _party) {
       emitMovePieceEvent(player.id, pieceToMove);
     }
+
+    await savePieces();
   }
 
   refreshCanvas();
@@ -568,20 +494,19 @@ const onNewPlayerEvent = async function (player, isReconnect = false) {
 
   player = Player.fromObj(player);
 
-
   if (!isReconnect) {
     _party.push(player);
+    await localforage.setItem(StorageKeys.Party, _party);
   }
 
   $("#empty-party-msg").hide();
-  $("#list-connected-party-members").clear(); /// ???
+  $("#list-connected-party-members").empty();
   for (var p of _party) {
     $("#list-connected-party-members").append(
-      `<li class="list-group-item d-flex justify-content-between align-items-center">${p.name}
+      `<li class="list-group-item d-flex justify-content-between align-items-center" data-player-id=${p.id}>${p.name}
       <i class="text-success fa-solid fa-circle fa-sm"></i>
     </li>`);
   }
-
 
   emitConnectedToHostEvent(player.id);
   emitChangeBackgroundEvent(player.id);
@@ -591,14 +516,16 @@ const onNewPlayerEvent = async function (player, isReconnect = false) {
   }
 }
 
-const onGridChangeEvent = function (gridSize) {
+const onGridChangeEvent = async function (gridSize) {
   _gridSizeRatio = gridSize;
-  console.log(_gridSizeRatio);
+  if (isHost()) {
+    await localforage.setItem(StorageKeys.GridRatio, _gridSizeRatio);
+  }
   for (var piece of _pieces) {
     piece.updateSize();
   }
-  if (_areaCheck instanceof Area) {
-    _areaCheck.updateSize();
+  if (_spellRuler instanceof Area) {
+    _spellRuler.updateSize();
   }
   refreshCanvas();
 }
@@ -618,6 +545,14 @@ const initInviteLink = function () {
 }
 
 const initPeerEvents = function () {
+  _peer.on('disconnected', function(a, e, i) {
+    debugger;
+  });
+
+  _peer.on('error', function(a, e, i) {
+    debugger;
+  });
+
   _peer.on('connection', function (conn) {
     conn.on('data', function (data) {
       switch (data.event) {
@@ -646,7 +581,7 @@ const initPeerEvents = function () {
           onNewPlayerEvent(data.player, true);
           break;
         case EventTypes.ChangeBackground:
-          onChangeBackgroundEvent(data.url, data.isVideo);
+          onChangeBackgroundEvent(data.background);
           break;
         case EventTypes.GridChange:
           onGridChangeEvent(data.gridSize);
@@ -673,29 +608,45 @@ const initPeerEvents = function () {
 }
 
 const restoreHostSession = async function () {
-  debugger;
   const restorePiecesPromise = new Promise(async function (resolve, reject) {
     const val = await localforage.getItem(StorageKeys.Pieces);
     if (val != null) {
-      for (var pieceJson of val) {
-        const piece = await Piece.fromObj(pieceJson);
-        _pieces.push(piece);
+      for (var peice of val) {
+        _pieces.push(await Piece.fromObj(peice));
       }
     }
 
     resolve();
-  })
+  });
+  const restoreGridPromise = new Promise(async function (resolve, reject) {
+    const val = await localforage.getItem(StorageKeys.GridRatio);
+    if (val != null) {
+      _gridSizeRatio = val;
+      const pixelVal = _gridSizeRatio * getCurrentCanvasWidth();
+      $('#range-grid-size').val(pixelVal);
+      $('label[for="range-grid-size"]').html(`Grid Size: ${pixelVal}`);
+    }
+    resolve();
+  });
   const restoreBackgroundPromise = new Promise(async function (resolve, reject) {
-    await localforage.getItem(StorageKeys.BackgroundData);
+    const val = await localforage.getItem(StorageKeys.Background);
+    if (val != null) {
+      await onChangeBackgroundEvent(val);
+    }
     resolve();
   });
   const restorePartyPromise = new Promise(async function (resolve, reject) {
-    await localforage.getItem(StorageKeys.Party);
+    const val = await localforage.getItem(StorageKeys.Party);
+    if (val != null) {
+      for (var player of val) {
+        _party.push(Player.fromObj(player));
+      }
+    }
     resolve();
   });
 
 
-  await Promise.all([restorePartyPromise, restoreBackgroundPromise, restorePiecesPromise]).then(() => refreshCanvas());
+  await Promise.all([restorePartyPromise, restoreBackgroundPromise, restorePiecesPromise, restoreGridPromise]).then(() => refreshCanvas());
 }
 
 const initParty = async function () {
@@ -721,7 +672,6 @@ const initParty = async function () {
       }
       initInviteLink();
       initPeerEvents();
-      bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
       initMainMenuTour();
     });
   }
@@ -775,7 +725,6 @@ const initParty = async function () {
 
         $("#modal-player").on('hidden.bs.modal', async function () {
           const playerName = $("#input-player-name").val();
-          bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("main-menu")).show();
           initMainMenuTour(false);
 
           _player = new Player(id, playerName);
@@ -800,7 +749,7 @@ const onGridSizeInput = function () {
   const label = document.querySelector('label[for="range-grid-size"]');
   const value = input.value;
 
-  label.innerHTML = `Grid Size: ${value}</span>`
+  label.innerHTML = `Grid Size: ${value}`
 }
 
 const getCurrentCanvasWidth = function () {
@@ -821,11 +770,6 @@ const onGridSizeChange = function () {
   for (var player of _party) {
     emitGridSizeChangeEvent(player.id);
   }
-}
-
-const onMenuToggleHover = function () {
-
-
 }
 
 window.onload = async function () {
@@ -850,7 +794,7 @@ window.onload = async function () {
   $('.menu-toggle').on('mouseover', function () {
     if (_draggedPiece == null)
       menuToggleTimeout = setTimeout(() => {
-        bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).show();
+        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
       }, 450);
   });
   $('.menu-toggle').on('mouseout', function () {
@@ -865,9 +809,9 @@ window.onload = async function () {
     imgInput.type = "text";
     imgInput.type = "file";
   });
-  document.getElementById('btn-drawer-toggle').addEventListener('click', onDrawerToggle);
-  document.getElementById('btn-area-toggle').addEventListener('change', onAreaToggle);
-  $('input[type="radio"][name="radio-area-shape"]').on('change', onAreaToggle);
+
+  $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
+  $('#input-spell-size').on('change', onSpellSizeChange);
   document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
   document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
@@ -878,33 +822,34 @@ window.onload = async function () {
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
   document.getElementById("modal-piece").addEventListener('shown.bs.modal', function () {
     // TODO: Clear image input
-    bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
+    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   });
   document.getElementById("modal-bg").addEventListener('shown.bs.modal', function () {
     // TODO: Clear image input
-    bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
+    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   });
 
-  // _areaCheck = new Area(AreaType.Cone, 12);
+  // _spellRuler = new Area(AreaType.Cone, 12);
   can.addEventListener('mousedown', function (args) {
     if (args.button == 0) // left click
       _draggedPiece = shapeIntersects(args.x, args.y);
   });
   can.addEventListener('mousemove', function (args) {
     if (_draggedPiece != null) {
+      $('.menu-toggle').hide(); // disable invisible menu toggle
       _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / getCurrentCanvasWidth();
       _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / getCurrentCanvasHeight();
       refreshCanvas();
     }
-    else if (_areaCheck != null) {
-      _areaCheck.x = args.x;
-      _areaCheck.y = args.y;
+    else if (_spellRuler != null) {
+      _spellRuler.x = args.x;
+      _spellRuler.y = args.y;
       refreshCanvas();
     }
   });
   can.addEventListener('wheel', function (args) {
-    if (_areaCheck != null) {
-      _areaCheck.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
+    if (_spellRuler != null) {
+      _spellRuler.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
       refreshCanvas();
     }
     else if (_draggedPiece != null) {
@@ -913,6 +858,8 @@ window.onload = async function () {
     }
   });
   can.addEventListener('mouseup', async function () {
+    $('.menu-toggle').show(); // enable invisible menu toggle
+
     if (_draggedPiece == null) return;
     let movedPiece = { ..._draggedPiece };
 

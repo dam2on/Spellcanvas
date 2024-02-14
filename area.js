@@ -15,11 +15,19 @@ class Area {
 
         switch (this.type) {
             case AreaType.Line:
-                ctx.fillRect(this.x, this.y, this.width, this.height);
+                // is actually a rectangle with a thickness of 1 grid, center is middle of short side
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + this.height * -Math.sin(this.rotation) / 2, this.y + this.height * Math.cos(this.rotation) / 2);
+                ctx.lineTo(this.x + this.height * -Math.sin(this.rotation) / 2 + this.width * Math.cos(this.rotation), this.y + this.height * Math.cos(this.rotation) / 2 + this.width * Math.sin(this.rotation));
+                ctx.lineTo(this.x - this.height * -Math.sin(this.rotation) / 2 + this.width * Math.cos(this.rotation), this.y - this.height * Math.cos(this.rotation) / 2 + this.width * Math.sin(this.rotation));
+                ctx.lineTo(this.x - this.height * -Math.sin(this.rotation) / 2, this.y - this.height * Math.cos(this.rotation) / 2);
+                ctx.lineTo(this.x, this.y);
+                ctx.fill();
                 break;
             case AreaType.Circle:
                 const circle = new Path2D();
-                circle.arc(this.x, this.y, this.width, 0, 2 * Math.PI);
+                circle.arc(this.x, this.y, this.width * 2, 0, 2 * Math.PI);
                 ctx.fill(circle);
                 break;
             case AreaType.Cone:
