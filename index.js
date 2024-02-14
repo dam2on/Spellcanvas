@@ -679,6 +679,7 @@ const initPeerEvents = function () {
           break;
         case EventTypes.PermissionsUpdate:
           onPermissionsUpdateEvent(data.permissions);
+          break;
         default:
           console.log("unrecognized event type: " + data.event);
           break;
