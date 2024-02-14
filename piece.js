@@ -130,6 +130,7 @@ class Piece {
 
 
     draw(ctx) {
+        const deadImage = document.getElementById("image-dead");
         ctx.drawImage(this.image, this.getX(), this.getY(), this.width, this.height);
 
         // dead overlay

@@ -120,6 +120,10 @@ input[type="range"]::-webkit-slider-thumb {
     box-shadow: none !important;
   }
 
+  .grid-indicator {
+    border: 1px solid;
+  }
+
   .menu-toggle {
     width: 2.4em;
     position: absolute;

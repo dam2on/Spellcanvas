@@ -53,7 +53,6 @@ const refreshCanvas = function () {
 
   _ctx.clearRect(0, 0, _ctx.canvas.width, _ctx.canvas.height);
   _ctx.textBaseline = "bottom";
-  const deadImage = document.getElementById("image-dead");
 
   for (var piece of _pieces) {
     piece.draw(_ctx);
@@ -263,10 +262,11 @@ const onDeletePieceSubmit = function () {
   }
 }
 
-const onResetPiecesSubmit = function () {
+const onResetPiecesSubmit = async function () {
   if (!isHost()) return;
   if (confirm("Are you sure you want to remove all pieces from the board?")) {
     onResetPiecesEvent();
+    await savePieces();
   }
 }
 
@@ -628,7 +628,7 @@ const restoreHostSession = async function () {
       _gridSizeRatio = val;
       const pixelVal = _gridSizeRatio * getCurrentCanvasWidth();
       $('#range-grid-size').val(pixelVal);
-      $('label[for="range-grid-size"]').html(`Grid Size: ${pixelVal}`);
+      $('label[for="range-grid-size"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
     }
     resolve();
   });
@@ -753,7 +753,10 @@ const onGridSizeInput = function () {
   const label = document.querySelector('label[for="range-grid-size"]');
   const value = input.value;
 
-  label.innerHTML = `Grid Size: ${value}`
+  $('.grid-indicator').show();
+  $('.grid-indicator').css('width', value + 'px');
+  $('.grid-indicator').css('height', value + 'px');
+  label.innerHTML = `<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${value}`
 }
 
 const getCurrentCanvasWidth = function () {
@@ -766,6 +769,7 @@ const getCurrentCanvasHeight = function () {
 
 const onGridSizeChange = function () {
   if (!isHost()) return;
+  $('.grid-indicator').hide();
   const input = document.getElementById('range-grid-size');
   let newGridSize = Number(input.value) / getCurrentCanvasWidth();
   onGridChangeEvent(newGridSize);
@@ -807,7 +811,10 @@ window.onload = async function () {
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
     _pieceInMenu = null;
-    $("#piece-menu-status-conditions").tagsinput("removeAll");
+    const conditionsInput = $("#piece-menu-status-conditions");
+    for (var tag of conditionsInput.val().split(',')) {
+      conditionsInput.removeTag(tag);
+    }
     const imgInput = document.getElementById("piece-menu-image-input");
     imgInput.value = null;
     imgInput.type = "text";
@@ -816,6 +823,11 @@ window.onload = async function () {
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
+  $('#piece-menu-status-conditions').tagsInput({
+    defaultText: '',
+    width: '100%',
+    height: '4em'
+  });
   document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
   document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
@@ -893,9 +905,12 @@ window.onload = async function () {
       document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
       $('input[name="radio-piece-menu-size"]').prop('checked', false);
       $(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).prop("checked", true);
-      $("#piece-menu-status-conditions").tagsinput('removeAll');
+      const conditionsInput = $("#piece-menu-status-conditions");
+      for (var tag of conditionsInput.val().split(',')) {
+        conditionsInput.removeTag(tag);
+      }
       for (var cond of _pieceInMenu.conditions) {
-        $("#piece-menu-status-conditions").tagsinput('add', cond);
+        conditionsInput.addTag(cond);
       }
     }
   });
