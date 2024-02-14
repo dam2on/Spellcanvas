@@ -140,18 +140,17 @@
     </div>
     <div class="offcanvas offcanvas-end" tabindex="-1" id="piece-menu" aria-labelledby="piece-menu-header">
         <div class="offcanvas-body">
-            <div class="form-group">
-                <label>Name</label>
-                <input id="piece-menu-name" class="form-control" />
-            </div>
             <div class="form-group text-center my-2">
                 <img id="piece-menu-image" style="width: 65%;" />
                 <div class="text-center mt-2">
                     <input id="piece-menu-image-input" type="file" />
                 </div>
             </div>
-
-            <div class="form-group">
+            <div class="form-group mb-3">
+                <label>Name</label>
+                <input id="piece-menu-name" class="form-control" />
+            </div>
+            <div class="form-group mb-3">
                 <label>Size</label>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.5">
@@ -194,14 +193,14 @@
                 <label>Status Conditions</label>
                 <input class="form-control" id="piece-menu-status-conditions" data-role="tagsinput" />
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label for="#piece-menu-dead">Dead?</label>
                 <input class="form-check-input" type="checkbox" value="false" id="piece-menu-dead">
             </div>
-            <div class="form-group">
+
                 <button id="btn-update-piece" class="btn btn-primary">Save</button>
                 <button id="btn-delete-piece" class="btn btn-danger">Delete</button>
-            </div>
+
         </div>
     </div>
     <!-- Modals -->

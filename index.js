@@ -186,8 +186,10 @@ const onAddPieceSubmit = async function () {
   const size = document.querySelector('input[name="radio-piece-size"]:checked').value;
 
   const piece = new Piece(newGuid(), _peer.id, name, img, size);
-  piece.image.addEventListener('load', () => {
+  piece.image.addEventListener('load', async () => {
     piece.draw(_ctx);
+    await savePieces();
+
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
     initGamePieceTour(piece);
     modalPieceInputs[0].value = null;
@@ -198,13 +200,13 @@ const onAddPieceSubmit = async function () {
 
   _pieces.push(piece);
 
-  if (!isHost()) {
-    emitAddPieceEvent(_host, piece);
-  }
-  else if (_party.length > 0) {
+  if (isHost()) {
     for (var player of _party) {
       emitAddPieceEvent(player.id, piece);
     }
+  }
+  else {
+    emitAddPieceEvent(_host, piece);
   }
 }
 
