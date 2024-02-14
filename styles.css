@@ -79,7 +79,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .grid-indicator {
-  border: 1px solid;
+  border: 1px dashed;
 }
 
 .menu-toggle {

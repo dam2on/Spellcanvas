@@ -9,7 +9,8 @@ const EventTypes = {
   GridChange: 'grid change',
   ConnectedToHost: 'connected to host',
   ResetPieces: 'reset pieces',
-  PlayerReconnected: 'player reconnected'
+  PlayerReconnected: 'player reconnected',
+  PermissionsUpdate: 'permissions update'
 }
 
 const BackgroundType = {
@@ -24,7 +25,8 @@ const StorageKeys = {
   Pieces: 'pieces',
   Party: 'party',
   Tutorial: 'tutorial',
-  GridRatio: 'grid ratio'
+  GridRatio: 'grid ratio',
+  Permissions: 'permissions'
 }
 
 const PieceSizes = {
@@ -41,4 +43,8 @@ const AreaType = {
   Circle: 'circle',
   Cone: 'cone',
   Square: 'square'
+}
+
+const PermissionType = {
+  OnlyMoveOwnedPieces: 'only moved owned pieces'
 }
