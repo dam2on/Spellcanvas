@@ -1,36 +1,41 @@
-html, body, .offcanvas, .modal-content {
+html,
+body,
+.offcanvas,
+.modal-content {
   background-color: #36454F !important;
   color: #f7f7f7 !important;
 }
 
 input[type="range"] {
-    -webkit-appearance: none;
-    display: block;
-    appearance: none;
-    background: transparent;
-    cursor: pointer;
+  -webkit-appearance: none;
+  display: block;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-    background: #f7f7f7;
-    border-radius: 0.33rem;
-    height: 0.25rem;
+  background: #f7f7f7;
+  border-radius: 0.33rem;
+  height: 0.25rem;
 }
 
 input[type="range"]::-moz-range-track {
-    background: #f7f7f7;
-    border-radius: 0.33rem;
-    height: 0.25rem;
+  background: #f7f7f7;
+  border-radius: 0.33rem;
+  height: 0.25rem;
 }
 
 input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; /* Override default look */
-    appearance: none;
-    margin-top: -6px; /* Centers thumb on the track */
-    background-color: #f7f7f7;
-    border-radius: 0.25rem;
-    height: 1rem;
-    width: 0.33rem;    
+  -webkit-appearance: none;
+  /* Override default look */
+  appearance: none;
+  margin-top: -6px;
+  /* Centers thumb on the track */
+  background-color: #f7f7f7;
+  border-radius: 0.25rem;
+  height: 1rem;
+  width: 0.33rem;
 }
 
 #input-party-link {
@@ -39,108 +44,79 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .offcanvas {
-    visibility: visible !important;
+  visibility: visible !important;
 }
 
 .menu-btn {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
-.bootstrap-tagsinput {
-    background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-    display: inline-block;
-    padding: 4px 6px;
-    color: #555;
-    vertical-align: middle;
-    border-radius: 4px;
-    max-width: 100%;
-    line-height: 22px;
-    cursor: text;
-  }
-  .bootstrap-tagsinput input {
-    border: none;
-    box-shadow: none;
-    outline: none;
+.bootstrap-tagsinput .tag {
+  font-size: 0.95em;
+  color: #f9f9f9;
+  background-color: #880808;
+  border-radius: 0.2em;
+  padding: 0 2px 0 2px;
+}
+
+.video-background {
+  z-index: -100 !important;
+}
+
+.drawer {
+  height: 0;
+  bottom: 0;
+  right: 2em;
+  position: fixed;
+  transition: 0.27s;
+  background: #5c636a;
+}
+
+.no-focus {
+  box-shadow: none !important;
+}
+
+.grid-indicator {
+  border: 1px solid;
+}
+
+.menu-toggle {
+  width: 2.4em;
+  position: absolute;
+  height: 100vh;
+}
+
+.blinking {
+  -webkit-animation: blinkingAnimation 1.8s infinite;
+  /* Safari 4+ */
+  -moz-animation: blinkingAnimation 1.8s infinite;
+  /* Fx 5+ */
+  -o-animation: blinkingAnimation 1.8s infinite;
+  /* Opera 12+ */
+  animation: blinkingAnimation 1.8s infinite;
+  /* IE 10+, Fx 29+ */
+}
+
+@keyframes blinkingAnimation {
+  0% {
     background-color: transparent;
-    padding: 0 6px;
-    margin: 0;
-    width: auto;
-    max-width: inherit;
-  }
-  .bootstrap-tagsinput.form-control input::-moz-placeholder {
-    color: #777;
-    opacity: 1;
-  }
-  .bootstrap-tagsinput.form-control input:-ms-input-placeholder {
-    color: #777;
-  }
-  .bootstrap-tagsinput.form-control input::-webkit-input-placeholder {
-    color: #777;
-  }
-  .bootstrap-tagsinput input:focus {
-    border: none;
-    box-shadow: none;
-  }
-  .bootstrap-tagsinput .tag {
-    margin-right: 2px;
-  }
-  .bootstrap-tagsinput .tag [data-role="remove"] {
-    margin-left: 8px;
-    cursor: pointer;
-  }
-  .bootstrap-tagsinput .tag [data-role="remove"]:after {
-    content: "x";
-    padding: 0px 2px;
-  }
-  .bootstrap-tagsinput .tag [data-role="remove"]:hover {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-  .bootstrap-tagsinput .tag [data-role="remove"]:hover:active {
-    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
   }
 
-  .video-background {
-    z-index: -100 !important;
+  6% {
+    background-color: #ffeeaaB0;
   }
 
-  .drawer {
-    height: 0;
-    bottom: 0;
-    right: 2em;
-    position: fixed;
-    transition: 0.27s;
-    background: #5c636a;
+  29% {
+    background-color: transparent;
   }
 
-  .no-focus {
-    box-shadow: none !important;
+  35% {
+    background-color: #ffeeaaB0;
   }
 
-  .grid-indicator {
-    border: 1px solid;
+  58% {
+    background-color: transparent;
   }
-
-  .menu-toggle {
-    width: 2.4em;
-    position: absolute;
-    height: 100vh;
-  }
-
-  .blinking {
-   -webkit-animation: blinkingAnimation 1.8s infinite; /* Safari 4+ */
-    -moz-animation:    blinkingAnimation 1.8s infinite; /* Fx 5+ */
-    -o-animation:      blinkingAnimation 1.8s infinite; /* Opera 12+ */
-    animation:         blinkingAnimation 1.8s infinite; /* IE 10+, Fx 29+ */
-  }
-
-  @keyframes blinkingAnimation {
-    0% {background-color: transparent;}
-    6% {background-color: #ffeeaaB0;}
-    29% {background-color: transparent;}
-    35% {background-color: #ffeeaaB0;}
-    58% {background-color: transparent;}
-  }
+}

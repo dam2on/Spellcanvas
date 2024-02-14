@@ -414,11 +414,17 @@ const onChangeBackgroundEvent = async function (obj = null) {
   }
 }
 
-const onAddPieceEvent = async function (piece) {
+const updatePlayerDetails = async function (playerId, piece) {
+  $(`#player-${playerId}`).html($(`#player-${playerId}`).html() + `<img title=${piece.name} style="height: 50px" src=${piece.image}></img>`);
+}
+
+const onAddPieceEvent = async function (peerId, piece) {
   if (_pieces.find(p => p.id == piece.id) != null) {
     // redundant piece
     return;
   }
+
+  updatePlayerDetails(peerId, piece);
   let newPiece = await Piece.fromObj(piece);
   _pieces.push(newPiece);
 
@@ -507,7 +513,7 @@ const onNewPlayerEvent = async function (player, isReconnect = false) {
   $("#list-connected-party-members").empty();
   for (var p of _party) {
     $("#list-connected-party-members").append(
-      `<li class="list-group-item d-flex justify-content-between align-items-center" data-player-id=${p.id}>${p.name}
+      `<li class="list-group-item d-flex justify-content-between align-items-center" id=player-${p.id}>${p.name}
       <i class="text-success fa-solid fa-circle fa-sm"></i>
     </li>`);
   }
@@ -561,7 +567,7 @@ const initPeerEvents = function () {
     conn.on('data', function (data) {
       switch (data.event) {
         case EventTypes.AddPiece:
-          onAddPieceEvent(data.piece);
+          onAddPieceEvent(conn.peer, data.piece);
           break;
         case EventTypes.MovePiece:
           onMovePieceEvent(data.movedPiece);
@@ -611,6 +617,14 @@ const initPeerEvents = function () {
   });
 }
 
+const restorePlayerPieces = function(player) {
+  for (var piece of _pieces) {
+    if (piece.owner == player.id) {
+      updatePlayerDetails(player.id, piece);
+    }
+  }
+}
+
 const restoreHostSession = async function () {
   const restorePiecesPromise = new Promise(async function (resolve, reject) {
     const val = await localforage.getItem(StorageKeys.Pieces);
@@ -644,6 +658,7 @@ const restoreHostSession = async function () {
     if (val != null) {
       for (var player of val) {
         _party.push(Player.fromObj(player));
+        restorePlayerPieces(player);
       }
     }
     resolve();
@@ -811,10 +826,7 @@ window.onload = async function () {
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
     _pieceInMenu = null;
-    const conditionsInput = $("#piece-menu-status-conditions");
-    for (var tag of conditionsInput.val().split(',')) {
-      conditionsInput.removeTag(tag);
-    }
+    $("#piece-menu-status-conditions").tagsinput('removeAll')
     const imgInput = document.getElementById("piece-menu-image-input");
     imgInput.value = null;
     imgInput.type = "text";
@@ -823,11 +835,6 @@ window.onload = async function () {
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
-  $('#piece-menu-status-conditions').tagsInput({
-    defaultText: '',
-    width: '100%',
-    height: '4em'
-  });
   document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
   document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
@@ -905,12 +912,9 @@ window.onload = async function () {
       document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
       $('input[name="radio-piece-menu-size"]').prop('checked', false);
       $(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).prop("checked", true);
-      const conditionsInput = $("#piece-menu-status-conditions");
-      for (var tag of conditionsInput.val().split(',')) {
-        conditionsInput.removeTag(tag);
-      }
+      $("#piece-menu-status-conditions").tagsinput('removeAll')
       for (var cond of _pieceInMenu.conditions) {
-        conditionsInput.addTag(cond);
+        $("#piece-menu-status-conditions").tagsinput('add', cond);
       }
     }
   });
