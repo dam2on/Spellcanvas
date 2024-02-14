@@ -936,7 +936,7 @@ window.onload = async function () {
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
-  $('.quick-add').on('click', onQuickAdd);
+  // $('.quick-add').on('click', onQuickAdd);
   document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange)
   document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
   document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);
