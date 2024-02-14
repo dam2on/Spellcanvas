@@ -150,6 +150,9 @@ const onSpellRulerToggle = function (args) {
     sizeLabel.hide();
     $(this).blur();
     $(this).focusout();
+
+    // need to clear out existing image
+    refreshCanvas();
   }
   else {
     _spellRuler = new Area(type, $('#input-spell-size').val() / 5);
@@ -189,7 +192,6 @@ const onAddPieceSubmit = async function () {
   piece.image.addEventListener('load', async () => {
     piece.draw(_ctx);
     await savePieces();
-
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
     initGamePieceTour(piece);
     modalPieceInputs[0].value = null;
