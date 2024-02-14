@@ -32,13 +32,6 @@ const initGamePieceTour = async function (piece) {
         buttons: [
             {
                 action() {
-                    return this.back();
-                },
-                classes: 'shepherd-button-secondary',
-                text: 'Back'
-            },
-            {
-                action() {
                     menuState = 'open';
                     piece.click();
                     return this.next();
@@ -161,8 +154,8 @@ const initMainMenuTour = async function (isHost = true) {
     });
 
     tour.addStep({
-        title: 'Welcome to Dnd Combat App!',
-        text: 'Dnd Combat App is a multiplayer, virtual tabletop website!',
+        title: 'Welcome to SpellTable!',
+        text: 'SpellTable is a multiplayer, virtual tabletop built with DnD in mind!',
         buttons: [
             {
                 action() {
@@ -170,7 +163,7 @@ const initMainMenuTour = async function (isHost = true) {
                     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
                     return this.next();
                 },
-                text: 'Get Started'
+                text: "Let's Explore"
             }
         ]
     });
