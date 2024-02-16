@@ -4,8 +4,8 @@ class Piece {
         this.owner = ownerId;
         this.name = name;
         this.size = Number(size);
-        this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
-        this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+        this.width = this.size;
+        this.height = this.size;
         this.conditions = [];
         this.rotation = 0;
         this.x = x;
@@ -28,8 +28,8 @@ class Piece {
         if (size != null) {
             this.size = Number(size);
         }
-        this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
-        this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+        this.width = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size;
+        this.height = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size;
     }
 
     updateImage(img) {
@@ -130,7 +130,11 @@ class Piece {
 
 
     draw(ctx) {
+        this.updateSize();
+        const textMargin = 3;
         const deadImage = document.getElementById("image-dead");
+        const fontSize = this.getFontSizeByPiece(this.size);
+
         ctx.drawImage(this.image, this.getX(), this.getY(), this.width, this.height);
 
         // dead overlay
@@ -140,18 +144,18 @@ class Piece {
             ctx.globalAlpha = 1;
         }
 
-        const fontSize = this.getFontSizeByPiece(this.size);
-
+        ctx.textBaseline = "bottom";
+        
         // add name
         if (this.name) {
             ctx.font = fontSize.name + " Arial";
             let nameTextDims = this.getTextDims(ctx, this.name);
             ctx.fillStyle = "#36454F"; // charcoal
             ctx.beginPath();
-            ctx.roundRect(this.getX() - _canvasTextMargin + (this.width - nameTextDims.width) / 2,
-                this.getY() - _canvasTextMargin - nameTextDims.height,
-                nameTextDims.width + 2 * _canvasTextMargin,
-                nameTextDims.height + 2 * _canvasTextMargin,
+            ctx.roundRect(this.getX() - textMargin + (this.width - nameTextDims.width) / 2,
+                this.getY() - textMargin - nameTextDims.height,
+                nameTextDims.width + 2 * textMargin,
+                nameTextDims.height + 2 * textMargin,
                 3);
             ctx.fill();
             ctx.fillStyle = "#f9f9f9"; // off white
@@ -167,16 +171,16 @@ class Piece {
             for (var i = 0; i < this.conditions.length; i++) {
                 let currentConDims = this.getTextDims(ctx, this.conditions[i]);
                 if (i > 0 && (conX + currentConDims.width > this.getX() + this.width)) {
-                    conY += anyLetterHeight + (3 * _canvasTextMargin);
+                    conY += anyLetterHeight + (3 * textMargin);
                     conX = this.getX();
                 }
                 ctx.fillStyle = "#880808"; // blood red
                 ctx.beginPath();
-                ctx.roundRect(conX, conY, currentConDims.width + 2 * _canvasTextMargin, anyLetterHeight + 2 * _canvasTextMargin, 3);
+                ctx.roundRect(conX, conY, currentConDims.width + 2 * textMargin, anyLetterHeight + 2 * textMargin, 3);
                 ctx.fill();
                 ctx.fillStyle = "#f9f9f9"; // off white
-                ctx.fillText(this.conditions[i], conX + _canvasTextMargin, conY + anyLetterHeight + _canvasTextMargin);
-                conX += currentConDims.width + (3 * _canvasTextMargin);
+                ctx.fillText(this.conditions[i], conX + textMargin, conY + anyLetterHeight + textMargin);
+                conX += currentConDims.width + (3 * textMargin);
             }
         }
     }

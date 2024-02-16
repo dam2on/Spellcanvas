@@ -20,13 +20,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"
         integrity="sha512-+BMamP0e7wn39JGL8nKAZ3yAQT2dL5oaXWr4ZYlTGkKOaoXM/Yj7c4oy50Ngz5yoUutAG17flueD4F6QpTlPng=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script type="text/javascript" src="piece.js"></script>
-    <script type="text/javascript" src="player.js"></script>
-    <script type="text/javascript" src="background.js"></script>
-    <script type="text/javascript" src="area.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightslider/1.1.6/js/lightslider.min.js"
+        integrity="sha512-Gfrxsz93rxFuB7KSYlln3wFqBaXUc1jtt3dGCp+2jTb563qYvnUBM/GP2ZUtRC27STN/zUamFtVFAIsRFoT6/w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" src="classes/piece.js"></script>
+    <script type="text/javascript" src="classes/player.js"></script>
+    <script type="text/javascript" src="classes/permission.js"></script>
+    <script type="text/javascript" src="classes/background.js"></script>
+    <script type="text/javascript" src="classes/area.js"></script>
+    <script type="text/javascript" src="classes/party.js"></script>
+    <script type="text/javascript" src="classes/scene.js"></script>
     <script type="text/javascript" src="tour.js"></script>
-    <script type="text/javascript" src="index.js"></script>
     <script type="text/javascript" src="enums.js"></script>
+    <script type="text/javascript" src="index.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightslider/1.1.6/css/lightslider.min.css"
+        integrity="sha512-yJHCxhu8pTR7P2UgXFrHvLMniOAL5ET1f5Cj+/dzl+JIlGTh5Cz+IeklcXzMavKvXP8vXqKMQyZjscjf3ZDfGA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.css"
         integrity="sha512-xmGTNt20S0t62wHLmQec2DauG9T+owP9e6VU8GigI0anN7OXLip9i7IwEhelasml2osdxX71XcYm6BQunTQeQg=="
@@ -118,6 +128,13 @@
             <div class="form-group my-4">
                 <button id="btn-reset-pieces" class="btn btn-danger btn-sm">Delete Game Pieces</button>
             </div>
+            <div class="form-group">
+                <label for="scene-slider">Scenes</label>
+                <ul id="scene-slider">
+                    <li id="btn-add-scene">Add Scene</li>
+
+                </ul>
+            </div>
             <div id="section-party-menu" class="my-4">
                 <h4><i class="fa-solid fa-users me-2"></i>Party</h4>
                 <div class="form-group mb-3">
@@ -197,7 +214,7 @@
             </div>
             <div class="form-group">
                 <label>Status Conditions</label>
-                <input class="form-control" id="piece-menu-status-conditions"  data-role="tagsinput" />
+                <input class="form-control" id="piece-menu-status-conditions" data-role="tagsinput" />
             </div>
             <div class="form-group mb-3">
                 <label for="#piece-menu-dead">Dead?</label>

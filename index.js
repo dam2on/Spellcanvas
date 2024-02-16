@@ -1,9 +1,5 @@
-
-_pieces = [];
-_party = [];
-_permissions = [];
-_gridSizeRatio = 0.025;
-_background = null;
+PARTY = null;
+CURRENT_SCENE = null;
 
 _player = null;
 _spellRuler = null;
@@ -12,8 +8,6 @@ _host = null;
 _ctx = null;
 _pieceInMenu = null;
 _draggedPiece = null;
-
-_canvasTextMargin = 3;
 
 
 const isHost = function () {
@@ -33,15 +27,11 @@ const toBase64 = file => new Promise((resolve, reject) => {
   reader.onerror = reject;
 });
 
-const getPermissionValue = function(type) {
-  return _permissions.find(p => p.type == type)?.value
-}
-
 const shapeIntersects = function (x, y) {
   let xInts = false;
   let yInts = false;
 
-  for (var piece of _pieces) {
+  for (var piece of CURRENT_SCENE.pieces) {
     let shapeX = piece.getX();
     let shapeY = piece.getY();
     xInts = x >= shapeX && x <= (shapeX + piece.width);
@@ -50,7 +40,7 @@ const shapeIntersects = function (x, y) {
       if (yInts) {
         // check permission
         if (!isHost() && piece.owner != _player.id) {
-          if (getPermissionValue(PermissionType.OnlyMoveOwnedPieces)) continue;
+          if (PARTY.getPermissionValue(PermissionType.OnlyMoveOwnedPieces)) continue;
         }
         return piece;
       }
@@ -61,28 +51,15 @@ const shapeIntersects = function (x, y) {
 }
 
 const refreshCanvas = function () {
-
   _ctx.clearRect(0, 0, _ctx.canvas.width, _ctx.canvas.height);
-  _ctx.textBaseline = "bottom";
 
-  for (var piece of _pieces) {
-    piece.draw(_ctx);
+  if (CURRENT_SCENE != null) {
+    CURRENT_SCENE.draw(_ctx);
   }
 
   if (_spellRuler instanceof Area) {
     _spellRuler.draw(_ctx);
   }
-}
-
-const savePieces = async function () {
-  const piecesJson = [];
-  for (var piece of _pieces) {
-    let pieceCopy = { ...piece };
-    pieceCopy.image = piece.image.src;
-    piecesJson.push(pieceCopy);
-  }
-
-  await localforage.setItem(StorageKeys.Pieces, piecesJson);
 }
 
 const drawImageScaled = function (img) {
@@ -126,18 +103,18 @@ const onChangeBackgroundSubmit = function () {
     case BackgroundType.Image:
       const bgImg = document.getElementById('input-bg-image').files[0];
       Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
-        _background = new Background(BackgroundType.Image, dataUrl);
+        CURRENT_SCENE.updateBackground(new Background(BackgroundType.Image, dataUrl));
         onChangeBackgroundEvent();
-        for (var player of _party) {
+        for (var player of PARTY.players) {
           emitChangeBackgroundEvent(player.id);
         }
       });
       break;
     case BackgroundType.Video:
       const videoUrl = document.getElementById('input-bg-video').value;
-      _background = new Background(BackgroundType.Video, videoUrl);
+      CURRENT_SCENE.updateBackground(new Background(BackgroundType.Video, videoUrl));
       onChangeBackgroundEvent();
-      for (var player of _party) {
+      for (var player of PARTY.players) {
         emitChangeBackgroundEvent(player.id);
       }
       break;
@@ -192,19 +169,19 @@ const onSpellSizeChange = function (args) {
   _spellRuler.updateSize(Number($(this).val()) / 5);
 }
 
-const onQuickAdd = function(args) {
+const onQuickAdd = function (args) {
   const piece = new Piece(newGuid(), _peer.id, "orc", $(this).find('img')[0].src, PieceSizes.Medium);
   piece.image.addEventListener('load', async () => {
     piece.draw(_ctx);
-    await savePieces();
+    await CURRENT_SCENE.savePieces();
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
     initGamePieceTour(piece);
   });
 
-  _pieces.push(piece);
+  CURRENT_SCENE.addPiece(piece);
 
   if (isHost()) {
-    for (var player of _party) {
+    for (var player of PARTY.players) {
       emitAddPieceEvent(player.id, piece);
     }
   }
@@ -222,7 +199,7 @@ const onAddPieceSubmit = async function () {
   const piece = new Piece(newGuid(), _peer.id, name, img, size);
   piece.image.addEventListener('load', async () => {
     piece.draw(_ctx);
-    await savePieces();
+    await CURRENT_SCENE.savePieces();
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
     initGamePieceTour(piece);
     modalPieceInputs[0].value = null;
@@ -231,10 +208,10 @@ const onAddPieceSubmit = async function () {
     modalPieceInputs[1].type = "file";
   });
 
-  _pieces.push(piece);
+  CURRENT_SCENE.addPiece(piece);
 
   if (isHost()) {
-    for (var player of _party) {
+    for (var player of PARTY.players) {
       emitAddPieceEvent(player.id, piece);
     }
   }
@@ -260,9 +237,9 @@ const onUpdatePieceSubmit = async function () {
   }
 
   if (isHost()) {
-    await savePieces();
+    await CURRENT_SCENE.savePieces();
 
-    for (var player of _party) {
+    for (var player of PARTY.players) {
       emitUpdatePieceEvent(player.id, _pieceInMenu);
     }
   }
@@ -277,12 +254,11 @@ const onUpdatePieceSubmit = async function () {
 const onDeletePieceSubmit = function () {
   if (_pieceInMenu == null) return;
   if (confirm("Delete piece: " + _pieceInMenu.name + "?")) {
-    let index = _pieces.indexOf(_pieceInMenu);
-    _pieces.splice(index, 1);
+    CURRENT_SCENE.deletePiece(_pieceInMenu);
     refreshCanvas();
 
     if (isHost()) {
-      for (var player of _party) {
+      for (var player of PARTY.players) {
         emitDeletePieceEvent(player.id, _pieceInMenu.id);
       }
     }
@@ -298,16 +274,16 @@ const onResetPiecesSubmit = async function () {
   if (!isHost()) return;
   if (confirm("Are you sure you want to remove all pieces from the board?")) {
     onResetPiecesEvent();
-    await savePieces();
+    await CURRENT_SCENE.savePieces();
   }
 }
 
 const onResetPiecesEvent = function () {
-  _pieces = [];
+  CURRENT_SCENE.clearPieces();
   refreshCanvas();
 
   if (isHost()) {
-    for (var player of _party) {
+    for (var player of PARTY.players) {
       emitResetPiecesEvent(player.id);
     }
   }
@@ -322,24 +298,38 @@ const onConnectedToHostEvent = function (host) {
   alert(`Successfully connected to ${host}'s party!`);
 }
 
-const onPermissionsUpdateEvent = function(permissions) {
-  _permissions = permissions;
+const onPermissionsUpdateEvent = function (permissions) {
+  PARTY.permissions = permissions;
+}
+
+const onLoadSceneEvent = async function (scene) {
+  CURRENT_SCENE = await Scene.fromObj(scene);
+  CURRENT_SCENE.applyBackground();
+  refreshCanvas();
+}
+
+const emitLoadSceneEvent = function (peerId) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function () {
+    conn.send({
+      event: EventTypes.LoadScene,
+      scene: CURRENT_SCENE.pureJson()
+    });
+  });
 }
 
 const emitChangeBackgroundEvent = function (peerId) {
-  if (_background == null) return;
-
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
-    conn.send({ event: EventTypes.ChangeBackground, background: _background });
+    conn.send({ event: EventTypes.ChangeBackground, background: CURRENT_SCENE.background });
   });
 }
 
 const emitAddPieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
+  let pieceCopy = { ...piece };
+  pieceCopy.image = piece.image.src;
   conn.on('open', function () {
-    let pieceCopy = { ...piece };
-    pieceCopy.image = piece.image.src;
     conn.send({ event: EventTypes.AddPiece, piece: pieceCopy });
   })
 }
@@ -401,7 +391,7 @@ const emitGridSizeChangeEvent = function (peerId) {
     conn.on('open', function () {
       conn.send({
         event: EventTypes.GridChange,
-        gridSize: _gridSizeRatio
+        gridSize: CURRENT_SCENE.gridRatio
       });
       resolve();
     });
@@ -438,70 +428,61 @@ const emitConnectedToHostEvent = function (peerId) {
   });
 }
 
-const onPermissionsChange = async function() {
-  if (!isHost()) return;
-
-  _permissions = [
-    {
-      type: PermissionType.OnlyMoveOwnedPieces,
-      elementId: 'permissions-own-pieces',
-      value: $('#permissions-own-pieces').prop('checked')
-    }
-  ]
-
-  await localforage.setItem(StorageKeys.Permissions, _permissions);
-
-
-  for (player of _party) {
-    emitPermissionsChangeEvent(player.id)
-  }
-}
-
 const emitPermissionsChangeEvent = function (peerId) {
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
     conn.send({
       event: EventTypes.PermissionsUpdate,
-      permissions: _permissions
+      permissions: PARTY.permissions
     });
   });
 }
 
+const onPermissionsChange = async function () {
+  if (!isHost()) return;
+
+  PARTY.setPermission(PermissionType.OnlyMoveOwnedPieces, 'permissions-own-pieces', $('#permissions-own-pieces').prop('checked'));
+  await PARTY.save();
+
+  for (player of PARTY.players) {
+    emitPermissionsChangeEvent(player.id)
+  }
+}
+
 const onChangeBackgroundEvent = async function (obj = null) {
   if (obj != null) {
-    _background = Background.fromObj(obj);
+    CURRENT_SCENE.updateBackground(obj);
   }
 
-  _background.apply();
+  CURRENT_SCENE.applyBackground();
 
   if (isHost()) {
-    await localforage.setItem(StorageKeys.Background, _background);
+    await CURRENT_SCENE.saveBackground();
   }
 }
 
 const onAddPieceEvent = async function (piece) {
-  if (_pieces.find(p => p.id == piece.id) != null) {
+  if (CURRENT_SCENE.getPieceById(piece.id) != null) {
     // redundant piece
     return;
   }
 
-  let newPiece = await Piece.fromObj(piece);
-  _pieces.push(newPiece);
+  const newPiece = await CURRENT_SCENE.addPiece(piece);
 
   if (isHost()) {
     updatePlayerDetails({ id: piece.owner }, piece);
 
-    for (var player of _party) {
+    for (var player of PARTY.players) {
       emitAddPieceEvent(player.id, newPiece);
     }
-    await savePieces();
+    await CURRENT_SCENE.savePieces();
   }
 
   refreshCanvas();
 }
 
 const onMovePieceEvent = async function (movedPiece) {
-  let pieceToMove = _pieces.find(p => p.id == movedPiece.id);
+  let pieceToMove = CURRENT_SCENE.getPieceById(movedPiece.id);
   if (pieceToMove == null) {
     emitRequestPieceEvent(movedPiece.id);
     return;
@@ -510,71 +491,61 @@ const onMovePieceEvent = async function (movedPiece) {
   pieceToMove.y = movedPiece.y;
 
   if (isHost()) {
-    for (var player of _party) {
+    for (var player of PARTY.players) {
       emitMovePieceEvent(player.id, pieceToMove);
     }
 
-    await savePieces();
+    await CURRENT_SCENE.savePieces();
   }
 
   refreshCanvas();
 }
 
 const onDeletePieceEvent = async function (id) {
-  let piece = _pieces.find(p => p.id == id);
+  let piece = CURRENT_SCENE.getPieceById(id);
   if (piece == null) return;
 
-  let index = _pieces.indexOf(piece);
-  _pieces.splice(index, 1);
+  CURRENT_SCENE.deletePiece(piece);
   if (isHost()) {
     piece.deleteMe = true;
     updatePlayerDetails({ id: piece.owner }, piece);
 
-    for (var player of _party) {
+    for (var player of PARTY.players) {
       emitDeletePieceEvent(player.id, id);
     }
 
-    await savePieces();
+    await CURRENT_SCENE.savePieces();
   }
   refreshCanvas();
 }
 
 const onRequestPieceEvent = function (peerId, id) {
-  let piece = _pieces.find(p => p.id == id);
+  let piece = CURRENT_SCENE.getPieceById(id);
   emitAddPieceEvent(peerId, piece);
 }
 
 const onUpdatePieceEvent = async function (piece) {
-  let localPiece = _pieces.find(p => p.id == piece.id);
-  const index = _pieces.indexOf(localPiece);
-  if (!piece.imageUpdated) {
-    // use same image
-    piece.image = localPiece.image;
-  }
-  localPiece = await Piece.fromObj(piece);
-  _pieces.splice(index, 1, localPiece);
+  const updatedPiece = await CURRENT_SCENE.updatePiece(piece);
 
   if (isHost()) {
-    updatePlayerDetails({ id: piece.owner }, piece);
+    updatePlayerDetails({ id: updatedPiece.owner }, updatedPiece);
 
-    for (var player of _party) {
-      emitUpdatePieceEvent(player.id, localPiece);
+    for (var player of PARTY.players) {
+      emitUpdatePieceEvent(player.id, updatedPiece);
     }
 
-    await savePieces();
+    await CURRENT_SCENE.savePieces();
   }
 
   refreshCanvas();
 }
 
 const onGridChangeEvent = async function (gridSize) {
-  _gridSizeRatio = gridSize;
+  CURRENT_SCENE.gridRatio = gridSize;
   if (isHost()) {
-    await localforage.setItem(StorageKeys.GridRatio, _gridSizeRatio);
+    await CURRENT_SCENE.saveGrid();
   }
-  for (var piece of _pieces) {
-    piece.updateSize();
-  }
+
   if (_spellRuler instanceof Area) {
     _spellRuler.updateSize();
   }
@@ -590,18 +561,14 @@ const onNewPlayerEvent = async function (player, isReconnect = false) {
   player = Player.fromObj(player);
 
   if (!isReconnect) {
-    _party.push(player);
-    await localforage.setItem(StorageKeys.Party, _party);
+    PARTY.addPlayer(player);
+    await PARTY.save();
   }
 
   updatePlayerDetails(player);
   emitPermissionsChangeEvent(player.id);
   emitConnectedToHostEvent(player.id);
-  emitChangeBackgroundEvent(player.id);
-  await emitGridSizeChangeEvent(player.id);
-  for (var piece of _pieces) {
-    emitAddPieceEvent(player.id, piece);
-  }
+  emitLoadSceneEvent(player.id);
 }
 
 const updatePlayerDetails = async function (player, piece = null) {
@@ -614,7 +581,7 @@ const updatePlayerDetails = async function (player, piece = null) {
       ${player.name}
     </li>`);
     playerDiv = $(`#player-${player.id}`);
-    for (var p of _pieces) {
+    for (var p of CURRENT_SCENE.pieces) {
       if (p.owner == player.id) {
         if (playerDiv.children().length >= 10) return;
         playerDiv.html(playerDiv.html() + `<img id="piece-icon-${p.id}" title="${p.name}" style="width: 15px; object-fit: contain" src="${p.image instanceof HTMLImageElement ? p.image.src : p.image}"></img>`)
@@ -701,6 +668,9 @@ const initPeerEvents = function () {
         case EventTypes.PermissionsUpdate:
           onPermissionsUpdateEvent(data.permissions);
           break;
+        case EventTypes.LoadScene:
+          onLoadSceneEvent(data.scene);
+          break;
         default:
           console.log("unrecognized event type: " + data.event);
           break;
@@ -719,148 +689,173 @@ const initPeerEvents = function () {
   });
 }
 
-const restoreHostSession = async function () {
-
-  const val = await localforage.getItem(StorageKeys.Pieces);
-  if (val != null) {
-    for (var peice of val) {
-      _pieces.push(await Piece.fromObj(peice));
-    }
-  }
-
-  const restoreGridPromise = new Promise(async function (resolve, reject) {
-    const val = await localforage.getItem(StorageKeys.GridRatio);
-    if (val != null) {
-      _gridSizeRatio = val;
-      const pixelVal = _gridSizeRatio * getCurrentCanvasWidth();
-      $('#range-grid-size').val(pixelVal);
-      $('label[for="range-grid-size"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
-    }
-    resolve();
-  });
-  const restoreBackgroundPromise = new Promise(async function (resolve, reject) {
-    const val = await localforage.getItem(StorageKeys.Background);
-    if (val != null) {
-      await onChangeBackgroundEvent(val);
-    }
-    resolve();
-  });
-  const restorePartyPromise = new Promise(async function (resolve, reject) {
-    const val = await localforage.getItem(StorageKeys.Party);
-    if (val != null) {
-      for (var player of val) {
-        _party.push(Player.fromObj(player));
-        updatePlayerDetails(player);
-      }
-    }
-    resolve();
-  });
-  const restorePermissionsPromise = new Promise(async function(resolve, reject) {
-    const val = await localforage.getItem(StorageKeys.Permissions);
-    if (val != null) {
-      _permissions = val;
-      for (var p of _permissions) {
-        document.getElementById(p.elementId).checked = p.value;
-      }
-    }
-    resolve();
-  })
-
-  await Promise.all([restorePartyPromise, restoreBackgroundPromise, restorePermissionsPromise, restoreGridPromise]).then(() => refreshCanvas());
+const buildScene = function() {
+  const pixelVal = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth();
+  $('#range-grid-size').val(pixelVal);
+  $('label[for="range-grid-size"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
+  CURRENT_SCENE.applyBackground();
+  refreshCanvas();
 }
 
-const initParty = async function () {
-  let hostQueryParam = new URLSearchParams(window.location.search).get("host");
-  const existingHostId = await localforage.getItem(StorageKeys.HostId);
-
-  if (hostQueryParam == null) {
-    // host mode
-
-    if (existingHostId != null) {
-      _peer = new Peer(existingHostId);
-      _peer.reconnect();
+const displaySceneList = function (scenePartials) {
+  if (!!scenePartials.length) {
+    for (var scene of scenePartials) {
+      $('#scene-slider').append(`<li id=scene-${scene.id} onclick="onSceneSelect('${scene.id}')">
+      ${scene.name}
+    </li>`);
     }
-    else {
-      _peer = new Peer();
-    }
+  }
+}
 
-    _peer.on('open', async function (id) {
-      _host = id;
-      await localforage.setItem(StorageKeys.HostId, _host);
-      if (existingHostId != null) {
-        await restoreHostSession();
-      }
-      initInviteLink();
-      initPeerEvents();
-      initMainMenuTour();
-    });
+const onAddScene = async function() {
+  CURRENT_SCENE = new Scene(newGuid(), _host);
+  await CURRENT_SCENE.saveScene();
+
+  $('#scene-slider').append(`<li id=scene-${CURRENT_SCENE.id} onclick="onSceneSelect('${CURRENT_SCENE.id}')">
+    ${CURRENT_SCENE.name}
+  </li>`);
+
+  buildScene();
+}
+
+const onSceneSelect = async function(id) {
+  const scenePartials = await localforage.getItem(StorageKeys.Scenes);
+  const sceneToLoad = scenePartials.find(sp => sp.id == id);
+  if (sceneToLoad == null) {
+    console.warn("can not find scene with id: " + id);
+    return;
+  }
+
+  CURRENT_SCENE = await Scene.load(sceneToLoad);
+
+  buildScene();
+}
+
+const restoreHostSession = async function () {
+  const scenePartials = await localforage.getItem(StorageKeys.Scenes);
+  if (!!scenePartials?.length && !!scenePartials.find(s => s.owner == _host)) {
+    // load any scene
+    const partialToLoad = scenePartials.find(s => s.owner == _host);
+    CURRENT_SCENE = await Scene.load(partialToLoad);
+    displaySceneList(scenePartials);
   }
   else {
-    // player mode
-    const existingPlayer = await localforage.getItem(StorageKeys.Player);
-    if (existingHostId != null && existingHostId == hostQueryParam && existingPlayer != null) {
-      _player = existingPlayer;
-      _peer = new Peer(_player.id);
+    CURRENT_SCENE = new Scene(newGuid(), _host);
+    await CURRENT_SCENE.saveScene();
+  }
+
+  const partyVal = await localforage.getItem(`${StorageKeys.Party}-${_host}`);
+  if (partyVal != null) {
+    PARTY = Party.fromObj(partyVal);
+    for (var player of PARTY.players) {
+      updatePlayerDetails(player);
     }
-    else {
-      _peer = new Peer();
-      await localforage.setItem(StorageKeys.HostId, hostQueryParam);
+    for (var permission of PARTY.permissions) {
+      document.getElementById(permission.elementId).checked = permission.value;
     }
+  }
+  else {
+    PARTY = new Party(_host);
+  }
 
-    _host = hostQueryParam;
-    initInviteLink();
+  buildScene();
+}
 
-    // hide buttons for players
-    var btnChangeBg = document.getElementById("btn-change-bg");
-    btnChangeBg.setAttribute("style", "display: none");
-    btnChangeBg.setAttribute("disabled", "disabled");
+const initPeer = function () {
+  return new Promise(async function (resolve, reject) {
+    let hostQueryParam = new URLSearchParams(window.location.search).get("host");
+    const existingHostId = await localforage.getItem(StorageKeys.HostId);
 
-    var rangeGridSize = document.getElementById("range-grid-size");
-    rangeGridSize.parentNode.setAttribute("style", "display: none");
-    rangeGridSize.setAttribute("disabled", "disabled");
+    if (hostQueryParam == null) {
+      // host mode
 
-    var btnResetPieces = document.getElementById("btn-reset-pieces");
-    btnResetPieces.parentNode.setAttribute("style", "display: none");
-    btnResetPieces.setAttribute("disabled", "disabled");
-
-    var listPartyMembers = document.getElementById("list-connected-party-members");
-    listPartyMembers.parentNode.setAttribute("style", "display: none");
-
-    // initial peer open
-    _peer.on('open', function (id) {
-      console.log('My peer ID is: ' + id);
-      initPeerEvents();
-      if (_player != null) {
-        var conn = _peer.connect(_host);
-        conn.on('open', function () {
-          conn.send({
-            event: EventTypes.PlayerReconnected,
-            player: _player
-          });
-        });
+      if (existingHostId != null) {
+        _peer = new Peer(existingHostId);
+        _peer.reconnect();
       }
       else {
-        var playerModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-player'));
-        playerModal.show();
+        _peer = new Peer();
+      }
 
-        $("#modal-player").on('hidden.bs.modal', async function () {
-          const playerName = $("#input-player-name").val();
-          initMainMenuTour(false);
+      _peer.on('open', async function (id) {
+        _host = id;
+        await localforage.setItem(StorageKeys.HostId, _host);
+        initInviteLink();
+        initPeerEvents();
+        initMainMenuTour();
+        resolve();
+      });
+    }
+    else {
+      // player mode
+      _host = hostQueryParam;
+      PARTY = new Party(_host);
+      initInviteLink();
 
-          _player = new Player(id, playerName);
-          await localforage.setItem(StorageKeys.Player, _player);
+      const existingPlayer = await localforage.getItem(StorageKeys.Player);
+      if (existingHostId != null && existingHostId == _host && existingPlayer != null) {
+        _player = existingPlayer;
+        _peer = new Peer(_player.id);
+      }
+      else {
+        _peer = new Peer();
+        await localforage.setItem(StorageKeys.HostId, _host);
+      }
 
+      // hide buttons for players
+      var btnChangeBg = document.getElementById("btn-change-bg");
+      btnChangeBg.setAttribute("style", "display: none");
+      btnChangeBg.setAttribute("disabled", "disabled");
+
+      var rangeGridSize = document.getElementById("range-grid-size");
+      rangeGridSize.parentNode.setAttribute("style", "display: none");
+      rangeGridSize.setAttribute("disabled", "disabled");
+
+      var btnResetPieces = document.getElementById("btn-reset-pieces");
+      btnResetPieces.parentNode.setAttribute("style", "display: none");
+      btnResetPieces.setAttribute("disabled", "disabled");
+
+      var listPartyMembers = document.getElementById("list-connected-party-members");
+      listPartyMembers.parentNode.setAttribute("style", "display: none");
+
+      // initial peer open
+      _peer.on('open', function (id) {
+        console.log('My peer ID is: ' + id);
+        initPeerEvents();
+        if (_player != null) {
           var conn = _peer.connect(_host);
           conn.on('open', function () {
             conn.send({
-              event: EventTypes.NewPlayer,
+              event: EventTypes.PlayerReconnected,
               player: _player
             });
+            resolve();
           });
-        });
-      }
-    });
-  }
+        }
+        else {
+          var playerModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-player'));
+          playerModal.show();
+
+          $("#modal-player").on('hidden.bs.modal', async function () {
+            const playerName = $("#input-player-name").val();
+            initMainMenuTour(false);
+
+            _player = new Player(id, playerName);
+            await localforage.setItem(StorageKeys.Player, _player);
+
+            var conn = _peer.connect(_host);
+            conn.on('open', function () {
+              conn.send({
+                event: EventTypes.NewPlayer,
+                player: _player
+              });
+              resolve();
+            });
+          });
+        }
+      });
+    }
+  });
 }
 
 const onGridSizeInput = function () {
@@ -891,14 +886,12 @@ const onGridSizeChange = function () {
   onGridChangeEvent(newGridSize);
 
   // broadcast grid change
-  for (var player of _party) {
+  for (var player of PARTY.players) {
     emitGridSizeChangeEvent(player.id);
   }
 }
 
-window.onload = async function () {
-  await initParty();
-
+const initDom = function () {
   var can = document.getElementById('canvas');
   can.width = window.innerWidth;
   can.height = window.innerHeight;
@@ -937,6 +930,7 @@ window.onload = async function () {
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
   // $('.quick-add').on('click', onQuickAdd);
+  document.getElementById('btn-add-scene').addEventListener('click', onAddScene)
   document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange)
   document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
   document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);
@@ -990,11 +984,11 @@ window.onload = async function () {
     let movedPiece = { ..._draggedPiece };
 
     if (isHost()) {
-      for (var player of _party) {
+      for (var player of PARTY.players) {
         emitMovePieceEvent(player.id, movedPiece);
       }
 
-      await savePieces();
+      await CURRENT_SCENE.savePieces();
     }
     else {
       emitMovePieceEvent(_host, movedPiece);
@@ -1021,4 +1015,12 @@ window.onload = async function () {
       }
     }
   });
+}
+
+window.onload = async function () {
+  initDom();
+  await initPeer();
+  if (isHost()) {
+    await restoreHostSession();
+  }
 }

@@ -10,7 +10,8 @@ const EventTypes = {
   ConnectedToHost: 'connected to host',
   ResetPieces: 'reset pieces',
   PlayerReconnected: 'player reconnected',
-  PermissionsUpdate: 'permissions update'
+  PermissionsUpdate: 'permissions update',
+  LoadScene: 'load scene'
 }
 
 const BackgroundType = {
@@ -26,7 +27,8 @@ const StorageKeys = {
   Party: 'party',
   Tutorial: 'tutorial',
   GridRatio: 'grid ratio',
-  Permissions: 'permissions'
+  Permissions: 'permissions',
+  Scenes: 'scenes'
 }
 
 const PieceSizes = {
