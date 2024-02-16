@@ -8,6 +8,7 @@ class Area {
     }
 
     draw(ctx) {
+        this.updateSize();
         const currentFillStyle = ctx.fillStyle;
         const currentStrokeStyle = ctx.strokeStyle;
         ctx.fillStyle = "#ffeeaaA5";
@@ -58,18 +59,18 @@ class Area {
             this.size = Number(size);
         switch (this.type) {
             case AreaType.Line:
-                this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+                this.width = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size;
                 this.height = this.width / size;
                 break;
             case AreaType.Circle:
-                this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size / 2;
+                this.width = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size / 2;
                 break;
             case AreaType.Cone:
-                this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+                this.width = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size;
                 break;
             case AreaType.Square:
-                this.width = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
-                this.height = _gridSizeRatio * getCurrentCanvasWidth() * this.size;
+                this.width = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size;
+                this.height = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size;
                 break;
             default:
                 console.warn("area type not recognized: " + type);

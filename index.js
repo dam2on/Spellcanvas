@@ -50,29 +50,17 @@ const shapeIntersects = function (x, y) {
   return null;
 }
 
-const refreshCanvas = function () {
-  _ctx.clearRect(0, 0, _ctx.canvas.width, _ctx.canvas.height);
-
-  if (CURRENT_SCENE != null) {
-    CURRENT_SCENE.draw(_ctx);
-  }
-
-  if (_spellRuler instanceof Area) {
-    _spellRuler.draw(_ctx);
-  }
-}
-
-const drawImageScaled = function (img) {
-  var canvas = _ctx.canvas;
-  var hRatio = canvas.width / img.width;
-  var vRatio = canvas.height / img.height;
-  var ratio = Math.min(hRatio, vRatio);
-  var centerShift_x = (canvas.width - img.width * ratio) / 2;
-  var centerShift_y = (canvas.height - img.height * ratio) / 2;
-  _ctx.clearRect(0, 0, canvas.width, canvas.height);
-  _ctx.drawImage(img, 0, 0, img.width, img.height,
-    centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
-}
+// const drawImageScaled = function (img) {
+//   var canvas = _ctx.canvas;
+//   var hRatio = canvas.width / img.width;
+//   var vRatio = canvas.height / img.height;
+//   var ratio = Math.min(hRatio, vRatio);
+//   var centerShift_x = (canvas.width - img.width * ratio) / 2;
+//   var centerShift_y = (canvas.height - img.height * ratio) / 2;
+//   _ctx.clearRect(0, 0, canvas.width, canvas.height);
+//   _ctx.drawImage(img, 0, 0, img.width, img.height,
+//     centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+// }
 
 const onBackgroundTypeChange = function () {
   const bgType = document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value;
@@ -103,7 +91,7 @@ const onChangeBackgroundSubmit = function () {
     case BackgroundType.Image:
       const bgImg = document.getElementById('input-bg-image').files[0];
       Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
-        CURRENT_SCENE.updateBackground(new Background(BackgroundType.Image, dataUrl));
+        CURRENT_SCENE.setBackground(new Background(BackgroundType.Image, dataUrl));
         onChangeBackgroundEvent();
         for (var player of PARTY.players) {
           emitChangeBackgroundEvent(player.id);
@@ -112,7 +100,7 @@ const onChangeBackgroundSubmit = function () {
       break;
     case BackgroundType.Video:
       const videoUrl = document.getElementById('input-bg-video').value;
-      CURRENT_SCENE.updateBackground(new Background(BackgroundType.Video, videoUrl));
+      CURRENT_SCENE.setBackground(new Background(BackgroundType.Video, videoUrl));
       onChangeBackgroundEvent();
       for (var player of PARTY.players) {
         emitChangeBackgroundEvent(player.id);
@@ -138,8 +126,8 @@ const onSpellRulerToggle = function (args) {
     $(this).blur();
     $(this).focusout();
 
-    // need to clear out existing image
-    refreshCanvas();
+    // erase ruler from canvas
+    CURRENT_SCENE.drawPieces(_ctx);
   }
   else {
     _spellRuler = new Area(type, $('#input-spell-size').val() / 5);
@@ -171,6 +159,8 @@ const onSpellSizeChange = function (args) {
 
 const onQuickAdd = function (args) {
   const piece = new Piece(newGuid(), _peer.id, "orc", $(this).find('img')[0].src, PieceSizes.Medium);
+  CURRENT_SCENE.addPiece(piece);
+
   piece.image.addEventListener('load', async () => {
     piece.draw(_ctx);
     await CURRENT_SCENE.savePieces();
@@ -178,7 +168,6 @@ const onQuickAdd = function (args) {
     initGamePieceTour(piece);
   });
 
-  CURRENT_SCENE.addPiece(piece);
 
   if (isHost()) {
     for (var player of PARTY.players) {
@@ -197,27 +186,27 @@ const onAddPieceSubmit = async function () {
   const size = document.querySelector('input[name="radio-piece-size"]:checked').value;
 
   const piece = new Piece(newGuid(), _peer.id, name, img, size);
+  CURRENT_SCENE.addPiece(piece);
+
   piece.image.addEventListener('load', async () => {
     piece.draw(_ctx);
     await CURRENT_SCENE.savePieces();
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
     initGamePieceTour(piece);
     modalPieceInputs[0].value = null;
     modalPieceInputs[1].value = null;
     modalPieceInputs[1].type = "text";
     modalPieceInputs[1].type = "file";
-  });
 
-  CURRENT_SCENE.addPiece(piece);
-
-  if (isHost()) {
-    for (var player of PARTY.players) {
-      emitAddPieceEvent(player.id, piece);
+    if (isHost()) {
+      for (var player of PARTY.players) {
+        emitAddPieceEvent(player.id, piece);
+      }
     }
-  }
-  else {
-    emitAddPieceEvent(_host, piece);
-  }
+    else {
+      emitAddPieceEvent(_host, piece);
+    }
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
+  });
 }
 
 const onUpdatePieceSubmit = async function () {
@@ -247,7 +236,7 @@ const onUpdatePieceSubmit = async function () {
     emitUpdatePieceEvent(_host, _pieceInMenu);
   }
 
-  refreshCanvas();
+  CURRENT_SCENE.drawPieces(_ctx);
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
 }
 
@@ -255,7 +244,7 @@ const onDeletePieceSubmit = function () {
   if (_pieceInMenu == null) return;
   if (confirm("Delete piece: " + _pieceInMenu.name + "?")) {
     CURRENT_SCENE.deletePiece(_pieceInMenu);
-    refreshCanvas();
+    CURRENT_SCENE.drawPieces(_ctx);
 
     if (isHost()) {
       for (var player of PARTY.players) {
@@ -280,7 +269,7 @@ const onResetPiecesSubmit = async function () {
 
 const onResetPiecesEvent = function () {
   CURRENT_SCENE.clearPieces();
-  refreshCanvas();
+  CURRENT_SCENE.drawPieces(_ctx);
 
   if (isHost()) {
     for (var player of PARTY.players) {
@@ -304,8 +293,7 @@ const onPermissionsUpdateEvent = function (permissions) {
 
 const onLoadSceneEvent = async function (scene) {
   CURRENT_SCENE = await Scene.fromObj(scene);
-  CURRENT_SCENE.applyBackground();
-  refreshCanvas();
+  CURRENT_SCENE.draw(_ctx);
 }
 
 const emitLoadSceneEvent = function (peerId) {
@@ -451,10 +439,10 @@ const onPermissionsChange = async function () {
 
 const onChangeBackgroundEvent = async function (obj = null) {
   if (obj != null) {
-    CURRENT_SCENE.updateBackground(obj);
+    CURRENT_SCENE.setBackground(obj);
   }
 
-  CURRENT_SCENE.applyBackground();
+  CURRENT_SCENE.drawBackground();
 
   if (isHost()) {
     await CURRENT_SCENE.saveBackground();
@@ -470,7 +458,7 @@ const onAddPieceEvent = async function (piece) {
   const newPiece = await CURRENT_SCENE.addPiece(piece);
 
   if (isHost()) {
-    updatePlayerDetails({ id: piece.owner }, piece);
+    updatePlayerDetails({ id: piece.owner }, newPiece);
 
     for (var player of PARTY.players) {
       emitAddPieceEvent(player.id, newPiece);
@@ -478,7 +466,7 @@ const onAddPieceEvent = async function (piece) {
     await CURRENT_SCENE.savePieces();
   }
 
-  refreshCanvas();
+  CURRENT_SCENE.drawPieces(_ctx);
 }
 
 const onMovePieceEvent = async function (movedPiece) {
@@ -498,7 +486,7 @@ const onMovePieceEvent = async function (movedPiece) {
     await CURRENT_SCENE.savePieces();
   }
 
-  refreshCanvas();
+  CURRENT_SCENE.drawPieces(_ctx);
 }
 
 const onDeletePieceEvent = async function (id) {
@@ -506,6 +494,8 @@ const onDeletePieceEvent = async function (id) {
   if (piece == null) return;
 
   CURRENT_SCENE.deletePiece(piece);
+  CURRENT_SCENE.drawPieces(_ctx);
+  
   if (isHost()) {
     piece.deleteMe = true;
     updatePlayerDetails({ id: piece.owner }, piece);
@@ -516,7 +506,7 @@ const onDeletePieceEvent = async function (id) {
 
     await CURRENT_SCENE.savePieces();
   }
-  refreshCanvas();
+
 }
 
 const onRequestPieceEvent = function (peerId, id) {
@@ -537,7 +527,7 @@ const onUpdatePieceEvent = async function (piece) {
     await CURRENT_SCENE.savePieces();
   }
 
-  refreshCanvas();
+  CURRENT_SCENE.drawPieces(_ctx);
 }
 
 const onGridChangeEvent = async function (gridSize) {
@@ -547,9 +537,9 @@ const onGridChangeEvent = async function (gridSize) {
   }
 
   if (_spellRuler instanceof Area) {
-    _spellRuler.updateSize();
+    _spellRuler.draw(_ctx);
   }
-  refreshCanvas();
+  CURRENT_SCENE.drawPieces(_ctx);
 }
 
 const onNewPlayerEvent = async function (player, isReconnect = false) {
@@ -601,7 +591,7 @@ const updatePlayerDetails = async function (player, piece = null) {
     }
     else {
       if (playerDiv.children().length >= 10) return;
-      playerDiv.html(playerDiv.html() + `<img id="piece-icon-${p.id}" title=${piece.name} style="width: 15px; object-fit: contain" src="${piece.image instanceof HTMLImageElement ? piece.image.src : piece.image}"></img>`)
+      playerDiv.html(playerDiv.html() + `<img id="piece-icon-${piece.id}" title=${piece.name} style="width: 15px; object-fit: contain" src="${piece.image instanceof HTMLImageElement ? piece.image.src : piece.image}"></img>`)
     }
   }
 }
@@ -689,18 +679,10 @@ const initPeerEvents = function () {
   });
 }
 
-const buildScene = function() {
-  const pixelVal = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth();
-  $('#range-grid-size').val(pixelVal);
-  $('label[for="range-grid-size"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
-  CURRENT_SCENE.applyBackground();
-  refreshCanvas();
-}
-
 const displaySceneList = function (scenePartials) {
   if (!!scenePartials.length) {
     for (var scene of scenePartials) {
-      $('#scene-slider').append(`<li id=scene-${scene.id} onclick="onSceneSelect('${scene.id}')">
+      $('#scene-slider').append(`<li id=scene-${scene.id} onclick="onChangeScene('${scene.id}')">
       ${scene.name}
     </li>`);
     }
@@ -711,14 +693,16 @@ const onAddScene = async function() {
   CURRENT_SCENE = new Scene(newGuid(), _host);
   await CURRENT_SCENE.saveScene();
 
-  $('#scene-slider').append(`<li id=scene-${CURRENT_SCENE.id} onclick="onSceneSelect('${CURRENT_SCENE.id}')">
+  $('#scene-slider').append(`<li id=scene-${CURRENT_SCENE.id} onclick="onChangeScene('${CURRENT_SCENE.id}')">
     ${CURRENT_SCENE.name}
   </li>`);
 
-  buildScene();
+  CURRENT_SCENE.draw(_ctx);
 }
 
-const onSceneSelect = async function(id) {
+const onChangeScene = async function(id) {
+  if (!isHost()) return;
+
   const scenePartials = await localforage.getItem(StorageKeys.Scenes);
   const sceneToLoad = scenePartials.find(sp => sp.id == id);
   if (sceneToLoad == null) {
@@ -728,7 +712,11 @@ const onSceneSelect = async function(id) {
 
   CURRENT_SCENE = await Scene.load(sceneToLoad);
 
-  buildScene();
+  CURRENT_SCENE.draw(_ctx);
+
+  for (var player of PARTY.players) {
+    emitLoadSceneEvent(player.id);
+  }
 }
 
 const restoreHostSession = async function () {
@@ -757,8 +745,6 @@ const restoreHostSession = async function () {
   else {
     PARTY = new Party(_host);
   }
-
-  buildScene();
 }
 
 const initPeer = function () {
@@ -901,7 +887,10 @@ const initDom = function () {
     _ctx.canvas.width = window.innerWidth;
     _ctx.canvas.height = window.innerHeight;
 
-    refreshCanvas();
+    if (_spellRuler instanceof Area) {
+      _spellRuler.draw(_ctx);
+    }
+    CURRENT_SCENE?.drawPieces(_ctx);
   });
 
   // Observe one or multiple elements
@@ -959,22 +948,28 @@ const initDom = function () {
       $('.menu-toggle').hide(); // disable invisible menu toggle
       _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / getCurrentCanvasWidth();
       _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / getCurrentCanvasHeight();
-      refreshCanvas();
+      CURRENT_SCENE.drawPieces(_ctx);
     }
     else if (_spellRuler != null) {
       _spellRuler.x = args.x;
       _spellRuler.y = args.y;
-      refreshCanvas();
+      if (_spellRuler instanceof Area) {
+        _spellRuler.draw(_ctx);
+      }
+      CURRENT_SCENE.drawPieces(_ctx);
     }
   });
   can.addEventListener('wheel', function (args) {
     if (_spellRuler != null) {
       _spellRuler.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
-      refreshCanvas();
+      if (_spellRuler instanceof Area) {
+        _spellRuler.draw(_ctx);
+      }
+      CURRENT_SCENE.drawPieces(_ctx);
     }
     else if (_draggedPiece != null) {
       _draggedPiece.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
-      refreshCanvas();
+      CURRENT_SCENE.drawPieces(_ctx);
     }
   });
   can.addEventListener('mouseup', async function () {
@@ -1022,5 +1017,6 @@ window.onload = async function () {
   await initPeer();
   if (isHost()) {
     await restoreHostSession();
+    CURRENT_SCENE.draw(_ctx);
   }
 }

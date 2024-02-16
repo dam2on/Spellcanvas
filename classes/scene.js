@@ -5,7 +5,8 @@ class Scene {
         this.owner = ownerId;
         this.gridRatio = 0.025;
         this.pieces = [];
-        this.background = null;
+        this.background = new Background(BackgroundType.Image, 'img/bg.png');
+        // canvas ref here?
     }
 
     static async load(partial) {
@@ -58,7 +59,7 @@ class Scene {
     pureJson() {
         const piecesJson = [];
         for (var piece of this.pieces) {
-            const pieceCopy = {...piece};
+            const pieceCopy = { ...piece };
             pieceCopy.image = piece.image.src;
             piecesJson.push(pieceCopy);
         }
@@ -103,27 +104,37 @@ class Scene {
         await localforage.setItem(`${StorageKeys.Background}-${this.id}`, this.background);
     }
 
-    async saveGrid() { 
+    async saveGrid() {
         await localforage.setItem(`${StorageKeys.GridRatio}-${this.id}`, this.gridRatio);
     }
 
     async savePieces() {
         const piecesJson = [];
         for (var piece of this.pieces) {
-          let pieceCopy = { ...piece };
-          pieceCopy.image = piece.image.src;
-          piecesJson.push(pieceCopy);
+            let pieceCopy = { ...piece };
+            pieceCopy.image = piece.image.src;
+            piecesJson.push(pieceCopy);
         }
         await localforage.setItem(`${StorageKeys.Pieces}-${this.id}`, piecesJson);
     }
 
     draw(ctx) {
+        const pixelVal = this.gridRatio * getCurrentCanvasWidth();
+        $('#range-grid-size').val(pixelVal);
+        $('label[for="range-grid-size"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
+        this.drawBackground();
+        this.drawPieces(ctx);
+    }
+
+    drawPieces(ctx) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
         for (var piece of this.pieces) {
             piece.draw(ctx);
         }
     }
 
-    updateBackground(obj) {
+    setBackground(obj) {
         if (obj instanceof Background) {
             this.background = obj;
             return this.background;
@@ -139,7 +150,7 @@ class Scene {
         return null;
     }
 
-    applyBackground() { 
+    drawBackground() {
         return this.background?.apply();
     }
 
