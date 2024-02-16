@@ -23,6 +23,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"
         integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+        integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="classes/piece.js"></script>
     <script type="text/javascript" src="classes/player.js"></script>
     <script type="text/javascript" src="classes/permission.js"></script>
@@ -134,8 +137,8 @@
             </div>
             <div class="form-group">
                 <label for="scene-slider">Scenes</label>
-                <div id="scene-slider" class="owl-carousel owl-theme">
-                    <div><button id="btn-add-scene" class="btn btn-primary">New Scene</button></div>
+                <div id="scene-slider" class="row row-cols-3">
+                    <div class="col"><button id="btn-add-scene" class="btn btn-primary">New Scene</button></div>
 
                 </div>
             </div>

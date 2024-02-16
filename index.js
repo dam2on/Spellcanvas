@@ -304,6 +304,8 @@ const emitAddPieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
   let pieceCopy = { ...piece };
   pieceCopy.image = piece.image.src;
+  pieceCopy.canvas = undefined;
+  pieceCopy.ctx = undefined;
   conn.on('open', function () {
     conn.send({ event: EventTypes.AddPiece, piece: pieceCopy });
   })
@@ -603,7 +605,14 @@ const initPeerEvents = function () {
   });
 
   _peer.on('error', function (a, e, i) {
-    debugger;
+    if (a.type == 'peer-unavailable') {
+      console.warn('could not connect to peer ' + a.message);
+      // TODO: change connect icon under party section
+    }
+    else {
+      debugger;
+
+    }
   });
 
   _peer.on('connection', function (conn) {
@@ -666,29 +675,25 @@ const initPeerEvents = function () {
   });
 }
 
-const displaySceneList = function (scenePartials) {
+const displaySceneList = async function (scenePartials) {
   if (!!scenePartials.length) {
     for (var scene of scenePartials) {
-      $('#scene-slider').prepend(`<div id=scene-${scene.id}>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="onChangeScene('${scene.id}')">Load ${scene.name}</button>
-    </div>`);
+      $('#scene-slider').append(`<div id=scene-${scene.id} class="col" onclick="onChangeScene('${scene.id}')">
+      <img src=${scene instanceof Scene ? scene.background.url : scene.thumbnail}></img>
+      </div>`);
     }
-
-    $('#scene-slider').owlCarousel({
-
-    });
-
-
   }
 }
 
 const onAddScene = async function () {
+  await CURRENT_SCENE.saveThumbnail();
+
   CURRENT_SCENE = new Scene(newGuid(), _host);
   await CURRENT_SCENE.saveScene();
 
-  $('#scene-slider').prepend(`<li id=scene-${CURRENT_SCENE.id} onclick="onChangeScene('${CURRENT_SCENE.id}')">
-    ${CURRENT_SCENE.name}
-  </li>`);
+  $('#scene-slider').append(`<div class="col" id=scene-${CURRENT_SCENE.id} onclick="onChangeScene('${CURRENT_SCENE.id}')">
+    <img src="${CURRENT_SCENE.background.url}"></img>
+  </div>`);
 
   CURRENT_SCENE.draw();
 }
@@ -696,6 +701,7 @@ const onAddScene = async function () {
 const onChangeScene = async function (id) {
   if (!isHost()) return;
 
+  await CURRENT_SCENE.saveThumbnail();
   const scenePartials = await localforage.getItem(StorageKeys.Scenes);
   const sceneToLoad = scenePartials.find(sp => sp.id == id);
   if (sceneToLoad == null) {
@@ -727,6 +733,7 @@ const restoreHostSession = async function () {
   else {
     CURRENT_SCENE = new Scene(newGuid(), _host);
     await CURRENT_SCENE.saveScene();
+    displaySceneList([CURRENT_SCENE]);
   }
 
   const partyVal = await localforage.getItem(`${StorageKeys.Party}-${_host}`);

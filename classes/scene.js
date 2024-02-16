@@ -69,6 +69,8 @@ class Scene {
 
         const sceneCopy = {
             ...this,
+            canvas: undefined,
+            ctx: undefined,
             pieces: piecesJson
         };
 
@@ -81,18 +83,19 @@ class Scene {
             id: this.id,
             name: this.name,
             owner: this.owner,
-            gridRatio: this.gridRatio
+            gridRatio: this.gridRatio,
+            thumbnail: this.thumbnail
         };
         if (scenes == null) {
             scenes = [objForSaving];
         }
         else {
-            const existingScene = scenes.find(s => s.id == this.id);
+            let existingScene = scenes.find(s => s.id == this.id);
             if (existingScene == null) {
                 scenes.push(objForSaving);
             }
             else {
-                existingScene = objForSaving;
+                scenes.splice(scenes.indexOf(existingScene), 1, objForSaving);
             }
         }
 
@@ -104,6 +107,7 @@ class Scene {
     }
 
     async saveBackground() {
+        await CURRENT_SCENE.saveThumbnail();
         await localforage.setItem(`${StorageKeys.Background}-${this.id}`, this.background);
     }
 
@@ -123,6 +127,42 @@ class Scene {
         await localforage.setItem(`${StorageKeys.Pieces}-${this.id}`, piecesJson);
     }
 
+    async saveThumbnail() {
+        const scene = this;
+        return new Promise(function(resolve, reject) {
+            const sceneContainer = document.getElementById('scene-' + scene.id);
+            sceneContainer.innerHTML = '';
+            sceneContainer.appendChild(scene.getThumbnail());
+            setTimeout(html2canvas(sceneContainer).then(async (canvas) => {
+                scene.thumbnail = canvas.toDataURL();
+                await scene.saveScene();
+                resolve();
+            }), 1000);
+
+        });
+    }
+
+    getThumbnail() {
+        //create a new canvas
+        const newCanvas = document.createElement('canvas');
+
+        //set dimensions
+        newCanvas.width = this.canvas.width;
+        newCanvas.height = this.canvas.height;
+
+        //apply the old canvas to the new one
+        newCanvas.getContext('2d', {willReadFrequently: true}).drawImage(this.canvas, 0, 0);
+
+        newCanvas.style = `width: 100%; height: auto; position: relative; top: 0; left: 0; margin: 0; padding: 0; 
+        background-color: transparent;
+        background-position: center; 
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-image: url('${this.background.getPosterImgUrl()}')`;
+
+        return newCanvas;
+    }
+
     draw() {
         const pixelVal = this.gridRatio * this.canvas.width;
         $('#range-grid-size').val(pixelVal);
@@ -139,6 +179,7 @@ class Scene {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
         for (var piece of this.pieces) {
+
             piece.draw();
         }
     }
