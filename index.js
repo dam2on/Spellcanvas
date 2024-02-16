@@ -2,13 +2,12 @@ PARTY = null;
 CURRENT_SCENE = null;
 
 _player = null;
-_spellRuler = null;
 _peer = null;
 _host = null;
-_ctx = null;
-_pieceInMenu = null;
-_draggedPiece = null;
 
+_pieceInMenu = null;
+_spellRuler = null;
+_draggedPiece = null;
 
 const isHost = function () {
   return _peer.id == _host;
@@ -49,18 +48,6 @@ const shapeIntersects = function (x, y) {
   }
   return null;
 }
-
-// const drawImageScaled = function (img) {
-//   var canvas = _ctx.canvas;
-//   var hRatio = canvas.width / img.width;
-//   var vRatio = canvas.height / img.height;
-//   var ratio = Math.min(hRatio, vRatio);
-//   var centerShift_x = (canvas.width - img.width * ratio) / 2;
-//   var centerShift_y = (canvas.height - img.height * ratio) / 2;
-//   _ctx.clearRect(0, 0, canvas.width, canvas.height);
-//   _ctx.drawImage(img, 0, 0, img.width, img.height,
-//     centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
-// }
 
 const onBackgroundTypeChange = function () {
   const bgType = document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value;
@@ -127,7 +114,7 @@ const onSpellRulerToggle = function (args) {
     $(this).focusout();
 
     // erase ruler from canvas
-    CURRENT_SCENE.drawPieces(_ctx);
+    CURRENT_SCENE.drawPieces();
   }
   else {
     _spellRuler = new Area(type, $('#input-spell-size').val() / 5);
@@ -162,7 +149,7 @@ const onQuickAdd = function (args) {
   CURRENT_SCENE.addPiece(piece);
 
   piece.image.addEventListener('load', async () => {
-    piece.draw(_ctx);
+    piece.draw();
     await CURRENT_SCENE.savePieces();
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
     initGamePieceTour(piece);
@@ -189,7 +176,7 @@ const onAddPieceSubmit = async function () {
   CURRENT_SCENE.addPiece(piece);
 
   piece.image.addEventListener('load', async () => {
-    piece.draw(_ctx);
+    piece.draw();
     await CURRENT_SCENE.savePieces();
     initGamePieceTour(piece);
     modalPieceInputs[0].value = null;
@@ -236,7 +223,7 @@ const onUpdatePieceSubmit = async function () {
     emitUpdatePieceEvent(_host, _pieceInMenu);
   }
 
-  CURRENT_SCENE.drawPieces(_ctx);
+  CURRENT_SCENE.drawPieces();
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
 }
 
@@ -244,7 +231,7 @@ const onDeletePieceSubmit = function () {
   if (_pieceInMenu == null) return;
   if (confirm("Delete piece: " + _pieceInMenu.name + "?")) {
     CURRENT_SCENE.deletePiece(_pieceInMenu);
-    CURRENT_SCENE.drawPieces(_ctx);
+    CURRENT_SCENE.drawPieces();
 
     if (isHost()) {
       for (var player of PARTY.players) {
@@ -269,7 +256,7 @@ const onResetPiecesSubmit = async function () {
 
 const onResetPiecesEvent = function () {
   CURRENT_SCENE.clearPieces();
-  CURRENT_SCENE.drawPieces(_ctx);
+  CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
     for (var player of PARTY.players) {
@@ -293,7 +280,7 @@ const onPermissionsUpdateEvent = function (permissions) {
 
 const onLoadSceneEvent = async function (scene) {
   CURRENT_SCENE = await Scene.fromObj(scene);
-  CURRENT_SCENE.draw(_ctx);
+  CURRENT_SCENE.draw();
 }
 
 const emitLoadSceneEvent = function (peerId) {
@@ -466,7 +453,7 @@ const onAddPieceEvent = async function (piece) {
     await CURRENT_SCENE.savePieces();
   }
 
-  CURRENT_SCENE.drawPieces(_ctx);
+  CURRENT_SCENE.drawPieces();
 }
 
 const onMovePieceEvent = async function (movedPiece) {
@@ -486,7 +473,7 @@ const onMovePieceEvent = async function (movedPiece) {
     await CURRENT_SCENE.savePieces();
   }
 
-  CURRENT_SCENE.drawPieces(_ctx);
+  CURRENT_SCENE.drawPieces();
 }
 
 const onDeletePieceEvent = async function (id) {
@@ -494,8 +481,8 @@ const onDeletePieceEvent = async function (id) {
   if (piece == null) return;
 
   CURRENT_SCENE.deletePiece(piece);
-  CURRENT_SCENE.drawPieces(_ctx);
-  
+  CURRENT_SCENE.drawPieces();
+
   if (isHost()) {
     piece.deleteMe = true;
     updatePlayerDetails({ id: piece.owner }, piece);
@@ -527,7 +514,7 @@ const onUpdatePieceEvent = async function (piece) {
     await CURRENT_SCENE.savePieces();
   }
 
-  CURRENT_SCENE.drawPieces(_ctx);
+  CURRENT_SCENE.drawPieces();
 }
 
 const onGridChangeEvent = async function (gridSize) {
@@ -537,9 +524,9 @@ const onGridChangeEvent = async function (gridSize) {
   }
 
   if (_spellRuler instanceof Area) {
-    _spellRuler.draw(_ctx);
+    _spellRuler.draw();
   }
-  CURRENT_SCENE.drawPieces(_ctx);
+  CURRENT_SCENE.drawPieces();
 }
 
 const onNewPlayerEvent = async function (player, isReconnect = false) {
@@ -682,25 +669,31 @@ const initPeerEvents = function () {
 const displaySceneList = function (scenePartials) {
   if (!!scenePartials.length) {
     for (var scene of scenePartials) {
-      $('#scene-slider').append(`<li id=scene-${scene.id} onclick="onChangeScene('${scene.id}')">
-      ${scene.name}
-    </li>`);
+      $('#scene-slider').prepend(`<div id=scene-${scene.id}>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="onChangeScene('${scene.id}')">Load ${scene.name}</button>
+    </div>`);
     }
+
+    $('#scene-slider').owlCarousel({
+
+    });
+
+
   }
 }
 
-const onAddScene = async function() {
+const onAddScene = async function () {
   CURRENT_SCENE = new Scene(newGuid(), _host);
   await CURRENT_SCENE.saveScene();
 
-  $('#scene-slider').append(`<li id=scene-${CURRENT_SCENE.id} onclick="onChangeScene('${CURRENT_SCENE.id}')">
+  $('#scene-slider').prepend(`<li id=scene-${CURRENT_SCENE.id} onclick="onChangeScene('${CURRENT_SCENE.id}')">
     ${CURRENT_SCENE.name}
   </li>`);
 
-  CURRENT_SCENE.draw(_ctx);
+  CURRENT_SCENE.draw();
 }
 
-const onChangeScene = async function(id) {
+const onChangeScene = async function (id) {
   if (!isHost()) return;
 
   const scenePartials = await localforage.getItem(StorageKeys.Scenes);
@@ -712,11 +705,15 @@ const onChangeScene = async function(id) {
 
   CURRENT_SCENE = await Scene.load(sceneToLoad);
 
-  CURRENT_SCENE.draw(_ctx);
+  CURRENT_SCENE.draw();
 
   for (var player of PARTY.players) {
     emitLoadSceneEvent(player.id);
   }
+}
+
+const onDeleteScene = function (id) {
+
 }
 
 const restoreHostSession = async function () {
@@ -856,19 +853,11 @@ const onGridSizeInput = function () {
   label.innerHTML = `<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${value}`
 }
 
-const getCurrentCanvasWidth = function () {
-  return Number(getComputedStyle(document.getElementById("canvas")).width.replace("px", ""));
-}
-
-const getCurrentCanvasHeight = function () {
-  return Number(getComputedStyle(document.getElementById("canvas")).height.replace("px", ""));
-}
-
 const onGridSizeChange = function () {
   if (!isHost()) return;
   $('.grid-indicator').hide();
   const input = document.getElementById('range-grid-size');
-  let newGridSize = Number(input.value) / getCurrentCanvasWidth();
+  let newGridSize = Number(input.value) / document.getElementById("canvas").width;
   onGridChangeEvent(newGridSize);
 
   // broadcast grid change
@@ -881,16 +870,15 @@ const initDom = function () {
   var can = document.getElementById('canvas');
   can.width = window.innerWidth;
   can.height = window.innerHeight;
-  _ctx = can.getContext('2d');
 
   var ro = new ResizeObserver(e => {
-    _ctx.canvas.width = window.innerWidth;
-    _ctx.canvas.height = window.innerHeight;
+    document.getElementById('canvas').width = window.innerWidth;
+    document.getElementById('canvas').height = window.innerHeight;
 
     if (_spellRuler instanceof Area) {
-      _spellRuler.draw(_ctx);
+      _spellRuler.draw();
     }
-    CURRENT_SCENE?.drawPieces(_ctx);
+    CURRENT_SCENE?.drawPieces();
   });
 
   // Observe one or multiple elements
@@ -938,7 +926,6 @@ const initDom = function () {
     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   });
 
-  // _spellRuler = new Area(AreaType.Cone, 12);
   can.addEventListener('mousedown', function (args) {
     if (args.button == 0) // left click
       _draggedPiece = shapeIntersects(args.x, args.y);
@@ -946,30 +933,31 @@ const initDom = function () {
   can.addEventListener('mousemove', function (args) {
     if (_draggedPiece != null) {
       $('.menu-toggle').hide(); // disable invisible menu toggle
-      _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / getCurrentCanvasWidth();
-      _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / getCurrentCanvasHeight();
-      CURRENT_SCENE.drawPieces(_ctx);
+      _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / document.getElementById("canvas").width;
+      _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / document.getElementById("canvas").height;
+      CURRENT_SCENE.drawPieces();
     }
     else if (_spellRuler != null) {
+      CURRENT_SCENE.drawPieces();
       _spellRuler.x = args.x;
       _spellRuler.y = args.y;
       if (_spellRuler instanceof Area) {
-        _spellRuler.draw(_ctx);
+        _spellRuler.draw();
       }
-      CURRENT_SCENE.drawPieces(_ctx);
     }
   });
   can.addEventListener('wheel', function (args) {
     if (_spellRuler != null) {
+      CURRENT_SCENE.drawPieces();
       _spellRuler.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
       if (_spellRuler instanceof Area) {
-        _spellRuler.draw(_ctx);
+        _spellRuler.draw();
       }
-      CURRENT_SCENE.drawPieces(_ctx);
+
     }
     else if (_draggedPiece != null) {
       _draggedPiece.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
-      CURRENT_SCENE.drawPieces(_ctx);
+      CURRENT_SCENE.drawPieces();
     }
   });
   can.addEventListener('mouseup', async function () {
@@ -1017,6 +1005,6 @@ window.onload = async function () {
   await initPeer();
   if (isHost()) {
     await restoreHostSession();
-    CURRENT_SCENE.draw(_ctx);
+    CURRENT_SCENE.draw();
   }
 }

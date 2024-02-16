@@ -20,8 +20,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"
         integrity="sha512-+BMamP0e7wn39JGL8nKAZ3yAQT2dL5oaXWr4ZYlTGkKOaoXM/Yj7c4oy50Ngz5yoUutAG17flueD4F6QpTlPng=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightslider/1.1.6/js/lightslider.min.js"
-        integrity="sha512-Gfrxsz93rxFuB7KSYlln3wFqBaXUc1jtt3dGCp+2jTb563qYvnUBM/GP2ZUtRC27STN/zUamFtVFAIsRFoT6/w=="
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"
+        integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="classes/piece.js"></script>
     <script type="text/javascript" src="classes/player.js"></script>
@@ -34,8 +34,12 @@
     <script type="text/javascript" src="enums.js"></script>
     <script type="text/javascript" src="index.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightslider/1.1.6/css/lightslider.min.css"
-        integrity="sha512-yJHCxhu8pTR7P2UgXFrHvLMniOAL5ET1f5Cj+/dzl+JIlGTh5Cz+IeklcXzMavKvXP8vXqKMQyZjscjf3ZDfGA=="
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css"
+        integrity="sha512-tS3S5qG0BlhnQROyJXvNjeEM4UpMXHrQfTGmbQ1gKmelCxlSEBUaxhRBj/EFTzpbP4RVSrpEikbmdJobCvhE3g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css"
+        integrity="sha512-sMXtMNL1zRzolHYKEujM2AqCLUR9F2C4/05cdbxjjLSRvMQIciEPCQZo++nk7go3BtSuK9kfa/s+a4f4i5pLkw=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.css"
@@ -80,7 +84,7 @@
                 <!-- </div>
             <div class="form-group mb-3"> -->
                 <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal"
-                    data-bs-target="#modal-piece">Add Game Piece <i class="fa-solid fa-chess-knight"></i></button>
+                    data-bs-target="#modal-piece">New Game Piece <i class="fa-solid fa-chess-knight"></i></button>
             </div>
             <div id="spell-ruler" class="form-group mb-3">
                 <label for="spell-ruler"><i class="fa-solid fa-ruler me-2"></i>Spell Ruler</label>
@@ -130,10 +134,10 @@
             </div>
             <div class="form-group">
                 <label for="scene-slider">Scenes</label>
-                <ul id="scene-slider">
-                    <li id="btn-add-scene">Add Scene</li>
+                <div id="scene-slider" class="owl-carousel owl-theme">
+                    <div><button id="btn-add-scene" class="btn btn-primary">New Scene</button></div>
 
-                </ul>
+                </div>
             </div>
             <div id="section-party-menu" class="my-4">
                 <h4><i class="fa-solid fa-users me-2"></i>Party</h4>

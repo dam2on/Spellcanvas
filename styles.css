@@ -1,10 +1,12 @@
 html,
 body,
 .offcanvas,
-.modal-content {
+.modal-content,
+.card {
   background-color: #36454F !important;
   color: #f7f7f7 !important;
 }
+
 
 .modal-header {
   border-bottom: none;

@@ -1,12 +1,13 @@
 class Scene {
     constructor(id, ownerId) {
         this.id = id;
-        this.name = "New Scene";
+        this.name = "My Scene";
         this.owner = ownerId;
+        this.canvas = document.getElementById('canvas');
         this.gridRatio = 0.025;
         this.pieces = [];
+        this.ctx = this.canvas.getContext('2d');
         this.background = new Background(BackgroundType.Image, 'img/bg.png');
-        // canvas ref here?
     }
 
     static async load(partial) {
@@ -61,6 +62,8 @@ class Scene {
         for (var piece of this.pieces) {
             const pieceCopy = { ...piece };
             pieceCopy.image = piece.image.src;
+            pieceCopy.canvas = undefined;
+            pieceCopy.ctx = undefined;
             piecesJson.push(pieceCopy);
         }
 
@@ -113,24 +116,30 @@ class Scene {
         for (var piece of this.pieces) {
             let pieceCopy = { ...piece };
             pieceCopy.image = piece.image.src;
+            pieceCopy.canvas = undefined;
+            pieceCopy.ctx = undefined;
             piecesJson.push(pieceCopy);
         }
         await localforage.setItem(`${StorageKeys.Pieces}-${this.id}`, piecesJson);
     }
 
-    draw(ctx) {
-        const pixelVal = this.gridRatio * getCurrentCanvasWidth();
+    draw() {
+        const pixelVal = this.gridRatio * this.canvas.width;
         $('#range-grid-size').val(pixelVal);
         $('label[for="range-grid-size"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
         this.drawBackground();
-        this.drawPieces(ctx);
+        this.drawPieces();
     }
 
-    drawPieces(ctx) {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    drawBackground() {
+        return this.background?.apply();
+    }
+
+    drawPieces() {
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
         for (var piece of this.pieces) {
-            piece.draw(ctx);
+            piece.draw();
         }
     }
 
@@ -148,10 +157,6 @@ class Scene {
 
         console.warn("bad argument: " + JSON.stringify(obj));
         return null;
-    }
-
-    drawBackground() {
-        return this.background?.apply();
     }
 
     async addPiece(piece) {

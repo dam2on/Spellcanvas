@@ -12,15 +12,27 @@ class Piece {
         this.y = y;
         this.dead = false;
         this.imageUpdated = false;
+        this.canvas = document.getElementById('canvas');
+        this.ctx = this.canvas.getContext('2d');
         this.updateImage(img);
     }
 
-    updateConditions(statusListString) {
-        if (statusListString == "") {
+    static async fromObj(obj) {
+        let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
+        piece.dead = obj.dead;
+        if (obj.conditions != null) {
+            piece.conditions = obj.conditions;
+        }
+
+        return piece;
+    }
+
+    updateConditions(conditionListStr) {
+        if (conditionListStr == "") {
             this.conditions = [];
         }
         else {
-            this.conditions = statusListString.split(',');
+            this.conditions = conditionListStr.split(',');
         }
     }
 
@@ -28,8 +40,8 @@ class Piece {
         if (size != null) {
             this.size = Number(size);
         }
-        this.width = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size;
-        this.height = CURRENT_SCENE.gridRatio * getCurrentCanvasWidth() * this.size;
+        this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
+        this.height = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
     }
 
     updateImage(img) {
@@ -59,11 +71,11 @@ class Piece {
     }
 
     getX() {
-        return this.x * getCurrentCanvasWidth();
+        return this.x * this.canvas.width;
     }
 
     getY() {
-        return this.y * getCurrentCanvasHeight();
+        return this.y * this.canvas.height;
     }
 
     click() {
@@ -72,21 +84,11 @@ class Piece {
             buttons: 2,
             clientX: this.getX() + this.width / 2,
             clientY: this.getY() + this.height / 2
-          }));
+        }));
     }
 
-    static async fromObj(obj) {
-        let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
-        piece.dead = obj.dead;
-        if (obj.conditions != null) {
-            piece.conditions = obj.conditions;
-        }
-
-        return piece;
-    }
-
-    getTextDims(ctx, str) {
-        const textDims = ctx.measureText(str);
+    getTextDims(str) {
+        const textDims = this.ctx.measureText(str);
         return {
             width: Math.ceil(textDims.width),
             top: textDims.actualBoundingBoxAscent,
@@ -121,7 +123,7 @@ class Piece {
             case PieceSizes.Gargantuan:
                 break;
             default:
-                console.warn("piece size: " + pieceSize + " not recognized as standard size");
+                console.warn("piece size: " + pieceSize + " not recognized");
                 break;
         }
 
@@ -129,57 +131,57 @@ class Piece {
     }
 
 
-    draw(ctx) {
+    draw() {
         this.updateSize();
         const textMargin = 3;
         const deadImage = document.getElementById("image-dead");
         const fontSize = this.getFontSizeByPiece(this.size);
 
-        ctx.drawImage(this.image, this.getX(), this.getY(), this.width, this.height);
+        this.ctx.drawImage(this.image, this.getX(), this.getY(), this.width, this.height);
 
         // dead overlay
         if (this.dead) {
-            ctx.globalAlpha = 0.5;
-            ctx.drawImage(deadImage, this.getX(), this.getY(), this.width, this.height);
-            ctx.globalAlpha = 1;
+            this.ctx.globalAlpha = 0.5;
+            this.ctx.drawImage(deadImage, this.getX(), this.getY(), this.width, this.height);
+            this.ctx.globalAlpha = 1;
         }
 
-        ctx.textBaseline = "bottom";
-        
+        this.ctx.textBaseline = "bottom";
+
         // add name
         if (this.name) {
-            ctx.font = fontSize.name + " Arial";
-            let nameTextDims = this.getTextDims(ctx, this.name);
-            ctx.fillStyle = "#36454F"; // charcoal
-            ctx.beginPath();
-            ctx.roundRect(this.getX() - textMargin + (this.width - nameTextDims.width) / 2,
+            this.ctx.font = fontSize.name + " Arial";
+            let nameTextDims = this.getTextDims(this.name);
+            this.ctx.fillStyle = "#36454F"; // charcoal
+            this.ctx.beginPath();
+            this.ctx.roundRect(this.getX() - textMargin + (this.width - nameTextDims.width) / 2,
                 this.getY() - textMargin - nameTextDims.height,
                 nameTextDims.width + 2 * textMargin,
                 nameTextDims.height + 2 * textMargin,
                 3);
-            ctx.fill();
-            ctx.fillStyle = "#f9f9f9"; // off white
-            ctx.fillText(this.name, this.getX() + (this.width - nameTextDims.width) / 2, this.getY());
+            this.ctx.fill();
+            this.ctx.fillStyle = "#f9f9f9"; // off white
+            this.ctx.fillText(this.name, this.getX() + (this.width - nameTextDims.width) / 2, this.getY());
         }
 
         // add conditions
         if (this.conditions.length > 0) {
-            ctx.font = fontSize.statuses + " Arial";
-            const anyLetterHeight = this.getTextDims(ctx, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ").height;
+            this.ctx.font = fontSize.statuses + " Arial";
+            const anyLetterHeight = this.getTextDims("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ").height;
             let conX = this.getX();
             let conY = this.height + this.getY();
             for (var i = 0; i < this.conditions.length; i++) {
-                let currentConDims = this.getTextDims(ctx, this.conditions[i]);
+                let currentConDims = this.getTextDims(this.conditions[i]);
                 if (i > 0 && (conX + currentConDims.width > this.getX() + this.width)) {
                     conY += anyLetterHeight + (3 * textMargin);
                     conX = this.getX();
                 }
-                ctx.fillStyle = "#880808"; // blood red
-                ctx.beginPath();
-                ctx.roundRect(conX, conY, currentConDims.width + 2 * textMargin, anyLetterHeight + 2 * textMargin, 3);
-                ctx.fill();
-                ctx.fillStyle = "#f9f9f9"; // off white
-                ctx.fillText(this.conditions[i], conX + textMargin, conY + anyLetterHeight + textMargin);
+                this.ctx.fillStyle = "#880808"; // blood red
+                this.ctx.beginPath();
+                this.ctx.roundRect(conX, conY, currentConDims.width + 2 * textMargin, anyLetterHeight + 2 * textMargin, 3);
+                this.ctx.fill();
+                this.ctx.fillStyle = "#f9f9f9"; // off white
+                this.ctx.fillText(this.conditions[i], conX + textMargin, conY + anyLetterHeight + textMargin);
                 conX += currentConDims.width + (3 * textMargin);
             }
         }
