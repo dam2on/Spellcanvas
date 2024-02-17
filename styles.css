@@ -5,8 +5,37 @@ body,
 .card {
   background-color: #36454F !important;
   color: #f7f7f7 !important;
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
 }
 
+*, *:before, *:after {
+  -webkit-box-sizing: inherit; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: inherit;    /* Firefox, other Gecko */
+  box-sizing: inherit;         /* Opera/IE 8+ */
+}
+
+.bg-img-cover {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 0.5rem;
+  border-top: 0.25rem solid transparent;
+  border-bottom: 0.25rem solid transparent;
+  height: 100%;
+}
+
+input[type="radio"]:checked ~ .bg-img-cover {
+  border: 0.25rem solid #0d6efd;
+}
+
+.btn-round {
+  border-radius: 5em;
+}
 
 .modal-header {
   border-bottom: none;

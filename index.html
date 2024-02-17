@@ -23,9 +23,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"
         integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
-        integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="classes/piece.js"></script>
     <script type="text/javascript" src="classes/player.js"></script>
     <script type="text/javascript" src="classes/permission.js"></script>
@@ -89,6 +86,17 @@
                 <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal"
                     data-bs-target="#modal-piece">New Game Piece <i class="fa-solid fa-chess-knight"></i></button>
             </div>
+            <div class="form-group mb-3">
+                <label for="range-grid-size" class="form-label"><i class="fa-solid fa-border-none me-2"></i>Grid
+                    Size: 50</label>
+                <input type="range" id="range-grid-size" min="1" max="150" step="1" value="50"
+                    style="width: 149px !important;">
+                <div class="mt-3">
+                    <div class="grid-indicator" style="display: none; width: 50px; height: 50px;">
+
+                    </div>
+                </div>
+            </div>
             <div id="spell-ruler" class="form-group mb-3">
                 <label for="spell-ruler"><i class="fa-solid fa-ruler me-2"></i>Spell Ruler</label>
                 <div class="row mt-1">
@@ -121,26 +129,15 @@
                     </div>
                 </div>
             </div>
-            <div class="form-group mb-3">
-                <label for="range-grid-size" class="form-label"><i class="fa-solid fa-border-none me-2"></i>Grid
-                    Size: 50</label>
-                <input type="range" id="range-grid-size" min="1" max="150" step="1" value="50"
-                    style="width: 149px !important;">
-                <div class="mt-3">
-                    <div class="grid-indicator" style="display: none; width: 50px; height: 50px;">
-
-                    </div>
+            <div class="form-group">
+                <label for="scene-list"><i class="fa-regular fa-map me-2"></i>Scenes</label>
+                <div id="scene-list" class="row row-cols-3 gy-2">
+                    <div class="col d-flex justify-content-center align-items-center"><button id="btn-add-scene" class="btn btn-primary btn-round"><i class="fa-solid fa-plus"></i></button></div>
                 </div>
             </div>
             <div class="form-group my-4">
-                <button id="btn-reset-pieces" class="btn btn-danger btn-sm">Delete Game Pieces</button>
-            </div>
-            <div class="form-group">
-                <label for="scene-slider">Scenes</label>
-                <div id="scene-slider" class="row row-cols-3">
-                    <div class="col"><button id="btn-add-scene" class="btn btn-primary">New Scene</button></div>
-
-                </div>
+                <button id="btn-delete-scene" class="d-none btn btn-danger btn-sm">Delete Current Scene</button>
+                <button id="btn-reset-pieces" class="d-none btn btn-danger btn-sm">Delete Game Pieces</button>
             </div>
             <div id="section-party-menu" class="my-4">
                 <h4><i class="fa-solid fa-users me-2"></i>Party</h4>
@@ -152,13 +149,13 @@
                             data-bs-toggle="popover" data-bs-content="Copied!">Copy</button>
                     </div>
                 </div>
-                <span style="display: block;" id="empty-party-msg"><em>No one's here yet</em></span>
-                <ul class="list-group" id="list-connected-party-members"></ul>
                 <div class="form-group my-3">
                     <div>Permissions</div>
                     <label for="permissions-own-pieces">Players can only move their own pieces: </label>
                     <input class="form-check-input" type="checkbox" value="false" id="permissions-own-pieces">
                 </div>
+                <span style="display: block;" id="empty-party-msg"><em>No one's here yet</em></span>
+                <ul class="list-group" id="list-connected-party-members"></ul>
             </div>
         </div>
         <div>
@@ -177,7 +174,7 @@
                 </div>
             </div>
             <div class="form-group mb-3">
-                <label>Name</label>
+                <label for="piece-menu-name">Name</label>
                 <input id="piece-menu-name" class="form-control" />
             </div>
             <div class="form-group mb-3">
@@ -220,11 +217,11 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Status Conditions</label>
+                <label for="piece-menu-status-conditions">Status Conditions</label>
                 <input class="form-control" id="piece-menu-status-conditions" data-role="tagsinput" />
             </div>
             <div class="form-group mb-3">
-                <label for="#piece-menu-dead">Dead?</label>
+                <label for="piece-menu-dead">Dead?</label>
                 <input class="form-check-input" type="checkbox" value="false" id="piece-menu-dead">
             </div>
 

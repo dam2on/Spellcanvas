@@ -22,6 +22,10 @@ class Party {
         await localforage.setItem(`${StorageKeys.Party}-${this.owner}`, this);
     }
 
+    getPlayer(id) {
+        return this.players.find(p => p.id == id);
+    }
+
     addPlayer(player) {
         if (player instanceof Player) {
             this.players.push(player);

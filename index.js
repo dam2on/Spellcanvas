@@ -212,6 +212,8 @@ const onUpdatePieceSubmit = async function () {
     _pieceInMenu.imageUpdated = true;
   }
 
+  CURRENT_SCENE.drawPieces();
+
   if (isHost()) {
     await CURRENT_SCENE.savePieces();
 
@@ -223,17 +225,18 @@ const onUpdatePieceSubmit = async function () {
     emitUpdatePieceEvent(_host, _pieceInMenu);
   }
 
-  CURRENT_SCENE.drawPieces();
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
 }
 
-const onDeletePieceSubmit = function () {
+const onDeletePieceSubmit = async function () {
   if (_pieceInMenu == null) return;
   if (confirm("Delete piece: " + _pieceInMenu.name + "?")) {
     CURRENT_SCENE.deletePiece(_pieceInMenu);
     CURRENT_SCENE.drawPieces();
 
     if (isHost()) {
+      await CURRENT_SCENE.savePieces();
+
       for (var player of PARTY.players) {
         emitDeletePieceEvent(player.id, _pieceInMenu.id);
       }
@@ -254,11 +257,13 @@ const onResetPiecesSubmit = async function () {
   }
 }
 
-const onResetPiecesEvent = function () {
+const onResetPiecesEvent = async function () {
   CURRENT_SCENE.clearPieces();
   CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
+    await CURRENT_SCENE.savePieces();
+
     for (var player of PARTY.players) {
       emitResetPiecesEvent(player.id);
     }
@@ -446,16 +451,16 @@ const onAddPieceEvent = async function (piece) {
 
   const newPiece = await CURRENT_SCENE.addPiece(piece);
 
+  CURRENT_SCENE.drawPieces();
+
   if (isHost()) {
-    updatePlayerDetails({ id: piece.owner }, newPiece);
+    PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
 
     for (var player of PARTY.players) {
       emitAddPieceEvent(player.id, newPiece);
     }
     await CURRENT_SCENE.savePieces();
   }
-
-  CURRENT_SCENE.drawPieces();
 }
 
 const onMovePieceEvent = async function (movedPiece) {
@@ -467,6 +472,8 @@ const onMovePieceEvent = async function (movedPiece) {
   pieceToMove.x = movedPiece.x;
   pieceToMove.y = movedPiece.y;
 
+  CURRENT_SCENE.drawPieces();
+
   if (isHost()) {
     for (var player of PARTY.players) {
       emitMovePieceEvent(player.id, pieceToMove);
@@ -474,8 +481,6 @@ const onMovePieceEvent = async function (movedPiece) {
 
     await CURRENT_SCENE.savePieces();
   }
-
-  CURRENT_SCENE.drawPieces();
 }
 
 const onDeletePieceEvent = async function (id) {
@@ -486,8 +491,7 @@ const onDeletePieceEvent = async function (id) {
   CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
-    piece.deleteMe = true;
-    updatePlayerDetails({ id: piece.owner }, piece);
+    PARTY.getPlayer(piece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
 
     for (var player of PARTY.players) {
       emitDeletePieceEvent(player.id, id);
@@ -506,6 +510,8 @@ const onRequestPieceEvent = function (peerId, id) {
 const onUpdatePieceEvent = async function (piece) {
   const updatedPiece = await CURRENT_SCENE.updatePiece(piece);
 
+  CURRENT_SCENE.drawPieces();
+
   if (isHost()) {
     updatePlayerDetails({ id: updatedPiece.owner }, updatedPiece);
 
@@ -515,74 +521,43 @@ const onUpdatePieceEvent = async function (piece) {
 
     await CURRENT_SCENE.savePieces();
   }
-
-  CURRENT_SCENE.drawPieces();
 }
 
 const onGridChangeEvent = async function (gridSize) {
   CURRENT_SCENE.gridRatio = gridSize;
-  if (isHost()) {
-    await CURRENT_SCENE.saveGrid();
-  }
 
   if (_spellRuler instanceof Area) {
     _spellRuler.draw();
   }
   CURRENT_SCENE.drawPieces();
+
+  if (isHost()) {
+    await CURRENT_SCENE.saveGrid();
+  }
 }
 
-const onNewPlayerEvent = async function (player, isReconnect = false) {
+const onPlayerJoinEvent = async function (player) {
   if (!isHost()) {
     console.warn("only host should receive new player events");
     return;
   }
 
-  player = Player.fromObj(player);
+  const existingPlayer = PARTY.getPlayer(player.id);
+  if (existingPlayer != null) {
+    existingPlayer.status = PlayerStatus.Connected;
+  }
+  else {
+    player = Player.fromObj(player);
+    player.status = PlayerStatus.Connected;
 
-  if (!isReconnect) {
     PARTY.addPlayer(player);
     await PARTY.save();
   }
 
-  updatePlayerDetails(player);
+  $('#list-connected-party-members').append((existingPlayer ?? player).updateOrCreateDom(CURRENT_SCENE.pieces));
   emitPermissionsChangeEvent(player.id);
   emitConnectedToHostEvent(player.id);
   emitLoadSceneEvent(player.id);
-}
-
-const updatePlayerDetails = async function (player, piece = null) {
-  let playerDiv = $(`#player-${player.id}`);
-  if (!playerDiv.length) {
-    $("#empty-party-msg").html('Members');
-    $("#list-connected-party-members").append(
-      `<li class="list-group-item d-flex justify-content-between align-items-center" id=player-${player.id}>
-      <i class="text-success fa-solid fa-circle fa-sm"></i>
-      ${player.name}
-    </li>`);
-    playerDiv = $(`#player-${player.id}`);
-    for (var p of CURRENT_SCENE.pieces) {
-      if (p.owner == player.id) {
-        if (playerDiv.children().length >= 10) return;
-        playerDiv.html(playerDiv.html() + `<img id="piece-icon-${p.id}" title="${p.name}" style="width: 15px; object-fit: contain" src="${p.image instanceof HTMLImageElement ? p.image.src : p.image}"></img>`)
-      }
-    }
-  }
-  else if (piece != null) {
-    const pieceIcon = $('#piece-icon-' + piece.id);
-    if (pieceIcon.length) {
-      if (piece.deleteMe) {
-        pieceIcon.remove();
-      }
-      else {
-        pieceIcon.attr('src', piece.image instanceof HTMLImageElement ? piece.image.src : piece.image);
-        pieceIcon.attr('title', piece.name);
-      }
-    }
-    else {
-      if (playerDiv.children().length >= 10) return;
-      playerDiv.html(playerDiv.html() + `<img id="piece-icon-${piece.id}" title=${piece.name} style="width: 15px; object-fit: contain" src="${piece.image instanceof HTMLImageElement ? piece.image.src : piece.image}"></img>`)
-    }
-  }
 }
 
 const initInviteLink = function () {
@@ -601,17 +576,26 @@ const initInviteLink = function () {
 
 const initPeerEvents = function () {
   _peer.on('disconnected', function (a, e, i) {
+          // leave here to learn about mmore errors
+
     debugger;
   });
 
-  _peer.on('error', function (a, e, i) {
+  _peer.on('error', function (a) {
     if (a.type == 'peer-unavailable') {
       console.warn('could not connect to peer ' + a.message);
-      // TODO: change connect icon under party section
+      const idMatch = a.message.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+      if (!!idMatch.length) {
+        const player = PARTY.getPlayer(idMatch[0]);
+        if (player != null) {
+          player.status = PlayerStatus.Disconnected;
+          player.updateOrCreateDom(CURRENT_SCENE.pieces);
+        }
+      }
     }
     else {
+      // leave here to learn about mmore errors
       debugger;
-
     }
   });
 
@@ -636,11 +620,8 @@ const initPeerEvents = function () {
         case EventTypes.RequestPiece:
           onRequestPieceEvent(conn.peer, data.id);
           break;
-        case EventTypes.NewPlayer:
-          onNewPlayerEvent(data.player);
-          break;
-        case EventTypes.PlayerReconnected:
-          onNewPlayerEvent(data.player, true);
+        case EventTypes.PlayerJoin:
+          onPlayerJoinEvent(data.player);
           break;
         case EventTypes.ChangeBackground:
           onChangeBackgroundEvent(data.background);
@@ -678,22 +659,21 @@ const initPeerEvents = function () {
 const displaySceneList = async function (scenePartials) {
   if (!!scenePartials.length) {
     for (var scene of scenePartials) {
-      $('#scene-slider').append(`<div id=scene-${scene.id} class="col" onclick="onChangeScene('${scene.id}')">
-      <img src=${scene instanceof Scene ? scene.background.url : scene.thumbnail}></img>
-      </div>`);
+      $('#scene-list').prepend(Scene.updateOrCreateDom(scene));
     }
+
+    $('#option-' + CURRENT_SCENE.id).prop('checked', true);
   }
 }
 
 const onAddScene = async function () {
-  await CURRENT_SCENE.saveThumbnail();
+  await CURRENT_SCENE.saveScene();
 
   CURRENT_SCENE = new Scene(newGuid(), _host);
   await CURRENT_SCENE.saveScene();
 
-  $('#scene-slider').append(`<div class="col" id=scene-${CURRENT_SCENE.id} onclick="onChangeScene('${CURRENT_SCENE.id}')">
-    <img src="${CURRENT_SCENE.background.url}"></img>
-  </div>`);
+  $('#scene-list').prepend(Scene.updateOrCreateDom(CURRENT_SCENE));
+  $('#option-' + CURRENT_SCENE.id).prop('checked', true);
 
   CURRENT_SCENE.draw();
 }
@@ -701,7 +681,9 @@ const onAddScene = async function () {
 const onChangeScene = async function (id) {
   if (!isHost()) return;
 
-  await CURRENT_SCENE.saveThumbnail();
+  // save current scene
+  await CURRENT_SCENE.saveScene();
+
   const scenePartials = await localforage.getItem(StorageKeys.Scenes);
   const sceneToLoad = scenePartials.find(sp => sp.id == id);
   if (sceneToLoad == null) {
@@ -710,16 +692,51 @@ const onChangeScene = async function (id) {
   }
 
   CURRENT_SCENE = await Scene.load(sceneToLoad);
-
   CURRENT_SCENE.draw();
 
   for (var player of PARTY.players) {
+    player.updateOrCreateDom(CURRENT_SCENE.pieces);
     emitLoadSceneEvent(player.id);
   }
 }
 
-const onDeleteScene = function (id) {
+const onDeleteScene = async function (id) {
+  await Scene.delete(id);
+}
 
+const updatePlayerDetails = async function (player, piece = null) {
+  let playerDiv = $(`#player-${player.id}`);
+  if (!playerDiv.length) {
+    $("#empty-party-msg").html('Members');
+    $("#list-connected-party-members").append(
+      `<li class="list-group-item d-flex justify-content-between align-items-center" id=player-${player.id}>
+      <i class="text-success fa-solid fa-circle fa-sm"></i>
+      ${player.name}
+    </li>`);
+    playerDiv = $(`#player-${player.id}`);
+    for (var p of CURRENT_SCENE.pieces) {
+      if (p.owner == player.id) {
+        if (playerDiv.children().length >= 10) return;
+        playerDiv.html(playerDiv.html() + `<img id="piece-icon-${p.id}" title="${p.name}" style="width: 15px; object-fit: contain" src="${p.image instanceof HTMLImageElement ? p.image.src : p.image}"></img>`)
+      }
+    }
+  }
+  else if (piece != null) {
+    const pieceIcon = $('#piece-icon-' + piece.id);
+    if (pieceIcon.length) {
+      if (piece.deleteMe) {
+        pieceIcon.remove();
+      }
+      else {
+        pieceIcon.attr('src', piece.image instanceof HTMLImageElement ? piece.image.src : piece.image);
+        pieceIcon.attr('title', piece.name);
+      }
+    }
+    else {
+      if (playerDiv.children().length >= 10) return;
+      playerDiv.html(playerDiv.html() + `<img id="piece-icon-${piece.id}" title=${piece.name} style="width: 15px; object-fit: contain" src="${piece.image instanceof HTMLImageElement ? piece.image.src : piece.image}"></img>`)
+    }
+  }
 }
 
 const restoreHostSession = async function () {
@@ -740,7 +757,8 @@ const restoreHostSession = async function () {
   if (partyVal != null) {
     PARTY = Party.fromObj(partyVal);
     for (var player of PARTY.players) {
-      updatePlayerDetails(player);
+      $("#list-connected-party-members").append(player.updateOrCreateDom(CURRENT_SCENE.pieces));
+      // updatePlayerDetails(player);
     }
     for (var permission of PARTY.permissions) {
       document.getElementById(permission.elementId).checked = permission.value;
@@ -808,6 +826,9 @@ const initPeer = function () {
       var listPartyMembers = document.getElementById("list-connected-party-members");
       listPartyMembers.parentNode.setAttribute("style", "display: none");
 
+      var sceneList = document.getElementById("scene-list");
+      sceneList.parentNode.setAttribute('style', 'display: none;');
+
       // initial peer open
       _peer.on('open', function (id) {
         console.log('My peer ID is: ' + id);
@@ -816,7 +837,7 @@ const initPeer = function () {
           var conn = _peer.connect(_host);
           conn.on('open', function () {
             conn.send({
-              event: EventTypes.PlayerReconnected,
+              event: EventTypes.PlayerJoin,
               player: _player
             });
             resolve();
@@ -836,7 +857,7 @@ const initPeer = function () {
             var conn = _peer.connect(_host);
             conn.on('open', function () {
               conn.send({
-                event: EventTypes.NewPlayer,
+                event: EventTypes.PlayerJoin,
                 player: _player
               });
               resolve();
@@ -857,11 +878,13 @@ const onGridSizeInput = function () {
   $('.grid-indicator').show();
   $('.grid-indicator').css('width', value + 'px');
   $('.grid-indicator').css('height', value + 'px');
+  $('.modal-backdrop.show').css('opacity', 0.0);
   label.innerHTML = `<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${value}`
 }
 
 const onGridSizeChange = function () {
   if (!isHost()) return;
+  $('.modal-backdrop.show').css('opacity', 0.5);
   $('.grid-indicator').hide();
   const input = document.getElementById('range-grid-size');
   let newGridSize = Number(input.value) / document.getElementById("canvas").width;
@@ -992,8 +1015,7 @@ const initDom = function () {
     _pieceInMenu = shapeIntersects(e.clientX, e.clientY);
     if (_pieceInMenu) {
       // open piece submenu
-      const pieceMenu = new bootstrap.Offcanvas(document.getElementById("piece-menu"));
-      pieceMenu.show();
+      bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
       document.getElementById("piece-menu-name").value = _pieceInMenu.name;
       document.getElementById("piece-menu-image").src = _pieceInMenu.image.src;
       document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;

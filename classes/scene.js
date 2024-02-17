@@ -3,11 +3,12 @@ class Scene {
         this.id = id;
         this.name = "My Scene";
         this.owner = ownerId;
-        this.canvas = document.getElementById('canvas');
         this.gridRatio = 0.025;
         this.pieces = [];
-        this.ctx = this.canvas.getContext('2d');
         this.background = new Background(BackgroundType.Image, 'img/bg.png');
+
+        Object.defineProperty(this, 'canvas', {value: document.getElementById('canvas'), enumerable: false, writable: true});
+        Object.defineProperty(this, 'ctx', {value: this.canvas.getContext('2d'), enumerable: false, writable: true});
     }
 
     static async load(partial) {
@@ -17,6 +18,7 @@ class Scene {
         }
         const scene = new Scene(partial.id, partial.owner);
         scene.name = partial.name;
+        scene.thumbnail = partial.thumbnail;
         const piecePromises = [];
         const pieces = await localforage.getItem(`${StorageKeys.Pieces}-${scene.id}`)
         if (pieces != null) {
@@ -44,6 +46,7 @@ class Scene {
         const scene = new Scene(obj.id, obj.owner);
         scene.name = obj.name;
         scene.gridRatio = obj.gridRatio;
+        scene.thumbnail = obj.thumbnail;
 
         const piecePromises = [];
         for (var piece of obj.pieces) {
@@ -57,24 +60,52 @@ class Scene {
         return scene;
     }
 
+    static updateOrCreateDom(scene) {
+        const existingDom = $(`label[for="option-${scene.id}"]`);
+        if (!!existingDom.length) {
+            existingDom.find('div').css('background-image', `url(${scene.background.getPosterImgUrl()})`);
+            existingDom.find('img').attr('src', scene.canvas.toDataURL());
+            // existingDom.find('figcaption').html(scene.name);
+        }
+        else {
+            return $(`
+            <label class="col scene-label" for="option-${scene.id}">
+                <input type="radio" class="btn-check" name="radio-scenes" id="option-${scene.id}">
+                <div class="bg-img-cover" onclick="onChangeScene('${scene.id}')" style="background-image: url(${scene.thumbnail?.bg ?? scene.background.getPosterImgUrl()})">
+                    <img style="height: 100%; width: 100%; position: relative; top: 0; left: 0;" src="${scene.thumbnail?.fg ?? scene.canvas.toDataURL()}">
+                </div>
+            </label>`);
+        }
+    }
+
     pureJson() {
         const piecesJson = [];
         for (var piece of this.pieces) {
             const pieceCopy = { ...piece };
             pieceCopy.image = piece.image.src;
-            pieceCopy.canvas = undefined;
-            pieceCopy.ctx = undefined;
             piecesJson.push(pieceCopy);
         }
 
         const sceneCopy = {
             ...this,
-            canvas: undefined,
-            ctx: undefined,
             pieces: piecesJson
         };
 
         return sceneCopy;
+    }
+
+    static async delete(id) {
+        const deleteScenePartialPromise = new Promise(function (resolve, reject) {
+            localforage.getItem(StorageKeys.Scenes).then(function (scenes) {
+                scenes = scenes.filter(s => s.id != id);
+                localforage.setItem(StorageKeys.Scenes, scenes).then(resolve);
+            });
+        });
+
+        await Promise.all([deleteScenePartialPromise,
+            localforage.removeItem(`${StorageKeys.Pieces}-${id}`),
+            localforage.removeItem(`${StorageKeys.Pieces}-${id}`),
+            localforage.removeItem(`${StorageKeys.Pieces}-${id}`)]);
     }
 
     async saveScene() {
@@ -84,7 +115,10 @@ class Scene {
             name: this.name,
             owner: this.owner,
             gridRatio: this.gridRatio,
-            thumbnail: this.thumbnail
+            thumbnail: {
+                fg: this.canvas.toDataURL(),
+                bg: this.background.getPosterImgUrl()
+            }
         };
         if (scenes == null) {
             scenes = [objForSaving];
@@ -107,60 +141,27 @@ class Scene {
     }
 
     async saveBackground() {
-        await CURRENT_SCENE.saveThumbnail();
+        Scene.updateOrCreateDom(this);
+        await this.saveScene(); // update thumbnail in storage
         await localforage.setItem(`${StorageKeys.Background}-${this.id}`, this.background);
     }
 
     async saveGrid() {
+        Scene.updateOrCreateDom(this);
+        await this.saveScene(); // update thumbnail in storage
         await localforage.setItem(`${StorageKeys.GridRatio}-${this.id}`, this.gridRatio);
     }
 
     async savePieces() {
+        Scene.updateOrCreateDom(this);
+        await this.saveScene(); // update thumbnail in storage
         const piecesJson = [];
         for (var piece of this.pieces) {
             let pieceCopy = { ...piece };
             pieceCopy.image = piece.image.src;
-            pieceCopy.canvas = undefined;
-            pieceCopy.ctx = undefined;
             piecesJson.push(pieceCopy);
         }
         await localforage.setItem(`${StorageKeys.Pieces}-${this.id}`, piecesJson);
-    }
-
-    async saveThumbnail() {
-        const scene = this;
-        return new Promise(function(resolve, reject) {
-            const sceneContainer = document.getElementById('scene-' + scene.id);
-            sceneContainer.innerHTML = '';
-            sceneContainer.appendChild(scene.getThumbnail());
-            setTimeout(html2canvas(sceneContainer).then(async (canvas) => {
-                scene.thumbnail = canvas.toDataURL();
-                await scene.saveScene();
-                resolve();
-            }), 1000);
-
-        });
-    }
-
-    getThumbnail() {
-        //create a new canvas
-        const newCanvas = document.createElement('canvas');
-
-        //set dimensions
-        newCanvas.width = this.canvas.width;
-        newCanvas.height = this.canvas.height;
-
-        //apply the old canvas to the new one
-        newCanvas.getContext('2d', {willReadFrequently: true}).drawImage(this.canvas, 0, 0);
-
-        newCanvas.style = `width: 100%; height: auto; position: relative; top: 0; left: 0; margin: 0; padding: 0; 
-        background-color: transparent;
-        background-position: center; 
-        background-repeat: no-repeat;
-        background-size: cover;
-        background-image: url('${this.background.getPosterImgUrl()}')`;
-
-        return newCanvas;
     }
 
     draw() {
@@ -172,14 +173,13 @@ class Scene {
     }
 
     drawBackground() {
-        return this.background?.apply();
+        return this.background.apply();
     }
 
     drawPieces() {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
         for (var piece of this.pieces) {
-
             piece.draw();
         }
     }

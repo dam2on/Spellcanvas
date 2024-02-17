@@ -1,5 +1,4 @@
 const EventTypes = {
-  NewPlayer: 'new player',
   AddPiece: 'add piece',
   MovePiece: 'move piece',
   DeletePiece: 'delete piece',
@@ -9,7 +8,7 @@ const EventTypes = {
   GridChange: 'grid change',
   ConnectedToHost: 'connected to host',
   ResetPieces: 'reset pieces',
-  PlayerReconnected: 'player reconnected',
+  PlayerJoin: 'player join',
   PermissionsUpdate: 'permissions update',
   LoadScene: 'load scene'
 }
@@ -45,6 +44,12 @@ const AreaType = {
   Circle: 'circle',
   Cone: 'cone',
   Square: 'square'
+}
+
+const PlayerStatus = {
+  Pending: 'pending',
+  Connected: 'connected',
+  Disconnected: 'disconnected'
 }
 
 const PermissionType = {

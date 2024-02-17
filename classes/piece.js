@@ -12,8 +12,8 @@ class Piece {
         this.y = y;
         this.dead = false;
         this.imageUpdated = false;
-        this.canvas = document.getElementById('canvas');
-        this.ctx = this.canvas.getContext('2d');
+        Object.defineProperty(this, 'canvas', {value: document.getElementById('canvas'), enumerable: false, writable: true});
+        Object.defineProperty(this, 'ctx', {value: this.canvas.getContext('2d'), enumerable: false, writable: true});
         this.updateImage(img);
     }
 

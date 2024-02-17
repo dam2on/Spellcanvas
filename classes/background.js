@@ -4,14 +4,16 @@ class Background {
     constructor(type, url) {
         this.type = type;
         this.url = url;
+        Object.defineProperty(this, 'vb', {value: null, enumerable: false, writable: true});
     }
 
     apply() {
+        if (_video instanceof VideoBackgrounds) {
+            _video.destroy(_video.elements[0]);
+        }
         switch (this.type) {
+
             case BackgroundType.Image:
-                if (_video instanceof VideoBackgrounds) {
-                    _video.destroy(_video.elements[0]);
-                }
                 $('#canvas').css('background-image', `url(${this.url})`);
                 break;
             case BackgroundType.Video:
