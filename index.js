@@ -293,8 +293,10 @@ const onPermissionsUpdateEvent = function (permissions) {
 }
 
 const onLoadSceneEvent = async function (scene) {
+  loading(true);
   CURRENT_SCENE = await Scene.fromObj(scene);
   CURRENT_SCENE.draw();
+  loading(false);
 }
 
 const emitLoadSceneEvent = function (peerId) {
@@ -749,6 +751,7 @@ const onImportSession = async function () {
 
   document.getElementById('input-session-import').click();
   $('#input-session-import').one('change', function (args) {
+    loading(true);
     const file = $(this)[0].files[0];
     const reader = new FileReader();
     reader.onload = async (ev) => {
@@ -786,6 +789,7 @@ const onImportSession = async function () {
         }
       }
   
+      loading(false);
       window.location.href = window.location.origin + window.location.pathname;
     };
   
@@ -1110,11 +1114,22 @@ const initDom = function () {
   });
 }
 
+const loading = function(state) {
+  if (state) {
+    $('.loader').show();
+  }
+  else {
+    $('.loader').hide();
+  }
+}
+
 window.onload = async function () {
+  loading(true);
   initDom();
   await initPeer();
   if (isHost()) {
     await restoreHostSession();
     CURRENT_SCENE.draw();
   }
+  loading(false);
 }
