@@ -508,7 +508,6 @@ const onDeletePieceEvent = async function (id) {
 
     await CURRENT_SCENE.savePieces();
   }
-
 }
 
 const onRequestPieceEvent = function (peerId, id) {
@@ -585,7 +584,7 @@ const initInviteLink = function () {
 
 const initPeerEvents = function () {
   _peer.on('disconnected', function (a, e, i) {
-          // leave here to learn about mmore errors
+    // leave here to learn about mmore errors
 
     debugger;
   });
@@ -709,6 +708,91 @@ const onChangeScene = async function (id) {
   }
 }
 
+const onExportSession = async function () {
+  if (!isHost()) {
+    console.warn('only host can export session');
+    return;
+  }
+
+  const exportVal = {
+    scenes: [],
+    party: undefined,
+    host: undefined
+  };
+  const scenePartials = await localforage.getItem(StorageKeys.Scenes);
+
+  for (var scene of scenePartials) {
+    const loadedScene = await Scene.load(scene);
+    for (var piece of loadedScene.pieces) {
+      piece.image = piece.image.src;
+    }
+    exportVal.scenes.push(loadedScene);
+  }
+
+  const partyVal = await localforage.getItem(`${StorageKeys.Party}-${_host}`);
+  PARTY = Party.fromObj(partyVal);
+  for (var player of PARTY.players) {
+    $("#list-connected-party-members").append(player.updateOrCreateDom(CURRENT_SCENE.pieces));
+  }
+  exportVal.party = PARTY;
+
+  exportVal.host = _host;
+
+  downloadObjectAsJson(exportVal, "session");
+}
+
+const onImportSession = async function () {
+  if (!isHost()) {
+    console.warn('only host can export session');
+    return;
+  }
+
+  document.getElementById('input-session-import').click();
+  $('#input-session-import').one('change', function (args) {
+    const file = $(this)[0].files[0];
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const session = JSON.parse(ev.target.result);
+  
+      for (var key of Object.keys(session)) {
+        switch (key) {
+          case 'scenes':
+            for (var scene of session.scenes) {
+              await localforage.setItem(`${StorageKeys.Pieces}-${scene.id}`, scene.pieces);
+              await localforage.setItem(`${StorageKeys.Background}-${scene.id}`, scene.background);
+              await localforage.setItem(`${StorageKeys.GridRatio}-${scene.id}`, scene.gridRatio);
+            }
+  
+            const scenePartials = session.scenes.map(s => {
+              return {
+                id: s.id,
+                name: s.name,
+                owner: s.owner,
+                gridRatio: s.gridRatio,
+                thumbnail: s.thumbnail
+              }
+            });
+            await localforage.setItem(StorageKeys.Scenes, scenePartials);
+            break;
+          case 'party':
+            await localforage.setItem(`${StorageKeys.Party}-${session.host}`, session.party);
+            break;
+          case 'host':
+            await localforage.setItem(StorageKeys.HostId, session.host);
+            break;
+          default:
+            console.warn("unrecognized session key: " + key);
+            continue;
+        }
+      }
+  
+      window.location.href = window.location.origin + window.location.pathname;
+    };
+  
+    reader.readAsText(file);
+  });
+}
+
 const onDeleteScene = async function (id) {
   await Scene.delete(id);
 }
@@ -820,23 +904,8 @@ const initPeer = function () {
       }
 
       // hide buttons for players
-      var btnChangeBg = document.getElementById("btn-change-bg");
-      btnChangeBg.setAttribute("style", "display: none");
-      btnChangeBg.setAttribute("disabled", "disabled");
-
-      var rangeGridSize = document.getElementById("range-grid-size");
-      rangeGridSize.parentNode.setAttribute("style", "display: none");
-      rangeGridSize.setAttribute("disabled", "disabled");
-
-      var btnResetPieces = document.getElementById("btn-reset-pieces");
-      btnResetPieces.parentNode.setAttribute("style", "display: none");
-      btnResetPieces.setAttribute("disabled", "disabled");
-
-      var listPartyMembers = document.getElementById("list-connected-party-members");
-      listPartyMembers.parentNode.setAttribute("style", "display: none");
-
-      var sceneList = document.getElementById("scene-list");
-      sceneList.parentNode.setAttribute('style', 'display: none;');
+      $('.host-only').hide();
+      $('.host-only').find('input,button').prop('disabled', true)
 
       // initial peer open
       _peer.on('open', function (id) {
@@ -955,6 +1024,9 @@ const initDom = function () {
   document.getElementById('range-grid-size').addEventListener('change', onGridSizeChange);
   document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
   document.getElementById('btn-reset-pieces').addEventListener("click", onResetPiecesSubmit);
+  document.getElementById('btn-export-session').addEventListener('click', onExportSession);
+  document.getElementById('btn-import-session').addEventListener('click', onImportSession);
+
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
   document.getElementById("modal-piece").addEventListener('shown.bs.modal', function () {
     // TODO: Clear image input

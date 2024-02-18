@@ -30,6 +30,7 @@
     <script type="text/javascript" src="classes/area.js"></script>
     <script type="text/javascript" src="classes/party.js"></script>
     <script type="text/javascript" src="classes/scene.js"></script>
+    <script type="text/javascript" src="utils.js"></script>
     <script type="text/javascript" src="tour.js"></script>
     <script type="text/javascript" src="enums.js"></script>
     <script type="text/javascript" src="index.js"></script>
@@ -78,7 +79,7 @@
         <div class="offcanvas-body">
             <h4><i class="fa-solid fa-chess my-3 me-2"></i>Game Board</h4>
             <div class="form-group mb-3">
-                <button id="btn-change-bg" class="btn btn-primary me-2" data-bs-toggle="modal"
+                <button id="btn-change-bg" class="btn btn-primary me-2 host-only" data-bs-toggle="modal"
                     data-bs-target="#modal-bg">
                     Set Background <i class="fa-regular fa-image"></i></button>
                 <!-- </div>
@@ -86,7 +87,7 @@
                 <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal"
                     data-bs-target="#modal-piece">New Game Piece <i class="fa-solid fa-chess-knight"></i></button>
             </div>
-            <div class="form-group mb-3">
+            <div class="form-group mb-3 host-only">
                 <label for="range-grid-size" class="form-label"><i class="fa-solid fa-border-none me-2"></i>Grid
                     Size: 50</label>
                 <input type="range" id="range-grid-size" min="1" max="150" step="1" value="50"
@@ -129,18 +130,18 @@
                     </div>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group host-only">
                 <label for="scene-list"><i class="fa-regular fa-map me-2"></i>Scenes</label>
                 <div id="scene-list" class="row row-cols-3 gy-2">
                     <div class="col d-flex justify-content-center align-items-center"><button id="btn-add-scene"
                             class="btn btn-primary btn-round"><i class="fa-solid fa-plus"></i></button></div>
                 </div>
             </div>
-            <div class="form-group my-4">
+            <div class="form-group my-4 host-only">
                 <button id="btn-delete-scene" class="d-none btn btn-danger btn-sm">Delete Current Scene</button>
                 <button id="btn-reset-pieces" class="d-none btn btn-danger btn-sm">Delete Game Pieces</button>
             </div>
-            <div id="section-party-menu" class="my-4">
+            <div id="section-party-menu" class="my-4 host-only">
                 <h4><i class="fa-solid fa-users me-2"></i>Party</h4>
                 <div class="form-group mb-3">
                     <label for="input-invite-link">Invite Link</label>
@@ -157,6 +158,11 @@
                 </div>
                 <span style="display: block;" id="empty-party-msg"><em>No one's here yet</em></span>
                 <ul class="list-group" id="list-connected-party-members"></ul>
+            </div>
+            <div class="form-group my-4 host-only">
+                <button id="btn-export-session" type="button" class="btn btn-secondary">Export Session</button>
+                <button id="btn-import-session" type="button" class="btn btn-secondary">Import Session</button>
+                <input id="input-session-import" type="file" accept="text/json" hidden/> 
             </div>
         </div>
         <div>
