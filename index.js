@@ -53,10 +53,16 @@ const onBackgroundTypeChange = function () {
   const bgType = document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value;
   switch (bgType) {
     case BackgroundType.Image:
+      document.getElementById("input-bg-video").removeAttribute("required");
+      document.getElementById("input-bg-image").setAttribute("required", "required");
+
       document.getElementById("input-bg-video").parentNode.setAttribute("style", "display: none;");
       document.getElementById("input-bg-image").parentNode.removeAttribute("style");
       break;
     case BackgroundType.Video:
+      document.getElementById("input-bg-image").removeAttribute("required");
+      document.getElementById("input-bg-video").setAttribute("required", "required");
+
       document.getElementById("input-bg-image").parentNode.setAttribute("style", "display: none;");
       document.getElementById("input-bg-video").parentNode.removeAttribute("style");
       break;
@@ -67,6 +73,7 @@ const onBackgroundTypeChange = function () {
 }
 
 const onChangeBackgroundSubmit = function () {
+  $('#form-modal-bg').removeClass('was-validated');
   if (!isHost()) {
     console.warn("only host can change bg");
     return;
@@ -166,7 +173,9 @@ const onQuickAdd = function (args) {
   }
 }
 
-const onAddPieceSubmit = async function () {
+const onAddPieceSubmit = async function (e) {
+  // e.preventDefault();
+  $('#form-modal-piece').removeClass('was-validated');
   const modalPieceInputs = document.getElementById('form-modal-piece').getElementsByTagName('input');
   const name = modalPieceInputs[0].value;
   const img = modalPieceInputs[1].files[0];
@@ -939,8 +948,8 @@ const initDom = function () {
   // $('.quick-add').on('click', onQuickAdd);
   document.getElementById('btn-add-scene').addEventListener('click', onAddScene)
   document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange)
-  document.getElementById('btn-modal-piece-ok').addEventListener('click', onAddPieceSubmit);
-  document.getElementById('btn-modal-bg-ok').addEventListener('click', onChangeBackgroundSubmit);
+  document.getElementById('form-modal-piece').addEventListener('submit', onAddPieceSubmit);
+  document.getElementById('form-modal-bg').addEventListener('submit', onChangeBackgroundSubmit);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
   document.getElementById('range-grid-size').addEventListener('input', onGridSizeInput);
   document.getElementById('range-grid-size').addEventListener('change', onGridSizeChange);

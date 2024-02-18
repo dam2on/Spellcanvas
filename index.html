@@ -132,7 +132,8 @@
             <div class="form-group">
                 <label for="scene-list"><i class="fa-regular fa-map me-2"></i>Scenes</label>
                 <div id="scene-list" class="row row-cols-3 gy-2">
-                    <div class="col d-flex justify-content-center align-items-center"><button id="btn-add-scene" class="btn btn-primary btn-round"><i class="fa-solid fa-plus"></i></button></div>
+                    <div class="col d-flex justify-content-center align-items-center"><button id="btn-add-scene"
+                            class="btn btn-primary btn-round"><i class="fa-solid fa-plus"></i></button></div>
                 </div>
             </div>
             <div class="form-group my-4">
@@ -234,19 +235,22 @@
     <div class="modal" id="modal-piece" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New Game Piece</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="form-modal-piece">
-                        <div class="mb-3">
+                <form id="form-modal-piece" class="needs-validation">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Game Piece</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 form-group">
                             <label class="form-label" for="#input-piece-name">Name</label>
                             <input id="input-piece-name" class="form-control" type="text" />
                         </div>
-                        <div class="mb-3">
+                        <div class="form-group mb-3">
                             <label for="#input-piece-art" class="form-label">Image</label>
-                            <input id="input-piece-art" type="file" />
+                            <input id="input-piece-art" type="file" required />
+                            <div class="invalid-feedback">
+                                Please upload a valid jpeg or png file.
+                            </div>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="radio-piece-size"
@@ -302,25 +306,25 @@
                                 <img src="img/firewall.png" style="width: 100%"></img>
                             </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="btn-modal-piece-ok">Accept</button>
+                    </div>
+                </form>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="btn-modal-piece-ok">Accept</button>
-                </div>
             </div>
         </div>
     </div>
     <div class="modal" id="modal-bg" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Set Background</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="form-modal-bg">
+                <form id="form-modal-bg" class="needs-validation">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Set Background</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
                         <h3>Background Type:</h3>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="radio-bg-type" id="radio-bg-image"
@@ -339,17 +343,23 @@
                         <div class="mb-3" style="display: none;">
                             <label class="form-label" for="#input-bg-video">Video Link</label>
                             <input id="input-bg-video" class="form-control" type="url" />
+                            <div class="invalid-feedback">
+                                Please enter a valid youtube or vimeo url.
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="#input-bg-image">Background Image</label>
-                            <input id="input-bg-image" type="file" />
+                            <input id="input-bg-image" type="file" required/>
+                            <div class="invalid-feedback">
+                                Please upload a valid jpeg or png file.
+                            </div>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="btn-modal-bg-ok">Accept</button>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="btn-modal-bg-ok">Accept</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -375,5 +385,7 @@
         <img id="image-dead" src="img/dead.png" />
     </div>
 </body>
+
+<script type="text/javascript" src="bootstrap-form-validation.js"></script>
 
 </html>
