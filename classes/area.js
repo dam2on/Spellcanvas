@@ -15,7 +15,6 @@ class Area {
         const currentStrokeStyle = this.ctx.strokeStyle;
         this.ctx.fillStyle = "#ffeeaaA5";
         this.ctx.strokeStyle = "#ffeeaaC8";
-        const hr = 0.75;
 
         switch (this.type) {
             case AreaType.Line:
@@ -31,7 +30,8 @@ class Area {
                 break;
             case AreaType.Circle:
                 const circle = new Path2D();
-                circle.arc(this.x, this.y, this.width * 2, 0, 2 * Math.PI);
+                // you can rotate this by adding this.rotation, but i dont think it actually makes sense to do that
+                circle.ellipse(this.x, this.y, this.width, this.height, 0, 0, 2 * Math.PI);
                 this.ctx.fill(circle);
                 break;
             case AreaType.Cone:
@@ -42,7 +42,7 @@ class Area {
                 this.ctx.arc(this.x, this.y, this.width, this.rotation - coneAngle / 2, this.rotation + coneAngle / 2);
                 this.ctx.lineTo(this.x, this.y);
                 this.ctx.stroke();
-                
+
                 // Fill
                 this.ctx.fill();
                 break;
@@ -58,26 +58,33 @@ class Area {
     }
 
     updateSize(size = undefined) {
-        if (size != undefined)
+        if (size != undefined) {
             this.size = Number(size);
+        }
+
+        const heightWidthRatio = CURRENT_SCENE.gridRatio.y / CURRENT_SCENE.gridRatio.x;
         switch (this.type) {
             case AreaType.Line:
-                // 3/4 is height : width grid ratio
-                this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
                 this.height = this.width / this.size;
-                this.width = this.width * (1 - Math.abs((1-3/4) * Math.sin(this.rotation)));
-                this.height = this.height * (1 - Math.abs((1-3/4) * Math.cos(this.rotation)));
+                if (heightWidthRatio != 1) {
+                    this.width = this.width * (1 - Math.abs((1 - heightWidthRatio) * Math.sin(this.rotation)));
+                    this.height = this.height * (1 - Math.abs((1 - heightWidthRatio) * Math.cos(this.rotation)));
+                }
                 break;
             case AreaType.Circle:
-                this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size / 2;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / 2;
+                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.width * this.size / 2;
                 break;
             case AreaType.Cone:
-                this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
-                this.width = this.width * (1 - Math.abs((1-3/4) * Math.sin(this.rotation)));
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
+                if (heightWidthRatio != 1) {
+                    this.width = this.width * (1 - Math.abs((1 - heightWidthRatio) * Math.sin(this.rotation)));
+                }
                 break;
             case AreaType.Square:
-                this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
-                this.height = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
+                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.width * this.size;
                 break;
             default:
                 console.warn("area type not recognized: " + type);

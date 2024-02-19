@@ -40,8 +40,8 @@ class Piece {
         if (size != null) {
             this.size = Number(size);
         }
-        this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
-        this.height = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
+        this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
+        this.height = CURRENT_SCENE.gridRatio.y * this.canvas.width * this.size;
     }
 
     updateImage(img) {

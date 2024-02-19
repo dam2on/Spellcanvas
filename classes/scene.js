@@ -3,7 +3,10 @@ class Scene {
         this.id = id;
         this.name = "My Scene";
         this.owner = ownerId;
-        this.gridRatio = 0.025;
+        this.gridRatio = {
+            x: 0.025,
+            y: 0.025
+        };
         this.pieces = [];
         this.background = new Background(BackgroundType.Image, 'img/bg.png');
 
@@ -171,9 +174,21 @@ class Scene {
     }
 
     draw() {
-        const pixelVal = this.gridRatio * this.canvas.width;
-        $('#range-grid-size-x').val(pixelVal);
-        $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
+        const valX = this.gridRatio.x * this.canvas.width;
+        const valY = this.gridRatio.y * this.canvas.width;
+        $('#range-grid-size-x').val(valX);
+        $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}`);
+
+        if (valX != valY) {
+            $('.extra-grid-controls').show();
+            $('#range-grid-size-y').css('width', valX + 'px');
+            $('#range-grid-size-y').attr('max', valX);
+            $('#range-grid-size-y').val(valY);
+            $('.grid-indicator').css('width', valX + 'px');
+            $('.grid-indicator').css('height', valY + 'px');
+            $('.grid-indicator').css('margin-bottom', (valX - valY) + 'px');
+            $('label[for="range-grid-size-x"]').html($('label[for="range-grid-size-x"]').html() + `, ${valY}`);
+        }
         this.drawBackground();
         this.drawPieces();
     }

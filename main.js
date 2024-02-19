@@ -521,8 +521,8 @@ const onUpdatePieceEvent = async function (piece) {
   }
 }
 
-const onGridChangeEvent = async function (gridSizeX, gridSizeY = null) {
-  CURRENT_SCENE.gridRatio = gridSizeX;
+const onGridChangeEvent = async function (gridSize) {
+  CURRENT_SCENE.gridRatio = gridSize;
 
   if (_spellRuler instanceof Area) {
     _spellRuler.draw();
@@ -968,10 +968,20 @@ const onGridSizeInput = function (args) {
 
 const onGridSizeChange = function () {
   if (!isHost()) return;
+  const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
   $('.modal-backdrop.show').css('opacity', 0.5);
   // $('.grid-indicator').hide();
-  const input = document.getElementById('range-grid-size-x');
-  let newGridSize = Number(input.value) / document.getElementById("canvas").width;
+  const inputX = document.getElementById('range-grid-size-x');
+  const inputY = document.getElementById('range-grid-size-y');
+  let newGridSize = {
+    x: Number(inputX.value) / document.getElementById("canvas").width,
+    y: Number(inputY.value) / document.getElementById("canvas").width
+  };
+
+  if (!controllingX && inputX.value == inputY.value) {
+    $('.extra-grid-controls').hide();
+  }
+
   onGridChangeEvent(newGridSize);
 
   // broadcast grid change
