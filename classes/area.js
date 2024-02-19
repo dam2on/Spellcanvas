@@ -15,6 +15,7 @@ class Area {
         const currentStrokeStyle = this.ctx.strokeStyle;
         this.ctx.fillStyle = "#ffeeaaA5";
         this.ctx.strokeStyle = "#ffeeaaC8";
+        const hr = 0.75;
 
         switch (this.type) {
             case AreaType.Line:
@@ -34,11 +35,11 @@ class Area {
                 this.ctx.fill(circle);
                 break;
             case AreaType.Cone:
-                const coneAngle = Math.PI * 1 / 3.39622641509;
+                const coneAngle = Math.PI * 1 / 3.39622641509; // ~ 53 degrees
 
                 this.ctx.beginPath();
                 this.ctx.moveTo(this.x, this.y);
-                this.ctx.arc(this.x, this.y, this.width, this.rotation, this.rotation + coneAngle);
+                this.ctx.arc(this.x, this.y, this.width, this.rotation - coneAngle / 2, this.rotation + coneAngle / 2);
                 this.ctx.lineTo(this.x, this.y);
                 this.ctx.stroke();
                 
@@ -61,14 +62,18 @@ class Area {
             this.size = Number(size);
         switch (this.type) {
             case AreaType.Line:
+                // 3/4 is height : width grid ratio
                 this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
                 this.height = this.width / this.size;
+                this.width = this.width * (1 - Math.abs((1-3/4) * Math.sin(this.rotation)));
+                this.height = this.height * (1 - Math.abs((1-3/4) * Math.cos(this.rotation)));
                 break;
             case AreaType.Circle:
                 this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size / 2;
                 break;
             case AreaType.Cone:
                 this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;
+                this.width = this.width * (1 - Math.abs((1-3/4) * Math.sin(this.rotation)));
                 break;
             case AreaType.Square:
                 this.width = CURRENT_SCENE.gridRatio * this.canvas.width * this.size;

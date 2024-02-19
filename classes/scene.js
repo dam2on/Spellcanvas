@@ -164,10 +164,16 @@ class Scene {
         await localforage.setItem(`${StorageKeys.Pieces}-${this.id}`, piecesJson);
     }
 
+    bringPieceToFront(piece) {
+        // makes piece appear on top of other pieces by moving to end of pieces array
+        const currentIndex = this.pieces.indexOf(piece); 
+        this.pieces.push(this.pieces.splice(currentIndex, 1)[0]);
+    }
+
     draw() {
         const pixelVal = this.gridRatio * this.canvas.width;
-        $('#range-grid-size').val(pixelVal);
-        $('label[for="range-grid-size"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
+        $('#range-grid-size-x').val(pixelVal);
+        $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${pixelVal}`);
         this.drawBackground();
         this.drawPieces();
     }

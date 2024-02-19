@@ -223,7 +223,7 @@ const initMainMenuTour = async function (isHost = true) {
             title: 'Grid Size',
             text: 'Adjust this slider to match the width of the grid lines in your background. The size of game pieces and spell ruler will be adjusted accordingly.',
             attachTo: {
-                element: document.getElementById('range-grid-size').parentElement,
+                element: document.getElementById('range-grid-size-x').parentElement,
                 on: 'right'
             },
             buttons: [

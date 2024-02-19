@@ -23,6 +23,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"
         integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+        integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="classes/piece.js"></script>
     <script type="text/javascript" src="classes/player.js"></script>
     <script type="text/javascript" src="classes/permission.js"></script>
@@ -30,10 +33,10 @@
     <script type="text/javascript" src="classes/area.js"></script>
     <script type="text/javascript" src="classes/party.js"></script>
     <script type="text/javascript" src="classes/scene.js"></script>
-    <script type="text/javascript" src="utils.js"></script>
-    <script type="text/javascript" src="tour.js"></script>
-    <script type="text/javascript" src="enums.js"></script>
-    <script type="text/javascript" src="index.js"></script>
+    <script type="text/javascript" src="helpers/utils.js"></script>
+    <script type="text/javascript" src="helpers/tour.js"></script>
+    <script type="text/javascript" src="helpers/enums.js"></script>
+    <script type="text/javascript" src="main.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css"
         integrity="sha512-tS3S5qG0BlhnQROyJXvNjeEM4UpMXHrQfTGmbQ1gKmelCxlSEBUaxhRBj/EFTzpbP4RVSrpEikbmdJobCvhE3g=="
@@ -52,8 +55,8 @@
         integrity="sha512-k4DlYDc0mf1H92BOi4i/3VKmE2y5T5CuMAFGepXwYD39pmzeoJ7vIUM57esJkGtDNrWcX0V74cHPB/78415VdQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/tubular@latest/dist/tubular-bundle.min.css" />
-    <link rel="stylesheet" href="loader.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/loader.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
@@ -90,13 +93,18 @@
                     data-bs-target="#modal-piece">New Game Piece <i class="fa-solid fa-chess-knight"></i></button>
             </div>
             <div class="form-group mb-3 host-only">
-                <label for="range-grid-size" class="form-label"><i class="fa-solid fa-border-none me-2"></i>Grid
+                <label for="range-grid-size-x" class="form-label"><i class="fa-solid fa-border-none me-2"></i>Grid
                     Size: 50</label>
-                <input type="range" id="range-grid-size" min="1" max="150" step="1" value="50"
+                <input type="range" id="range-grid-size-x" min="1" max="150" step="1" value="50"
                     style="width: 149px !important;">
-                <div class="mt-3">
-                    <div class="grid-indicator" style="display: none; width: 50px; height: 50px;">
+                <div class="mt-3 row extra-grid-controls" style="display: none;">
+                    <div class="col">
+                        <div class="grid-indicator" style="width: 50px; height: 50px;">
 
+                        </div>
+                    </div>
+                    <div class="col d-flex">
+                        <input type="range" id="range-grid-size-y" orient="vertical" min="1" max="150" step="1" value="50" style="position: relative; left: -5em;">
                     </div>
                 </div>
             </div>
@@ -164,7 +172,7 @@
             <div class="form-group my-4 host-only">
                 <button id="btn-export-session" type="button" class="btn btn-secondary">Export Session</button>
                 <button id="btn-import-session" type="button" class="btn btn-secondary">Import Session</button>
-                <input id="input-session-import" type="file" accept="text/json" hidden/> 
+                <input id="input-session-import" type="file" accept="text/json" hidden />
             </div>
         </div>
         <div>
@@ -357,7 +365,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="#input-bg-image">Background Image</label>
-                            <input id="input-bg-image" type="file" required/>
+                            <input id="input-bg-image" type="file" required />
                             <div class="invalid-feedback">
                                 Please upload a valid jpeg or png file.
                             </div>
@@ -393,7 +401,5 @@
         <img id="image-dead" src="img/dead.png" />
     </div>
 </body>
-
-<script type="text/javascript" src="bootstrap-form-validation.js"></script>
 
 </html>

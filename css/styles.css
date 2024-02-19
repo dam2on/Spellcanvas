@@ -45,6 +45,23 @@ input[type="radio"]:checked ~ .bg-img-cover {
   border-top: none;
 }
 
+
+input[type="range"][orient="vertical"] {
+  transform: rotate(90deg);
+  -webkit-transform: rotate(90deg);
+}
+
+input[type="range"][orient="vertical"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -6px;
+  background-color: #f7f7f7;
+  border-radius: 0.25rem;
+  height: 1rem;
+  width: 0.33rem;
+}
+
+
 input[type="range"] {
   -webkit-appearance: none;
   display: block;
@@ -67,10 +84,8 @@ input[type="range"]::-moz-range-track {
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  /* Override default look */
   appearance: none;
   margin-top: -6px;
-  /* Centers thumb on the track */
   background-color: #f7f7f7;
   border-radius: 0.25rem;
   height: 1rem;

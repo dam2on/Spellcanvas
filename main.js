@@ -13,19 +13,6 @@ const isHost = function () {
   return _peer.id == _host;
 }
 
-const newGuid = function () {
-  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-  );
-}
-
-const toBase64 = file => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => resolve(reader.result);
-  reader.onerror = reject;
-});
-
 const shapeIntersects = function (x, y) {
   let xInts = false;
   let yInts = false;
@@ -483,6 +470,7 @@ const onMovePieceEvent = async function (movedPiece) {
   pieceToMove.x = movedPiece.x;
   pieceToMove.y = movedPiece.y;
 
+  CURRENT_SCENE.bringPieceToFront(pieceToMove);
   CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
@@ -533,8 +521,8 @@ const onUpdatePieceEvent = async function (piece) {
   }
 }
 
-const onGridChangeEvent = async function (gridSize) {
-  CURRENT_SCENE.gridRatio = gridSize;
+const onGridChangeEvent = async function (gridSizeX, gridSizeY = null) {
+  CURRENT_SCENE.gridRatio = gridSizeX;
 
   if (_spellRuler instanceof Area) {
     _spellRuler.draw();
@@ -740,7 +728,7 @@ const onExportSession = async function () {
 
   exportVal.host = _host;
 
-  downloadObjectAsJson(exportVal, "session");
+  downloadObjectAsJson(exportVal, "session", true);
 }
 
 const onImportSession = async function () {
@@ -951,24 +939,38 @@ const initPeer = function () {
   });
 }
 
-const onGridSizeInput = function () {
+const onGridSizeInput = function (args) {
   if (!isHost()) return;
-  const input = document.getElementById('range-grid-size');
-  const label = document.querySelector('label[for="range-grid-size"]');
-  const value = input.value;
-
-  $('.grid-indicator').show();
-  $('.grid-indicator').css('width', value + 'px');
-  $('.grid-indicator').css('height', value + 'px');
+  const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
+  const inputX = document.getElementById('range-grid-size-x');
+  const labelX = document.querySelector('label[for="range-grid-size-x"]');
+  const valueX = inputX.value;
+  let valueY = $('#range-grid-size-y').val();
   $('.modal-backdrop.show').css('opacity', 0.0);
-  label.innerHTML = `<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${value}`
+  $('.extra-grid-controls').show();
+
+  if (controllingX) {
+    $('#range-grid-size-y').css('width', valueX + 'px');
+    $('#range-grid-size-y').attr('max', valueX);
+    $('#range-grid-size-y').val(valueX);
+    valueY = valueX;
+  }
+
+  $('.grid-indicator').css('width', valueX + 'px');
+  $('.grid-indicator').css('height', valueY + 'px');
+  $('.grid-indicator').css('margin-bottom', (valueX - valueY) + 'px');
+
+  labelX.innerHTML = `<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valueX}`
+  if (valueX != valueY) {
+    labelX.innerHTML += `, ${valueY}`;
+  }
 }
 
 const onGridSizeChange = function () {
   if (!isHost()) return;
   $('.modal-backdrop.show').css('opacity', 0.5);
-  $('.grid-indicator').hide();
-  const input = document.getElementById('range-grid-size');
+  // $('.grid-indicator').hide();
+  const input = document.getElementById('range-grid-size-x');
   let newGridSize = Number(input.value) / document.getElementById("canvas").width;
   onGridChangeEvent(newGridSize);
 
@@ -990,6 +992,7 @@ const initDom = function () {
     if (_spellRuler instanceof Area) {
       _spellRuler.draw();
     }
+    CURRENT_SCENE?.drawBackground();
     CURRENT_SCENE?.drawPieces();
   });
 
@@ -1024,8 +1027,10 @@ const initDom = function () {
   document.getElementById('form-modal-piece').addEventListener('submit', onAddPieceSubmit);
   document.getElementById('form-modal-bg').addEventListener('submit', onChangeBackgroundSubmit);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
-  document.getElementById('range-grid-size').addEventListener('input', onGridSizeInput);
-  document.getElementById('range-grid-size').addEventListener('change', onGridSizeChange);
+  document.getElementById('range-grid-size-x').addEventListener('input', onGridSizeInput);
+  document.getElementById('range-grid-size-x').addEventListener('change', onGridSizeChange);
+  document.getElementById('range-grid-size-y').addEventListener('input', onGridSizeInput);
+  document.getElementById('range-grid-size-y').addEventListener('change', onGridSizeChange);
   document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
   document.getElementById('btn-reset-pieces').addEventListener("click", onResetPiecesSubmit);
   document.getElementById('btn-export-session').addEventListener('click', onExportSession);
@@ -1044,6 +1049,10 @@ const initDom = function () {
   can.addEventListener('mousedown', function (args) {
     if (args.button == 0) // left click
       _draggedPiece = shapeIntersects(args.x, args.y);
+      if (_draggedPiece != null) {
+        // bring to front 
+        CURRENT_SCENE.bringPieceToFront(_draggedPiece);
+      }
   });
   can.addEventListener('mousemove', function (args) {
     if (_draggedPiece != null) {
@@ -1126,6 +1135,7 @@ const loading = function(state) {
 window.onload = async function () {
   loading(true);
   initDom();
+  initFormValidation();
   await initPeer();
   if (isHost()) {
     await restoreHostSession();
