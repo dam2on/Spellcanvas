@@ -12,9 +12,10 @@ class Piece {
         this.y = y;
         this.dead = false;
         this.imageUpdated = false;
-        Object.defineProperty(this, 'canvas', {value: document.getElementById('canvas'), enumerable: false, writable: true});
-        Object.defineProperty(this, 'ctx', {value: this.canvas.getContext('2d'), enumerable: false, writable: true});
-        Object.defineProperty(this, 'imageEl', {value: null, enumerable: false, writable: true});
+        this.objectType = this.constructor.name;
+        Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
+        Object.defineProperty(this, 'ctx', { value: this.canvas.getContext('2d'), enumerable: false, writable: true });
+        Object.defineProperty(this, 'imageEl', { value: null, enumerable: false, writable: true });
         this.updateImage(img);
     }
 
@@ -72,6 +73,9 @@ class Piece {
                 this.imageEl = img;
                 resolve(img);
             }
+            else if (img == null) {
+                resolve();
+            }
         });
     }
 
@@ -81,6 +85,20 @@ class Piece {
 
     getY() {
         return this.y * this.canvas.height;
+    }
+
+    intersects(x, y) {
+        let xInts = false;
+        let yInts = false;
+        const shapeX = this.getX();
+        const shapeY = this.getY();
+
+        xInts = x >= shapeX && x <= (shapeX + this.width);
+        if (xInts) {
+            yInts = y >= shapeY && y <= (shapeY + this.height);
+        }
+
+        return xInts && yInts;
     }
 
     click() {

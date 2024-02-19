@@ -26,7 +26,7 @@ class Scene {
         const pieces = await localforage.getItem(`${StorageKeys.Pieces}-${scene.id}`)
         if (pieces != null) {
             for (var piece of pieces) {
-                piecePromises.push(Piece.fromObj(piece));
+                piecePromises.push(piece.objectType == "Area" ? Area.fromObj(piece) : Piece.fromObj(piece));
             }
             await Promise.all(piecePromises).then((pieces) => {
                 scene.pieces = pieces;
@@ -53,7 +53,7 @@ class Scene {
 
         const piecePromises = [];
         for (var piece of obj.pieces) {
-            piecePromises.push(Piece.fromObj(piece));
+            piecePromises.push(piece.objectType == "Area" ? Area.fromObj(piece) : Piece.fromObj(piece));
         }
         await Promise.all(piecePromises).then((pieces) => {
             scene.pieces = pieces;

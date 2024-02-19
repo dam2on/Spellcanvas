@@ -14,24 +14,14 @@ const isHost = function () {
 }
 
 const shapeIntersects = function (x, y) {
-  let xInts = false;
-  let yInts = false;
-
   for (var piece of CURRENT_SCENE.pieces) {
-    let shapeX = piece.getX();
-    let shapeY = piece.getY();
-    xInts = x >= shapeX && x <= (shapeX + piece.width);
-    if (xInts) {
-      yInts = y >= shapeY && y <= (shapeY + piece.height);
-      if (yInts) {
-        // check permission
-        if (!isHost() && piece.owner != _player.id) {
-          if (PARTY.getPermissionValue(PermissionType.OnlyMoveOwnedPieces)) continue;
-        }
-        return piece;
+    if (piece.intersects(x, y)) {
+      if (!isHost() && piece.owner != _player.id) {
+        if (PARTY.getPermissionValue(PermissionType.OnlyMoveOwnedPieces)) continue;
       }
+
+      return piece;
     }
-    xInts = false;
   }
   return null;
 }
@@ -111,12 +101,12 @@ const onSpellRulerToggle = function (args) {
     CURRENT_SCENE.drawPieces();
   }
   else {
-    _spellRuler = new Area(type, $('#input-spell-size').val() / 5);
+    _spellRuler = new Area(newGuid(), _player?.id ?? _host, type, $('#input-spell-size').val() / 5);
     sizeInput.show();
     sizeLabel.show();
     switch (type) {
       case AreaType.Circle:
-        sizeLabel.html("ft (radius)");
+        sizeLabel.html("ft (diameter)");
         break;
       default:
         sizeLabel.html("ft");
@@ -735,7 +725,7 @@ const onImportSession = async function () {
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const session = JSON.parse(ev.target.result);
-  
+
       for (var key of Object.keys(session)) {
         switch (key) {
           case 'scenes':
@@ -744,7 +734,7 @@ const onImportSession = async function () {
               await localforage.setItem(`${StorageKeys.Background}-${scene.id}`, scene.background);
               await localforage.setItem(`${StorageKeys.GridRatio}-${scene.id}`, scene.gridRatio);
             }
-  
+
             const scenePartials = session.scenes.map(s => {
               return {
                 id: s.id,
@@ -767,11 +757,11 @@ const onImportSession = async function () {
             continue;
         }
       }
-  
+
       loading(false);
       window.location.href = window.location.origin + window.location.pathname;
     };
-  
+
     reader.readAsText(file);
   });
 }
@@ -1047,25 +1037,42 @@ const initDom = function () {
     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   });
 
-  can.addEventListener('mousedown', function (args) {
-    if (args.button == 0) // left click
-      _draggedPiece = shapeIntersects(args.x, args.y);
-      if (_draggedPiece != null) {
-        // bring to front 
-        CURRENT_SCENE.bringPieceToFront(_draggedPiece);
+  can.addEventListener('mousedown', async function (args) {
+    if (args.button == 0) {
+      // left click
+      if (_spellRuler instanceof Area) {
+        await CURRENT_SCENE.addPiece(_spellRuler);
+        $('#spell-ruler').find('input.btn-check:checked').click();
+        CURRENT_SCENE.drawPieces();
+        await CURRENT_SCENE.savePieces();
       }
+      else {
+        _draggedPiece = shapeIntersects(args.x, args.y);
+        if (_draggedPiece != null) {
+          // bring to front 
+          CURRENT_SCENE.bringPieceToFront(_draggedPiece);
+        }
+      }
+    }
   });
   can.addEventListener('mousemove', function (args) {
     if (_draggedPiece != null) {
       $('.menu-toggle').hide(); // disable invisible menu toggle
-      _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / document.getElementById("canvas").width;
-      _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / document.getElementById("canvas").height;
+      if (_draggedPiece.objectType == "Piece") {
+        _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / document.getElementById("canvas").width;
+        _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / document.getElementById("canvas").height;
+      }
+      else {
+        _draggedPiece.x = args.x / document.getElementById("canvas").width;
+        _draggedPiece.y = args.y / document.getElementById("canvas").height;
+      }
+
       CURRENT_SCENE.drawPieces();
     }
     else if (_spellRuler != null) {
       CURRENT_SCENE.drawPieces();
-      _spellRuler.x = args.x;
-      _spellRuler.y = args.y;
+      _spellRuler.x = args.x / document.getElementById("canvas").width;
+      _spellRuler.y = args.y / document.getElementById("canvas").height;
       if (_spellRuler instanceof Area) {
         _spellRuler.draw();
       }
@@ -1124,7 +1131,7 @@ const initDom = function () {
   });
 }
 
-const loading = function(state) {
+const loading = function (state) {
   if (state) {
     $('.loader').show();
   }
