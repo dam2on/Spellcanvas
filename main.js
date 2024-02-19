@@ -184,18 +184,31 @@ const onAddPieceSubmit = async function (e) {
 
 const onUpdatePieceSubmit = async function () {
   if (_pieceInMenu == null) return;
-  const name = document.getElementById("piece-menu-name").value;
-  const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
-  const statusConds = document.getElementById("piece-menu-status-conditions").value;
-  const dead = document.getElementById("piece-menu-dead").checked;
-  const image = document.getElementById("piece-menu-image-input").files[0];
-  _pieceInMenu.name = name;
-  _pieceInMenu.dead = dead;
-  _pieceInMenu.updateSize(size);
-  _pieceInMenu.updateConditions(statusConds);
-  if (image != null) {
-    await _pieceInMenu.updateImage(image);
-    _pieceInMenu.imageUpdated = true;
+
+  if (_pieceInMenu instanceof Area) {
+    const type = document.querySelector('input[name="radio-area-menu-type"]:checked').value;
+    const size = document.getElementById("input-area-menu-size").value;
+    const color = document.getElementById("input-area-menu-color").value;
+    const opacity = document.getElementById("input-area-menu-opacity").value;
+    _pieceInMenu.type = type;
+    _pieceInMenu.size = Number(size) / 5;
+    _pieceInMenu.color = color;
+    _pieceInMenu.opacity = opacity;
+  }
+  else {
+    const name = document.getElementById("piece-menu-name").value;
+    const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
+    const statusConds = document.getElementById("piece-menu-status-conditions").value;
+    const dead = document.getElementById("piece-menu-dead").checked;
+    const image = document.getElementById("piece-menu-image-input").files[0];
+    _pieceInMenu.name = name;
+    _pieceInMenu.dead = dead;
+    _pieceInMenu.updateSize(size);
+    _pieceInMenu.updateConditions(statusConds);
+    if (image != null) {
+      await _pieceInMenu.updateImage(image);
+      _pieceInMenu.imageUpdated = true;
+    }
   }
 
   CURRENT_SCENE.drawPieces();
@@ -1115,9 +1128,23 @@ const initDom = function () {
   can.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     _pieceInMenu = shapeIntersects(e.clientX, e.clientY);
-    if (_pieceInMenu) {
+    if (_pieceInMenu == null) return;
+
+    $('.area-only').hide();
+    $('.piece-only').hide();
+    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
+
+    if (_pieceInMenu instanceof Area) {
+      $('.area-only').show();
+      $('input[name="radio-area-menu-type"]').prop('checked', false);
+      $(`input[name='radio-area-menu-type'][value='${_pieceInMenu.type}']`).prop("checked", true);
+      $('#input-area-menu-size').val(_pieceInMenu.size * 5);
+      $('#input-area-menu-color').val(_pieceInMenu.color);
+      $('#input-area-menu-opacity').val(_pieceInMenu.opacity);
+    }
+    else {
+      $('.piece-only').show();
       // open piece submenu
-      bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
       document.getElementById("piece-menu-name").value = _pieceInMenu.name;
       document.getElementById("piece-menu-image").src = _pieceInMenu.image;
       document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;

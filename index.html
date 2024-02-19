@@ -104,7 +104,8 @@
                         </div>
                     </div>
                     <div class="col d-flex">
-                        <input type="range" id="range-grid-size-y" orient="vertical" min="1" max="150" step="1" value="50" style="position: relative; left: -5em;">
+                        <input type="range" id="range-grid-size-y" orient="vertical" min="1" max="150" step="1"
+                            value="50" style="position: relative; left: -5em;">
                     </div>
                 </div>
             </div>
@@ -184,64 +185,109 @@
     </div>
     <div class="offcanvas offcanvas-end" tabindex="-1" id="piece-menu" aria-labelledby="piece-menu-header">
         <div class="offcanvas-body">
-            <div class="form-group text-center my-2">
-                <img id="piece-menu-image" style="width: 65%;" />
-                <div class="text-center mt-2">
-                    <input id="piece-menu-image-input" type="file" />
+            <div class="piece-only">
+                <div class="form-group text-center my-2">
+                    <img id="piece-menu-image" style="width: 65%;" />
+                    <div class="text-center mt-2">
+                        <input id="piece-menu-image-input" type="file" />
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="piece-menu-name">Name</label>
+                    <input id="piece-menu-name" class="form-control" />
+                </div>
+                <div class="form-group mb-3">
+                    <label>Size</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.5">
+                        <label class="form-check-label">
+                            Tiny (&half; by &half;)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.9">
+                        <label class="form-check-label">
+                            Small (¾ by ¾)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="1">
+                        <label class="form-check-label">
+                            Medium (1 by 1)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="2">
+                        <label class="form-check-label">
+                            Large (2 by 2)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="3">
+                        <label class="form-check-label">
+                            Huge (3 by 3)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="4">
+                        <label class="form-check-label">
+                            Gargantuan (4 by 4)
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="piece-menu-status-conditions">Status Conditions</label>
+                    <input class="form-control" id="piece-menu-status-conditions" data-role="tagsinput" />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="piece-menu-dead">Dead?</label>
+                    <input class="form-check-input" type="checkbox" value="false" id="piece-menu-dead">
                 </div>
             </div>
-            <div class="form-group mb-3">
-                <label for="piece-menu-name">Name</label>
-                <input id="piece-menu-name" class="form-control" />
+            <div class="area-only">
+                <div class="form-group mb-3">
+                    <label>Shape</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-area-menu-type" value="line">
+                        <label class="form-check-label">
+                            Line
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-area-menu-type" value="circle">
+                        <label class="form-check-label">
+                            Circle
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-area-menu-type" value="square">
+                        <label class="form-check-label">
+                            Square
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio-area-menu-type" value="cone">
+                        <label class="form-check-label">
+                            Cone
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group w-50 mb-3">
+                    <label for="input-area-menu-size">Size</label>
+                    <div class="input-group">
+                        <input class="form-control form-control-sm" type="number" id="input-area-menu-size" />
+                        <span class="input-group-text">ft</span>
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="input-area-menu-color">Color</label>
+                    <input id="input-area-menu-color" type="color" />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="input-area-menu-opacity">Opacity</label>
+                    <input class="mt-1" id="input-area-menu-opacity" type="range" min="0" max="255" step="1" />
+                </div>
             </div>
-            <div class="form-group mb-3">
-                <label>Size</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.5">
-                    <label class="form-check-label">
-                        Tiny (&half; by &half;)
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.9">
-                    <label class="form-check-label">
-                        Small (¾ by ¾)
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="1">
-                    <label class="form-check-label">
-                        Medium (1 by 1)
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="2">
-                    <label class="form-check-label">
-                        Large (2 by 2)
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="3">
-                    <label class="form-check-label">
-                        Huge (3 by 3)
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="4">
-                    <label class="form-check-label">
-                        Gargantuan (4 by 4)
-                    </label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="piece-menu-status-conditions">Status Conditions</label>
-                <input class="form-control" id="piece-menu-status-conditions" data-role="tagsinput" />
-            </div>
-            <div class="form-group mb-3">
-                <label for="piece-menu-dead">Dead?</label>
-                <input class="form-check-input" type="checkbox" value="false" id="piece-menu-dead">
-            </div>
-
             <button id="btn-update-piece" class="btn btn-primary">Save</button>
             <button id="btn-delete-piece" class="btn btn-danger">Delete</button>
 

@@ -7,12 +7,16 @@ class Area extends Piece {
         this.x = x;
         this.y = y;
         this.rotation = 0;
+        this.color = "#ffeeaa";
+        this.opacity = 180;
         Object.defineProperty(this, 'path', { value: null, enumerable: false, writable: true });
     }
 
     static fromObj(obj) {
         const area = new Area(obj.id, obj.owner, obj.type, obj.size, obj.x, obj.y);
         area.rotation = obj.rotation;
+        area.color = obj.color;
+        area.opacity = obj.opacity;
         return area;
     }
 
@@ -25,8 +29,8 @@ class Area extends Piece {
         const currentFillStyle = this.ctx.fillStyle;
         const currentStrokeStyle = this.ctx.strokeStyle;
         this.path = new Path2D();
-        this.ctx.fillStyle = "#ffeeaaA5";
-        this.ctx.strokeStyle = "#ffeeaaC8";
+        this.ctx.fillStyle = this.color + Number(this.opacity).toString(16);
+        this.ctx.strokeStyle = this.ctx.fillStyle;
         const coords = {
             x: this.getX(),
             y: this.getY()
