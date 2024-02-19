@@ -665,17 +665,32 @@ const onAddScene = async function () {
   await CURRENT_SCENE.saveScene();
 
   CURRENT_SCENE = new Scene(newGuid(), _host);
+  CURRENT_SCENE.draw();
   await CURRENT_SCENE.saveScene();
 
   $('#scene-list').prepend(Scene.updateOrCreateDom(CURRENT_SCENE));
   $('#option-' + CURRENT_SCENE.id).prop('checked', true);
+}
 
-  CURRENT_SCENE.draw();
+const onSceneMenu = function(e, id) {
+  e.preventDefault();
+  $('.scene-label').each((i, el) => {
+    bootstrap.Dropdown.getOrCreateInstance(el).hide();
+  });
+
+  $(document.body).one('click', () => {
+    $('.scene-label').each((i, el) => {
+      bootstrap.Dropdown.getOrCreateInstance(el).hide();
+    });  
+  });
+
+  bootstrap.Dropdown.getOrCreateInstance($(`label[for="option-${id}"]`)[0]).show();
 }
 
 const onChangeScene = async function (id) {
   if (!isHost()) return;
 
+  $('#option-' + id).prop('checked', true);
   // save current scene
   await CURRENT_SCENE.saveScene();
 
@@ -780,7 +795,15 @@ const onImportSession = async function () {
 }
 
 const onDeleteScene = async function (id) {
-  await Scene.delete(id);
+  if (CURRENT_SCENE.id == id) {
+    alert('You cannot delete the scene you are currently viewing');
+    return;
+  }
+
+  if (confirm("Are you sure you wish to delete this scene?")) {
+    await Scene.delete(id);
+    $(`label[for="option-${id}"]`).parent().remove();
+  }
 }
 
 const updatePlayerDetails = async function (player, piece = null) {

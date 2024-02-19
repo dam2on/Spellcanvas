@@ -45,6 +45,14 @@ input[type="radio"]:checked ~ .bg-img-cover {
   border-top: none;
 }
 
+.dropdown-toggle::after {
+  content: none;
+}
+
+.dropdown {
+  position: static !important;
+
+}
 
 input[type="range"][orient="vertical"] {
   transform: rotate(90deg);

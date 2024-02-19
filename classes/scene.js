@@ -68,16 +68,21 @@ class Scene {
         if (!!existingDom.length) {
             existingDom.find('div').css('background-image', `url(${scene.background.getPosterImgUrl()})`);
             existingDom.find('img').attr('src', scene.canvas.toDataURL());
-            // existingDom.find('figcaption').html(scene.name);
         }
         else {
             return $(`
-            <label class="col scene-label" for="option-${scene.id}">
-                <input type="radio" class="btn-check" name="radio-scenes" id="option-${scene.id}">
-                <div class="bg-img-cover" onclick="onChangeScene('${scene.id}')" style="background-image: url(${scene.thumbnail?.bg ?? scene.background.getPosterImgUrl()})">
-                    <img style="height: 100%; width: 100%; position: relative; top: 0; left: 0;" src="${scene.thumbnail?.fg ?? scene.canvas.toDataURL()}">
-                </div>
-            </label>`);
+            <div class="dropdown">
+                <label class="col scene-label dropdown-toggle" onclick="onChangeScene('${scene.id}')" oncontextmenu="onSceneMenu(event, '${scene.id}')" for="option-${scene.id}">
+                    <input type="radio" class="btn-check" name="radio-scenes" id="option-${scene.id}">
+                    <div class="bg-img-cover" style="background-image: url(${scene.thumbnail?.bg ?? scene.background.getPosterImgUrl()})">
+                        <img style="height: 100%; width: 100%; position: relative; top: 0; left: 0;" src="${scene.thumbnail?.fg ?? scene.canvas.toDataURL()}">
+                    </div>
+                </label>
+                <ul class="dropdown-menu" role="menu">
+                    <!-- <li><a class="dropdown-item" onclick="onChangeScene('${scene.id}')" href="javascript:void(0)">Select</a></li> -->
+                    <li><a class="dropdown-item" onclick="onDeleteScene('${scene.id}')" href="javascript:void(0)">Delete</a></li>
+                </ul>
+            </div>`);
         }
     }
 
@@ -91,8 +96,8 @@ class Scene {
 
         await Promise.all([deleteScenePartialPromise,
             localforage.removeItem(`${StorageKeys.Pieces}-${id}`),
-            localforage.removeItem(`${StorageKeys.Pieces}-${id}`),
-            localforage.removeItem(`${StorageKeys.Pieces}-${id}`)]);
+            localforage.removeItem(`${StorageKeys.Background}-${id}`),
+            localforage.removeItem(`${StorageKeys.GridRatio}-${id}`)]);
     }
 
     async saveScene() {
@@ -155,17 +160,20 @@ class Scene {
         const valX = parseInt(this.gridRatio.x * this.canvas.width);
         const valY = parseInt(this.gridRatio.y * this.canvas.width);
         $('#range-grid-size-x').val(valX);
+        $('#range-grid-size-y').val(valY);
         $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}`);
 
         if (valX != valY) {
             $('.extra-grid-controls').show();
             $('#range-grid-size-y').css('width', valX + 'px');
             $('#range-grid-size-y').attr('max', valX);
-            $('#range-grid-size-y').val(valY);
             $('.grid-indicator').css('width', valX + 'px');
             $('.grid-indicator').css('height', valY + 'px');
             $('.grid-indicator').css('margin-bottom', (valX - valY) + 'px');
             $('label[for="range-grid-size-x"]').html($('label[for="range-grid-size-x"]').html() + `, ${valY}`);
+        }
+        else {
+            $('.extra-grid-controls').hide();
         }
         this.drawBackground();
         this.drawPieces();
