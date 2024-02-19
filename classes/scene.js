@@ -81,22 +81,6 @@ class Scene {
         }
     }
 
-    pureJson() {
-        const piecesJson = [];
-        for (var piece of this.pieces) {
-            const pieceCopy = { ...piece };
-            pieceCopy.image = piece.image.src;
-            piecesJson.push(pieceCopy);
-        }
-
-        const sceneCopy = {
-            ...this,
-            pieces: piecesJson
-        };
-
-        return sceneCopy;
-    }
-
     static async delete(id) {
         const deleteScenePartialPromise = new Promise(function (resolve, reject) {
             localforage.getItem(StorageKeys.Scenes).then(function (scenes) {
@@ -158,13 +142,7 @@ class Scene {
     async savePieces() {
         Scene.updateOrCreateDom(this);
         await this.saveScene(); // update thumbnail in storage
-        const piecesJson = [];
-        for (var piece of this.pieces) {
-            let pieceCopy = { ...piece };
-            pieceCopy.image = piece.image.src;
-            piecesJson.push(pieceCopy);
-        }
-        await localforage.setItem(`${StorageKeys.Pieces}-${this.id}`, piecesJson);
+        await localforage.setItem(`${StorageKeys.Pieces}-${this.id}`, this.pieces);
     }
 
     bringPieceToFront(piece) {
@@ -174,8 +152,8 @@ class Scene {
     }
 
     draw() {
-        const valX = this.gridRatio.x * this.canvas.width;
-        const valY = this.gridRatio.y * this.canvas.width;
+        const valX = parseInt(this.gridRatio.x * this.canvas.width);
+        const valY = parseInt(this.gridRatio.y * this.canvas.width);
         $('#range-grid-size-x').val(valX);
         $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}`);
 

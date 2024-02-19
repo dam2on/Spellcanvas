@@ -14,6 +14,7 @@ class Piece {
         this.imageUpdated = false;
         Object.defineProperty(this, 'canvas', {value: document.getElementById('canvas'), enumerable: false, writable: true});
         Object.defineProperty(this, 'ctx', {value: this.canvas.getContext('2d'), enumerable: false, writable: true});
+        Object.defineProperty(this, 'imageEl', {value: null, enumerable: false, writable: true});
         this.updateImage(img);
     }
 
@@ -47,24 +48,28 @@ class Piece {
     updateImage(img) {
         return new Promise((resolve, reject) => {
             if (img instanceof File) {
-                this.image = new Image();
+                this.imageEl = new Image();
                 // load image
                 let reader = new FileReader();
                 reader.onload = (event) => {
-                    this.image.src = event.target.result;
+                    this.image = event.target.result;
+                    this.imageEl.src = event.target.result;
                     resolve(event.target.result);
                 };
 
                 reader.readAsDataURL(img);
             }
             else if (typeof (img) == 'string') {
-                this.image = new Image();
-                this.image.src = img;
+                this.image = img;
+                this.imageEl = new Image();
+                this.imageEl.src = img;
                 resolve(img);
             }
             else if (img instanceof Image) {
+                debugger;
                 // nothing to do
                 this.image = img;
+                this.imageEl = img;
                 resolve(img);
             }
         });
@@ -137,7 +142,7 @@ class Piece {
         const deadImage = document.getElementById("image-dead");
         const fontSize = this.getFontSizeByPiece(this.size);
 
-        this.ctx.drawImage(this.image, this.getX(), this.getY(), this.width, this.height);
+        this.ctx.drawImage(this.imageEl, this.getX(), this.getY(), this.width, this.height);
 
         // dead overlay
         if (this.dead) {

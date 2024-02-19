@@ -1,23 +1,4 @@
-const downloadObjectAsJson = function (exportObj, exportName, compress = false) {
-    var zip = new JSZip();
-    zip.file(exportName + ".json", JSON.stringify(exportObj));
-    var downloadAnchorNode = document.createElement('a');
-    $(downloadAnchorNode).on("click", function () {
-        zip.generateAsync({type:"base64"}).then(function (base64) { // 1) generate the zip file
-            window.location = "data:application/zip;base64," + base64;
-        }, function (err) {
-            $(downloadAnchorNode).text(err);
-        });
-    });
-
-
-    downloadAnchorNode.setAttribute("href", "#");
-    document.body.appendChild(downloadAnchorNode); // required for firefox
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-}
-
-const downloadObjectAsJson2 = function (exportObj, exportName, compress = false) {
+const downloadObjectAsJson = function (exportObj, exportName) {
     var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
     var downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);

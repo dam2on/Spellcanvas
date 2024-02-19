@@ -142,7 +142,7 @@ const onQuickAdd = function (args) {
   const piece = new Piece(newGuid(), _peer.id, "orc", $(this).find('img')[0].src, PieceSizes.Medium);
   CURRENT_SCENE.addPiece(piece);
 
-  piece.image.addEventListener('load', async () => {
+  piece.imageEl.addEventListener('load', async () => {
     piece.draw();
     await CURRENT_SCENE.savePieces();
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
@@ -171,7 +171,7 @@ const onAddPieceSubmit = async function (e) {
   const piece = new Piece(newGuid(), _peer.id, name, img, size);
   CURRENT_SCENE.addPiece(piece);
 
-  piece.image.addEventListener('load', async () => {
+  piece.imageEl.addEventListener('load', async () => {
     piece.draw();
     await CURRENT_SCENE.savePieces();
     initGamePieceTour(piece);
@@ -272,6 +272,7 @@ const onConnectedToHostEvent = function (host) {
     return;
   }
 
+  loading(true);
   alert(`Successfully connected to ${host}'s party!`);
 }
 
@@ -291,7 +292,7 @@ const emitLoadSceneEvent = function (peerId) {
   conn.on('open', function () {
     conn.send({
       event: EventTypes.LoadScene,
-      scene: CURRENT_SCENE.pureJson()
+      scene: CURRENT_SCENE
     });
   });
 }
@@ -305,12 +306,8 @@ const emitChangeBackgroundEvent = function (peerId) {
 
 const emitAddPieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
-  let pieceCopy = { ...piece };
-  pieceCopy.image = piece.image.src;
-  pieceCopy.canvas = undefined;
-  pieceCopy.ctx = undefined;
   conn.on('open', function () {
-    conn.send({ event: EventTypes.AddPiece, piece: pieceCopy });
+    conn.send({ event: EventTypes.AddPiece, piece: piece });
   })
 }
 
@@ -352,9 +349,6 @@ const emitUpdatePieceEvent = function (peerId, piece) {
   if (!pieceCopy.imageUpdated) {
     // dont send image
     pieceCopy.image = undefined;
-  }
-  else {
-    pieceCopy.image = piece.image.src;
   }
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
@@ -713,9 +707,6 @@ const onExportSession = async function () {
 
   for (var scene of scenePartials) {
     const loadedScene = await Scene.load(scene);
-    for (var piece of loadedScene.pieces) {
-      piece.image = piece.image.src;
-    }
     exportVal.scenes.push(loadedScene);
   }
 
@@ -728,7 +719,7 @@ const onExportSession = async function () {
 
   exportVal.host = _host;
 
-  downloadObjectAsJson(exportVal, "session", true);
+  downloadObjectAsJson(exportVal, "session");
 }
 
 const onImportSession = async function () {
@@ -802,7 +793,7 @@ const updatePlayerDetails = async function (player, piece = null) {
     for (var p of CURRENT_SCENE.pieces) {
       if (p.owner == player.id) {
         if (playerDiv.children().length >= 10) return;
-        playerDiv.html(playerDiv.html() + `<img id="piece-icon-${p.id}" title="${p.name}" style="width: 15px; object-fit: contain" src="${p.image instanceof HTMLImageElement ? p.image.src : p.image}"></img>`)
+        playerDiv.html(playerDiv.html() + `<img id="piece-icon-${p.id}" title="${p.name}" style="width: 15px; object-fit: contain" src="${p.image}"></img>`)
       }
     }
   }
@@ -813,13 +804,13 @@ const updatePlayerDetails = async function (player, piece = null) {
         pieceIcon.remove();
       }
       else {
-        pieceIcon.attr('src', piece.image instanceof HTMLImageElement ? piece.image.src : piece.image);
+        pieceIcon.attr('src', piece.image);
         pieceIcon.attr('title', piece.name);
       }
     }
     else {
       if (playerDiv.children().length >= 10) return;
-      playerDiv.html(playerDiv.html() + `<img id="piece-icon-${piece.id}" title=${piece.name} style="width: 15px; object-fit: contain" src="${piece.image instanceof HTMLImageElement ? piece.image.src : piece.image}"></img>`)
+      playerDiv.html(playerDiv.html() + `<img id="piece-icon-${piece.id}" title=${piece.name} style="width: 15px; object-fit: contain" src="${piece.image}"></img>`)
     }
   }
 }
@@ -1121,7 +1112,7 @@ const initDom = function () {
       // open piece submenu
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
       document.getElementById("piece-menu-name").value = _pieceInMenu.name;
-      document.getElementById("piece-menu-image").src = _pieceInMenu.image.src;
+      document.getElementById("piece-menu-image").src = _pieceInMenu.image;
       document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
       $('input[name="radio-piece-menu-size"]').prop('checked', false);
       $(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).prop("checked", true);
