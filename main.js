@@ -678,10 +678,11 @@ const onSceneMenu = function(e, id) {
     bootstrap.Dropdown.getOrCreateInstance(el).hide();
   });
 
+  // close any dropdowns on next click
   $(document.body).one('click', () => {
     $('.scene-label').each((i, el) => {
       bootstrap.Dropdown.getOrCreateInstance(el).hide();
-    });  
+    });
   });
 
   bootstrap.Dropdown.getOrCreateInstance($(`label[for="option-${id}"]`)[0]).show();

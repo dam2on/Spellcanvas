@@ -214,7 +214,14 @@ class Scene {
         }
 
         if (piece instanceof Object) {
-            const newPiece = await Piece.fromObj(piece);
+            let newPiece = null;
+
+            if (piece.objectType == "Area") {
+                newPiece = Area.fromObj(piece);
+            }
+            else {
+                newPiece = await Piece.fromObj(piece);
+            }
             this.pieces.push(newPiece);
             return newPiece;
         }
@@ -225,11 +232,17 @@ class Scene {
 
     async updatePiece(piece) {
         let localPiece = this.getPieceById(piece.id);
-        if (!piece.imageUpdated) {
-            // use same image
-            piece.image = localPiece.image;
+        if (piece instanceof Area) {
+            localPiece = await Area.fromObj(piece);
         }
-        localPiece = await Piece.fromObj(piece);
+        else {
+            if (!piece.imageUpdated) {
+                // use same image
+                piece.image = localPiece.image;
+            }
+            localPiece = await Piece.fromObj(piece);
+        }
+
         const index = this.pieces.indexOf(localPiece);
         this.pieces.splice(index, 1, localPiece);
 

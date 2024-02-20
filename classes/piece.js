@@ -66,15 +66,8 @@ class Piece {
                 this.imageEl.src = img;
                 resolve(img);
             }
-            else if (img instanceof Image) {
-                debugger;
-                // nothing to do
-                this.image = img;
-                this.imageEl = img;
-                resolve(img);
-            }
-            else if (img == null) {
-                resolve();
+            else {
+                reject();
             }
         });
     }

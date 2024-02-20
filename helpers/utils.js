@@ -36,8 +36,6 @@ const initFormValidation = function () {
 
                     event.stopPropagation()
                 }
-
-                form.classList.add('was-validated')
             }, false)
         });
 }
