@@ -183,11 +183,11 @@ class Scene {
         return this.background.apply();
     }
 
-    drawPieces() {
+    drawPieces(addTrail = false) {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
         for (var piece of this.pieces) {
-            piece.draw();
+            piece.draw(addTrail);
         }
     }
 
@@ -232,7 +232,7 @@ class Scene {
 
     async updatePiece(piece) {
         let localPiece = this.getPieceById(piece.id);
-        if (piece instanceof Area) {
+        if (localPiece instanceof Area) {
             localPiece = await Area.fromObj(piece);
         }
         else {
@@ -243,7 +243,7 @@ class Scene {
             localPiece = await Piece.fromObj(piece);
         }
 
-        const index = this.pieces.indexOf(localPiece);
+        const index = this.pieces.findIndex(p => p.id == localPiece.id);
         this.pieces.splice(index, 1, localPiece);
 
         return localPiece;

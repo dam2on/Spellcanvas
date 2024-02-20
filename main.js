@@ -311,19 +311,22 @@ const emitAddPieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
     conn.send({ event: EventTypes.AddPiece, piece: piece });
-  })
+  });
 }
 
 const emitMovePieceEvent = function (peerId, piece) {
+  const movedPiece = {
+    id: piece.id,
+    x: piece.x,
+    y: piece.y,
+    origin: piece.origin,
+    rotation: piece.rotation
+  }
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
     conn.send({
       event: EventTypes.MovePiece,
-      movedPiece: {
-        id: piece.id,
-        x: piece.x,
-        y: piece.y
-      }
+      movedPiece: movedPiece
     });
   });
 }
@@ -445,7 +448,6 @@ const onAddPieceEvent = async function (piece) {
   }
 
   const newPiece = await CURRENT_SCENE.addPiece(piece);
-
   CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
@@ -466,6 +468,8 @@ const onMovePieceEvent = async function (movedPiece) {
   }
   pieceToMove.x = movedPiece.x;
   pieceToMove.y = movedPiece.y;
+  pieceToMove.rotation = movedPiece.rotation;
+  pieceToMove.origin = movedPiece.origin;
 
   CURRENT_SCENE.bringPieceToFront(pieceToMove);
   CURRENT_SCENE.drawPieces();
@@ -502,13 +506,13 @@ const onRequestPieceEvent = function (peerId, id) {
   emitAddPieceEvent(peerId, piece);
 }
 
-const onUpdatePieceEvent = async function (piece) {
+const onUpdatePieceEvent = async function (peer, piece) {
   const updatedPiece = await CURRENT_SCENE.updatePiece(piece);
 
   CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
-    updatePlayerDetails({ id: updatedPiece.owner }, updatedPiece);
+    $("#list-connected-party-members").append(PARTY.getPlayer(peer).updateOrCreateDom(CURRENT_SCENE.pieces));
 
     for (var player of PARTY.players) {
       emitUpdatePieceEvent(player.id, updatedPiece);
@@ -604,7 +608,7 @@ const initPeerEvents = function () {
           onMovePieceEvent(data.movedPiece);
           break;
         case EventTypes.UpdatePiece:
-          onUpdatePieceEvent(data.piece);
+          onUpdatePieceEvent(conn.peer, data.piece);
           break;
         case EventTypes.DeletePiece:
           onDeletePieceEvent(data.id);
@@ -807,41 +811,6 @@ const onDeleteScene = async function (id) {
   }
 }
 
-const updatePlayerDetails = async function (player, piece = null) {
-  let playerDiv = $(`#player-${player.id}`);
-  if (!playerDiv.length) {
-    $("#empty-party-msg").html('Members');
-    $("#list-connected-party-members").append(
-      `<li class="list-group-item d-flex justify-content-between align-items-center" id=player-${player.id}>
-      <i class="text-success fa-solid fa-circle fa-sm"></i>
-      ${player.name}
-    </li>`);
-    playerDiv = $(`#player-${player.id}`);
-    for (var p of CURRENT_SCENE.pieces) {
-      if (p.owner == player.id) {
-        if (playerDiv.children().length >= 10) return;
-        playerDiv.html(playerDiv.html() + `<img id="piece-icon-${p.id}" title="${p.name}" style="width: 15px; object-fit: contain" src="${p.image}"></img>`)
-      }
-    }
-  }
-  else if (piece != null) {
-    const pieceIcon = $('#piece-icon-' + piece.id);
-    if (pieceIcon.length) {
-      if (piece.deleteMe) {
-        pieceIcon.remove();
-      }
-      else {
-        pieceIcon.attr('src', piece.image);
-        pieceIcon.attr('title', piece.name);
-      }
-    }
-    else {
-      if (playerDiv.children().length >= 10) return;
-      playerDiv.html(playerDiv.html() + `<img id="piece-icon-${piece.id}" title=${piece.name} style="width: 15px; object-fit: contain" src="${piece.image}"></img>`)
-    }
-  }
-}
-
 const restoreHostSession = async function () {
   const scenePartials = await localforage.getItem(StorageKeys.Scenes);
   if (!!scenePartials?.length && !!scenePartials.find(s => s.owner == _host)) {
@@ -861,7 +830,6 @@ const restoreHostSession = async function () {
     PARTY = Party.fromObj(partyVal);
     for (var player of PARTY.players) {
       $("#list-connected-party-members").append(player.updateOrCreateDom(CURRENT_SCENE.pieces));
-      // updatePlayerDetails(player);
     }
     for (var permission of PARTY.permissions) {
       document.getElementById(permission.elementId).checked = permission.value;
@@ -1008,6 +976,14 @@ const onGridSizeChange = function () {
   }
 }
 
+const onRouteShow = function() {
+  CURRENT_SCENE.drawPieces(true);
+}
+
+const onRouteHide = function() { 
+  CURRENT_SCENE.drawPieces();
+}
+
 const initDom = function () {
   var can = document.getElementById('canvas');
   can.width = window.innerWidth;
@@ -1063,6 +1039,9 @@ const initDom = function () {
   document.getElementById('btn-reset-pieces').addEventListener("click", onResetPiecesSubmit);
   document.getElementById('btn-export-session').addEventListener('click', onExportSession);
   document.getElementById('btn-import-session').addEventListener('click', onImportSession);
+  document.getElementById('hover-route-toggle').addEventListener('mouseenter', onRouteShow);
+  document.getElementById('hover-route-toggle').addEventListener('mouseleave', onRouteHide);
+
 
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
   document.getElementById("modal-piece").addEventListener('shown.bs.modal', function () {
@@ -1079,14 +1058,28 @@ const initDom = function () {
       // left click
       if (_spellRuler instanceof Area) {
         await CURRENT_SCENE.addPiece(_spellRuler);
+        const newPiece = {..._spellRuler};
         $('#spell-ruler').find('input.btn-check:checked').click();
         CURRENT_SCENE.drawPieces();
-        await CURRENT_SCENE.savePieces();
+
+        if (isHost()) {
+          for (var player of PARTY.players) {
+            emitAddPieceEvent(player.id, newPiece);
+          }
+    
+          await CURRENT_SCENE.savePieces();
+        }
+        else {
+          emitAddPieceEvent(_host, newPiece);
+        }
       }
       else {
         _draggedPiece = shapeIntersects(args.x, args.y);
         if (_draggedPiece != null) {
-          // bring to front 
+          _draggedPiece.origin = {
+            x: _draggedPiece.x,
+            y: _draggedPiece.y
+          };
           CURRENT_SCENE.bringPieceToFront(_draggedPiece);
         }
       }
@@ -1133,17 +1126,16 @@ const initDom = function () {
     $('.menu-toggle').show(); // enable invisible menu toggle
 
     if (_draggedPiece == null) return;
-    let movedPiece = { ..._draggedPiece };
 
     if (isHost()) {
       for (var player of PARTY.players) {
-        emitMovePieceEvent(player.id, movedPiece);
+        emitMovePieceEvent(player.id, _draggedPiece);
       }
 
       await CURRENT_SCENE.savePieces();
     }
     else {
-      emitMovePieceEvent(_host, movedPiece);
+      emitMovePieceEvent(_host, _draggedPiece);
     }
 
     _draggedPiece = null;

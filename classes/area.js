@@ -17,6 +17,7 @@ class Area extends Piece {
         area.rotation = obj.rotation;
         area.color = obj.color;
         area.opacity = obj.opacity;
+        area.origin = obj.origin;
         return area;
     }
 
@@ -24,7 +25,7 @@ class Area extends Piece {
         return this.ctx.isPointInPath(this.path, x, y);
     }
 
-    draw() {
+    draw(addTrail = false) {
         this.updateSize();
         const currentFillStyle = this.ctx.fillStyle;
         const currentStrokeStyle = this.ctx.strokeStyle;
@@ -67,6 +68,15 @@ class Area extends Piece {
                 break;
         }
         this.ctx.fill(this.path);
+
+        if (addTrail && this.origin != undefined) {
+            this.ctx.strokeStyle = "#FFEA00";
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.getX(), this.getY());
+            this.ctx.lineTo(this.getOriginX(), this.getOriginY());
+            this.ctx.stroke();
+        }
+
         this.ctx.fillStyle = currentFillStyle;
         this.ctx.strokeStyle = currentStrokeStyle;
     }

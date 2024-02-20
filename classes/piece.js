@@ -22,6 +22,7 @@ class Piece {
     static async fromObj(obj) {
         let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         piece.dead = obj.dead;
+        piece.origin = obj.origin;
         if (obj.conditions != null) {
             piece.conditions = obj.conditions;
         }
@@ -47,6 +48,8 @@ class Piece {
     }
 
     updateImage(img) {
+        if (img == null) return;
+
         return new Promise((resolve, reject) => {
             if (img instanceof File) {
                 this.imageEl = new Image();
@@ -78,6 +81,14 @@ class Piece {
 
     getY() {
         return this.y * this.canvas.height;
+    }
+
+    getOriginX() {
+        return this.origin?.x * this.canvas.width;
+    }
+
+    getOriginY() {
+        return this.origin?.y * this.canvas.height;
     }
 
     intersects(x, y) {
@@ -147,7 +158,7 @@ class Piece {
     }
 
 
-    draw() {
+    draw(addTrail = false) {
         this.updateSize();
         const textMargin = 3;
         const deadImage = document.getElementById("image-dead");
@@ -200,6 +211,16 @@ class Piece {
                 this.ctx.fillText(this.conditions[i], conX + textMargin, conY + anyLetterHeight + textMargin);
                 conX += currentConDims.width + (3 * textMargin);
             }
+        }
+
+        if (addTrail && this.origin != undefined) {
+            const previousStroke = this.ctx.strokeStyle;
+            this.ctx.strokeStyle = "#FFEA00";
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.getX() + this.width / 2, this.getY() + this.height / 2);
+            this.ctx.lineTo(this.getOriginX() + this.width / 2, this.getOriginY() + this.height / 2);
+            this.ctx.stroke();
+            this.ctx.strokeStyle = previousStroke;
         }
     }
 }

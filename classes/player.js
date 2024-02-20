@@ -16,7 +16,7 @@ class Player {
         let pieceHtml = "";
 
         if (pieces != null) {
-            for (var piece of pieces.filter(p => p.owner == this.id)) {
+            for (var piece of pieces.filter(p => p.owner == this.id && p.objectType == "Piece")) {
                 const imgSrc = piece.image instanceof HTMLImageElement ? piece.image.src : piece.image;
                 pieceHtml += `<img style="margin-right: 0.5em; width: 1em;" title="${piece.name}" src=${imgSrc}>`;
             }
