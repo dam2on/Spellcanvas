@@ -25,7 +25,7 @@ class Area extends Piece {
         return this.ctx.isPointInPath(this.path, x, y);
     }
 
-    draw(addTrail = false) {
+    draw(trailColor = null) {
         this.updateSize();
         const currentFillStyle = this.ctx.fillStyle;
         const currentStrokeStyle = this.ctx.strokeStyle;
@@ -69,8 +69,8 @@ class Area extends Piece {
         }
         this.ctx.fill(this.path);
 
-        if (addTrail && this.origin != undefined) {
-            this.ctx.strokeStyle = "#FFEA00";
+        if (trailColor != null && this.origin != undefined) {
+            this.ctx.strokeStyle = trailColor;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX(), this.getY());
             this.ctx.lineTo(this.getOriginX(), this.getOriginY());

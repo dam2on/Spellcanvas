@@ -4,7 +4,7 @@ class Background {
     constructor(type, url) {
         this.type = type;
         this.url = url;
-        Object.defineProperty(this, 'vb', {value: null, enumerable: false, writable: true});
+        Object.defineProperty(this, 'vb', { value: null, enumerable: false, writable: true });
     }
 
     apply() {
@@ -31,26 +31,26 @@ class Background {
     getVidID() {
         if (this.type != BackgroundType.Video) return;
         if (this.url === undefined && this.url === null) return;
-    
+
         this.re = {};
         this.re.YOUTUBE = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i;
         this.re.VIMEO = /(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_\-]+)?/i;
         this.re.VIDEO = /\/([^\/]+\.(?:mp4|ogg|ogv|ogm|webm|avi))\s*$/i;
-        
+
         for (let k in this.re) {
-          const pts = this.url.match(this.re[k]);
-    
-          if (pts && pts.length) {
-            this.re[k].lastIndex = 0;
-            return {
-              id: pts[1],
-              type: k
-            };
-          }
+            const pts = this.url.match(this.re[k]);
+
+            if (pts && pts.length) {
+                this.re[k].lastIndex = 0;
+                return {
+                    id: pts[1],
+                    type: k
+                };
+            }
         }
-      
+
         return;
-      }
+    }
 
     getPosterImgUrl() {
 
@@ -65,6 +65,72 @@ class Background {
 
         // fallback image
         return 'img/bg.png';
+    }
+
+    async getAverageRGB() {
+        if (this.averageColor != undefined) {
+            return this.averageColor;
+        }
+
+        var imgEl = new Image;
+        const currentBg = this;
+        const imgLoadPromise = new Promise(async function (resolve, reject) {
+            let imgUrl = currentBg.getPosterImgUrl();
+            if (currentBg.type == BackgroundType.Video) {
+                imgUrl = await convertLinkToDataURL(imgUrl);
+            }
+            imgEl.src = imgUrl;
+            imgEl.onload = function () {
+                resolve();
+            };
+        });
+
+        await imgLoadPromise;
+
+        var blockSize = 5, // only visit every 5 pixels
+            defaultRGB = { r: 0, g: 0, b: 0 }, // for non-supporting envs
+            canvas = document.createElement('canvas'),
+            context = canvas.getContext && canvas.getContext('2d'),
+            data, width, height,
+            i = -4,
+            length,
+            rgb = { r: 0, g: 0, b: 0 },
+            count = 0;
+
+        if (!context) {
+            return defaultRGB;
+        }
+
+        height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
+        width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
+
+        context.drawImage(imgEl, 0, 0);
+
+        try {
+            data = context.getImageData(0, 0, width, height);
+        } catch (e) {
+            /* security error, img on diff domain */
+            return defaultRGB;
+        }
+
+        length = data.data.length;
+
+        while ((i += blockSize * 4) < length) {
+            ++count;
+            rgb.r += data.data[i];
+            rgb.g += data.data[i + 1];
+            rgb.b += data.data[i + 2];
+        }
+
+        // ~~ used to floor values
+        rgb.r = ~~(rgb.r / count);
+        rgb.g = ~~(rgb.g / count);
+        rgb.b = ~~(rgb.b / count);
+
+        const hexStr = '#' + rgb.r.toString(16) + rgb.g.toString(16) + rgb.b.toString(16);
+
+        this.averageColor = hexStr;
+        return hexStr;
     }
 
     static fromObj(obj) {

@@ -183,11 +183,16 @@ class Scene {
         return this.background.apply();
     }
 
-    drawPieces(addTrail = false) {
+    async drawPieces(addTrail = false) {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
+        let trailColor = null;
+        if (addTrail) {
+            trailColor = invertColor(await this.background.getAverageRGB());
+        }
+
         for (var piece of this.pieces) {
-            piece.draw(addTrail);
+            piece.draw(trailColor);
         }
     }
 

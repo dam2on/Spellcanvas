@@ -158,7 +158,7 @@ class Piece {
     }
 
 
-    draw(addTrail = false) {
+    draw(trailColor = null) {
         this.updateSize();
         const textMargin = 3;
         const deadImage = document.getElementById("image-dead");
@@ -213,9 +213,9 @@ class Piece {
             }
         }
 
-        if (addTrail && this.origin != undefined) {
+        if (trailColor != null && this.origin != undefined) {
             const previousStroke = this.ctx.strokeStyle;
-            this.ctx.strokeStyle = "#FFEA00";
+            this.ctx.strokeStyle = trailColor;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX() + this.width / 2, this.getY() + this.height / 2);
             this.ctx.lineTo(this.getOriginX() + this.width / 2, this.getOriginY() + this.height / 2);
