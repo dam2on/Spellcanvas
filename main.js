@@ -201,10 +201,19 @@ const onUpdatePieceSubmit = async function () {
     const statusConds = document.getElementById("piece-menu-status-conditions").value;
     const dead = document.getElementById("piece-menu-dead").checked;
     const image = document.getElementById("piece-menu-image-input").files[0];
+    const auraEnabled = document.getElementById("checkbox-piece-menu-aura").checked;
     _pieceInMenu.name = name;
     _pieceInMenu.dead = dead;
     _pieceInMenu.updateSize(size);
     _pieceInMenu.updateConditions(statusConds);
+    if (auraEnabled) {
+      _pieceInMenu.aura = new Area(_pieceInMenu.id, _pieceInMenu.owner, $('#checkbox-piece-menu-aura').val(), $('#input-aura-menu-size').val() / 2.5, _pieceInMenu.x, _pieceInMenu.y);
+      _pieceInMenu.aura.color = $('#input-aura-menu-color').val();
+      _pieceInMenu.aura.opacity = $('#input-aura-menu-opacity').val();
+    }
+    else {
+      _pieceInMenu.aura = undefined;
+    }
     if (image != null) {
       await _pieceInMenu.updateImage(image);
       _pieceInMenu.imageUpdated = true;
@@ -225,6 +234,17 @@ const onUpdatePieceSubmit = async function () {
   }
 
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
+}
+
+const onPieceAuraToggle = function(e) {
+  const auraEnabled = $(this).prop('checked');
+  if (auraEnabled) {
+    $('.aura-only').show();
+  }
+  else {
+    $('.aura-only').hide();
+
+  }
 }
 
 const onDeletePieceSubmit = async function () {
@@ -441,7 +461,7 @@ const onChangeBackgroundEvent = async function (obj = null) {
   }
 }
 
-const onAddPieceEvent = async function (piece) {
+const onAddPieceEvent = async function (peerId, piece) {
   if (CURRENT_SCENE.getPieceById(piece.id) != null) {
     // redundant piece
     return;
@@ -454,13 +474,14 @@ const onAddPieceEvent = async function (piece) {
     PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
 
     for (var player of PARTY.players) {
+      if (player.id == peerId) continue;
       emitAddPieceEvent(player.id, newPiece);
     }
     await CURRENT_SCENE.savePieces();
   }
 }
 
-const onMovePieceEvent = async function (movedPiece) {
+const onMovePieceEvent = async function (peerId, movedPiece) {
   let pieceToMove = CURRENT_SCENE.getPieceById(movedPiece.id);
   if (pieceToMove == null) {
     emitRequestPieceEvent(movedPiece.id);
@@ -476,6 +497,7 @@ const onMovePieceEvent = async function (movedPiece) {
 
   if (isHost()) {
     for (var player of PARTY.players) {
+      if (player.id == peerId) continue;
       emitMovePieceEvent(player.id, pieceToMove);
     }
 
@@ -483,7 +505,7 @@ const onMovePieceEvent = async function (movedPiece) {
   }
 }
 
-const onDeletePieceEvent = async function (id) {
+const onDeletePieceEvent = async function (peerId, id) {
   let piece = CURRENT_SCENE.getPieceById(id);
   if (piece == null) return;
 
@@ -494,6 +516,7 @@ const onDeletePieceEvent = async function (id) {
     PARTY.getPlayer(piece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
 
     for (var player of PARTY.players) {
+      if (player.id == peerId) continue;
       emitDeletePieceEvent(player.id, id);
     }
 
@@ -506,15 +529,16 @@ const onRequestPieceEvent = function (peerId, id) {
   emitAddPieceEvent(peerId, piece);
 }
 
-const onUpdatePieceEvent = async function (peer, piece) {
+const onUpdatePieceEvent = async function (peerId, piece) {
   const updatedPiece = await CURRENT_SCENE.updatePiece(piece);
 
   CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
-    $("#list-connected-party-members").append(PARTY.getPlayer(peer).updateOrCreateDom(CURRENT_SCENE.pieces));
+    $("#list-connected-party-members").append(PARTY.getPlayer(peerId).updateOrCreateDom(CURRENT_SCENE.pieces));
 
     for (var player of PARTY.players) {
+      if (player.id == peerId) continue;
       emitUpdatePieceEvent(player.id, updatedPiece);
     }
 
@@ -602,16 +626,16 @@ const initPeerEvents = function () {
     conn.on('data', function (data) {
       switch (data.event) {
         case EventTypes.AddPiece:
-          onAddPieceEvent(data.piece);
+          onAddPieceEvent(conn.peer, data.piece);
           break;
         case EventTypes.MovePiece:
-          onMovePieceEvent(data.movedPiece);
+          onMovePieceEvent(conn.peer, data.movedPiece);
           break;
         case EventTypes.UpdatePiece:
           onUpdatePieceEvent(conn.peer, data.piece);
           break;
         case EventTypes.DeletePiece:
-          onDeletePieceEvent(data.id);
+          onDeletePieceEvent(conn.peer, data.id);
           break;
         case EventTypes.ResetPieces:
           onResetPiecesEvent();
@@ -799,6 +823,11 @@ const onImportSession = async function () {
   });
 }
 
+const onClearSession = async function() {
+  await localforage.clear();
+  window.location.href = window.location.origin + window.location.pathname;
+}
+
 const onDeleteScene = async function (id) {
   if (CURRENT_SCENE.id == id) {
     alert('You cannot delete the scene you are currently viewing');
@@ -849,11 +878,11 @@ const initPeer = function () {
       // host mode
 
       if (existingHostId != null) {
-        _peer = new Peer(existingHostId);
+        _peer = new Peer(existingHostId, peerJsOptions);
         _peer.reconnect();
       }
       else {
-        _peer = new Peer();
+        _peer = new Peer(newGuid(), peerJsOptions);
       }
 
       _peer.on('open', async function (id) {
@@ -874,10 +903,10 @@ const initPeer = function () {
       const existingPlayer = await localforage.getItem(StorageKeys.Player);
       if (existingHostId != null && existingHostId == _host && existingPlayer != null) {
         _player = existingPlayer;
-        _peer = new Peer(_player.id);
+        _peer = new Peer(_player.id, peerJsOptions);
       }
       else {
-        _peer = new Peer();
+        _peer = new Peer(newGuid(), peerJsOptions);
         await localforage.setItem(StorageKeys.HostId, _host);
       }
 
@@ -1031,6 +1060,7 @@ const initDom = function () {
   document.getElementById('form-modal-piece').addEventListener('submit', onAddPieceSubmit);
   document.getElementById('form-modal-bg').addEventListener('submit', onChangeBackgroundSubmit);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
+  document.getElementById('checkbox-piece-menu-aura').addEventListener('change', onPieceAuraToggle);
   document.getElementById('range-grid-size-x').addEventListener('input', onGridSizeInput);
   document.getElementById('range-grid-size-x').addEventListener('change', onGridSizeChange);
   document.getElementById('range-grid-size-y').addEventListener('input', onGridSizeInput);
@@ -1039,8 +1069,9 @@ const initDom = function () {
   document.getElementById('btn-reset-pieces').addEventListener("click", onResetPiecesSubmit);
   document.getElementById('btn-export-session').addEventListener('click', onExportSession);
   document.getElementById('btn-import-session').addEventListener('click', onImportSession);
-  document.getElementById('hover-route-toggle').addEventListener('mouseenter', onRouteShow);
-  document.getElementById('hover-route-toggle').addEventListener('mouseleave', onRouteHide);
+  document.getElementById('btn-clear-session').addEventListener('click', onClearSession);
+  document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseenter', onRouteShow);
+  document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseleave', onRouteHide);
 
 
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
@@ -1088,13 +1119,13 @@ const initDom = function () {
   can.addEventListener('mousemove', function (args) {
     if (_draggedPiece != null) {
       $('.menu-toggle').hide(); // disable invisible menu toggle
-      if (_draggedPiece.objectType == "Piece") {
-        _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / document.getElementById("canvas").width;
-        _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / document.getElementById("canvas").height;
-      }
-      else {
+      if (_draggedPiece instanceof Area) {
         _draggedPiece.x = args.x / document.getElementById("canvas").width;
         _draggedPiece.y = args.y / document.getElementById("canvas").height;
+      }
+      else {
+        _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / document.getElementById("canvas").width;
+        _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / document.getElementById("canvas").height;
       }
 
       CURRENT_SCENE.drawPieces();
@@ -1123,22 +1154,29 @@ const initDom = function () {
     }
   });
   can.addEventListener('mouseup', async function () {
-    $('.menu-toggle').show(); // enable invisible menu toggle
-
     if (_draggedPiece == null) return;
+    $('.menu-toggle').show();
+
+    const movedPiece = {
+      id: _draggedPiece.id,
+      x: _draggedPiece.x,
+      y: _draggedPiece.y,
+      origin: _draggedPiece.origin,
+      rotation: _draggedPiece.rotation
+    }
+    _draggedPiece = null;
 
     if (isHost()) {
       for (var player of PARTY.players) {
-        emitMovePieceEvent(player.id, _draggedPiece);
+        emitMovePieceEvent(player.id, movedPiece);
       }
 
       await CURRENT_SCENE.savePieces();
     }
     else {
-      emitMovePieceEvent(_host, _draggedPiece);
+      emitMovePieceEvent(_host, movedPiece);
     }
 
-    _draggedPiece = null;
   });
 
   can.addEventListener('contextmenu', (e) => {
@@ -1169,6 +1207,16 @@ const initDom = function () {
       $("#piece-menu-status-conditions").tagsinput('removeAll')
       for (var cond of _pieceInMenu.conditions) {
         $("#piece-menu-status-conditions").tagsinput('add', cond);
+      }
+      if (_pieceInMenu.aura != null) {
+        $('.aura-only').show();
+        document.getElementById("checkbox-piece-menu-aura").checked = true;
+        document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size * 2.5;
+        document.getElementById("input-aura-menu-color").value = _pieceInMenu.aura.color;
+      }
+      else {
+        $('.aura-only').hide();
+        document.getElementById("checkbox-piece-menu-aura").checked = false;
       }
     }
   });

@@ -12,6 +12,7 @@ class Piece {
         this.y = y;
         this.dead = false;
         this.imageUpdated = false;
+        this.aura = null;
         this.objectType = this.constructor.name;
         Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
         Object.defineProperty(this, 'ctx', { value: this.canvas.getContext('2d'), enumerable: false, writable: true });
@@ -25,6 +26,9 @@ class Piece {
         piece.origin = obj.origin;
         if (obj.conditions != null) {
             piece.conditions = obj.conditions;
+        }
+        if (obj.aura != null) {
+            piece.aura = Area.fromObj(obj.aura);
         }
 
         return piece;
@@ -164,6 +168,12 @@ class Piece {
         const deadImage = document.getElementById("image-dead");
         const fontSize = this.getFontSizeByPiece(this.size);
 
+        if (this.aura instanceof Area) {
+            this.aura.x = this.x + (this.width / (2 * this.canvas.width));
+            this.aura.y = this.y + (this.height / (2 * this.canvas.height));
+            this.aura.draw();
+        }
+
         this.ctx.drawImage(this.imageEl, this.getX(), this.getY(), this.width, this.height);
 
         // dead overlay
@@ -193,36 +203,76 @@ class Piece {
 
         // add conditions
         if (this.conditions.length > 0) {
+            // not the most efficient
             this.ctx.font = fontSize.statuses + " Arial";
             const anyLetterHeight = this.getTextDims("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ").height;
-            let conX = this.getX();
-            let conY = this.height + this.getY();
-            for (var i = 0; i < this.conditions.length; i++) {
-                let currentConDims = this.getTextDims(this.conditions[i]);
-                if (i > 0 && (conX + currentConDims.width > this.getX() + this.width)) {
-                    conY += anyLetterHeight + (3 * textMargin);
-                    conX = this.getX();
+
+            let conditionWidths = this.conditions.map(c => {
+                return {
+                    text: c,
+                    width: this.getTextDims(c).width + 2 * textMargin
                 }
-                this.ctx.fillStyle = "#880808"; // blood red
-                this.ctx.beginPath();
-                this.ctx.roundRect(conX, conY, currentConDims.width + 2 * textMargin, anyLetterHeight + 2 * textMargin, 3);
-                this.ctx.fill();
-                this.ctx.fillStyle = "#f9f9f9"; // off white
-                this.ctx.fillText(this.conditions[i], conX + textMargin, conY + anyLetterHeight + textMargin);
-                conX += currentConDims.width + (3 * textMargin);
+            });
+            let conditionRows = [];
+            let currentRow = {
+                conditions: [],
+                width: 0
+            }
+            
+            // convert list of conditions into 2d array, describing conditions per row: 'conditionRows'
+            for (var i = 0; i < conditionWidths.length; i++) {
+                if (currentRow.conditions.length > 1 && currentRow.width + conditionWidths[i].width + textMargin > this.width) {
+                    conditionRows.push(currentRow);
+                    currentRow = {
+                        conditions: [],
+                        width: 0
+                    }
+                }
+
+                currentRow.conditions.push(conditionWidths[i].text);
+                currentRow.width += conditionWidths[i].width;
+                if (currentRow.conditions.length > 1) {
+                    currentRow.width += textMargin;
+                }
+            }
+            conditionRows.push(currentRow);
+
+            let conX = 0;
+            let conY = this.height + this.getY();
+            for (var row of conditionRows) {
+                conX = this.getX() + (this.width / 2) - (row.width / 2);
+                for (var c of row.conditions) {
+                    let currentConDims = this.getTextDims(c);
+                    this.ctx.fillStyle = "#880808"; // blood red
+                    this.ctx.beginPath();
+                    this.ctx.roundRect(conX, conY, currentConDims.width + 2 * textMargin, anyLetterHeight + 2 * textMargin, 3);
+                    this.ctx.fill();
+                    this.ctx.fillStyle = "#f9f9f9"; // off white
+                    this.ctx.fillText(c, conX + textMargin, conY + anyLetterHeight + textMargin);
+                    conX += currentConDims.width + (3 * textMargin);
+                }
+
+                conY += anyLetterHeight + (3 * textMargin);
             }
         }
 
         if (trailColor != null && this.origin != undefined) {
-            const previousStroke = this.ctx.strokeStyle;
+            const prevStroke = this.ctx.strokeStyle;
+            const prevFill = this.ctx.fillStyle;
             const prevWidth = this.ctx.lineWidth;
             this.ctx.lineWidth = 2;
             this.ctx.strokeStyle = trailColor;
+            this.ctx.fillStyle = trailColor;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX() + this.width / 2, this.getY() + this.height / 2);
             this.ctx.lineTo(this.getOriginX() + this.width / 2, this.getOriginY() + this.height / 2);
             this.ctx.stroke();
-            this.ctx.strokeStyle = previousStroke;
+            this.ctx.beginPath();
+            const trailHeadRadius = Math.max(3, this.canvas.width * 0.0045);
+            this.ctx.arc(this.getOriginX() + this.width / 2, this.getOriginY() + this.height / 2, trailHeadRadius, 0, 2 * Math.PI);
+            this.ctx.fill();
+            this.ctx.strokeStyle = prevStroke;
+            this.ctx.fillStyle = prevFill;
             this.ctx.lineWidth = prevWidth;
         }
     }

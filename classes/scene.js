@@ -187,7 +187,7 @@ class Scene {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
         let trailColor = null;
-        if (addTrail) {
+        if (addTrail || document.getElementById('checkbox-route-toggle').checked) {
             trailColor = invertColor(await this.background.getAverageRGB());
         }
 
@@ -199,17 +199,14 @@ class Scene {
     setBackground(obj) {
         if (obj instanceof Background) {
             this.background = obj;
-            return this.background;
         }
-
-        if (obj instanceof Object) {
+        else if (obj instanceof Object) {
             const newBg = Background.fromObj(obj);
             this.background = newBg;
-            return newBg;
         }
-
-        console.warn("bad argument: " + JSON.stringify(obj));
-        return null;
+        else {
+            console.warn("bad argument: " + JSON.stringify(obj));
+        }
     }
 
     async addPiece(piece) {

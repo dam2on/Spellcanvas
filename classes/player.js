@@ -11,7 +11,7 @@ class Player {
     }
 
     updateOrCreateDom(pieces = null) {
-        $("#empty-party-msg").html('Members');
+        $("#empty-party-msg").hide();
 
         let pieceHtml = "";
 
