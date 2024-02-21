@@ -215,12 +215,15 @@ class Piece {
 
         if (trailColor != null && this.origin != undefined) {
             const previousStroke = this.ctx.strokeStyle;
+            const prevWidth = this.ctx.lineWidth;
+            this.ctx.lineWidth = 2;
             this.ctx.strokeStyle = trailColor;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX() + this.width / 2, this.getY() + this.height / 2);
             this.ctx.lineTo(this.getOriginX() + this.width / 2, this.getOriginY() + this.height / 2);
             this.ctx.stroke();
             this.ctx.strokeStyle = previousStroke;
+            this.ctx.lineWidth = prevWidth;
         }
     }
 }

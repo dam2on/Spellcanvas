@@ -70,11 +70,14 @@ class Area extends Piece {
         this.ctx.fill(this.path);
 
         if (trailColor != null && this.origin != undefined) {
+            const prevWidth = this.ctx.lineWidth;
+            this.ctx.lineWidth = 2;
             this.ctx.strokeStyle = trailColor;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX(), this.getY());
             this.ctx.lineTo(this.getOriginX(), this.getOriginY());
             this.ctx.stroke();
+            this.ctx.lineWidth = prevWidth;
         }
 
         this.ctx.fillStyle = currentFillStyle;
