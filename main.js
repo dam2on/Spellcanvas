@@ -335,6 +335,7 @@ const emitAddPieceEvent = function (peerId, piece) {
 }
 
 const emitMovePieceEvent = function (peerId, piece) {
+  if (CURRENT_SCENE.getPieceById(piece.id) == null) return;
   const movedPiece = {
     id: piece.id,
     x: piece.x,
@@ -352,6 +353,7 @@ const emitMovePieceEvent = function (peerId, piece) {
 }
 
 const emitDeletePieceEvent = function (peerId, id) {
+  if (CURRENT_SCENE.getPieceById(id) == null) return;
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
     conn.send({
@@ -371,6 +373,7 @@ const emitResetPiecesEvent = function (peerId) {
 }
 
 const emitUpdatePieceEvent = function (peerId, piece) {
+  if (CURRENT_SCENE.getPieceById(piece.id) == null) return;
   let pieceCopy = { ...piece };
   if (!pieceCopy.imageUpdated) {
     // dont send image
@@ -484,7 +487,7 @@ const onAddPieceEvent = async function (peerId, piece) {
 const onMovePieceEvent = async function (peerId, movedPiece) {
   let pieceToMove = CURRENT_SCENE.getPieceById(movedPiece.id);
   if (pieceToMove == null) {
-    emitRequestPieceEvent(movedPiece.id);
+    // emitRequestPieceEvent(movedPiece.id);
     return;
   }
   pieceToMove.x = movedPiece.x;
@@ -530,6 +533,7 @@ const onRequestPieceEvent = function (peerId, id) {
 }
 
 const onUpdatePieceEvent = async function (peerId, piece) {
+  if (CURRENT_SCENE.getPieceById(piece.id) == null) return;
   const updatedPiece = await CURRENT_SCENE.updatePiece(piece);
 
   CURRENT_SCENE.drawPieces();
