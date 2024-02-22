@@ -152,12 +152,12 @@ const onQuickAdd = function (args) {
   }
 }
 
-const onChangeBackgroundModal = function() {
+const onChangeBackgroundModal = function () {
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).show();
 }
 
-const onAddPieceModal = function(initPos = null) {
+const onAddPieceModal = function (initPos = null) {
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).show();
 
@@ -1057,20 +1057,20 @@ const initDom = function () {
   can.width = window.innerWidth;
   can.height = window.innerHeight;
 
-  var ro = new ResizeObserver(e => {
+  new ResizeObserver(function () {
     document.getElementById('canvas').width = window.innerWidth;
     document.getElementById('canvas').height = window.innerHeight;
+    document.getElementById('background-image').width = window.innerWidth;
+    document.getElementById('background-image').height = window.innerHeight;
+  
     displayDebugInfo(`${window.innerWidth}, ${window.innerHeight}`);
-
+  
     if (_spellRuler instanceof Area) {
       _spellRuler.draw();
     }
     CURRENT_SCENE?.drawBackground();
     CURRENT_SCENE?.drawPieces();
-  });
-
-  // Observe one or multiple elements
-  ro.observe(document.body);
+  }).observe(document.body);
 
   let menuToggleTimeout;
   $('.menu-toggle').on('mouseover', function () {
@@ -1120,7 +1120,7 @@ const initDom = function () {
   });
 
   document.getElementById("piece-menu").addEventListener("shown.bs.offcanvas", () => {
-    $('#piece-menu').find('input').one('change', function() {
+    $('#piece-menu').find('input').one('change', function () {
       $('#btn-update-piece').addClass('shake');
     });
   });
@@ -1227,7 +1227,7 @@ const initDom = function () {
       $('.area-only').hide();
       $('.piece-only').hide();
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
-  
+
       if (_pieceInMenu instanceof Area) {
         $('.area-only').show();
         $('input[name="radio-area-menu-type"]').prop('checked', false);
@@ -1262,12 +1262,12 @@ const initDom = function () {
     }
     else {
       // open add piece dialog
-      onAddPieceModal({x: e.x / document.getElementById('canvas').width, y: e.y / document.getElementById('canvas').height});
+      onAddPieceModal({ x: e.x / document.getElementById('canvas').width, y: e.y / document.getElementById('canvas').height });
     }
   });
 }
 
-const displayDebugInfo = function(text) {
+const displayDebugInfo = function (text) {
   $('.debug-info').html(text);
 }
 

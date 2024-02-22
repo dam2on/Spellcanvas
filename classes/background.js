@@ -14,10 +14,14 @@ class Background {
         switch (this.type) {
 
             case BackgroundType.Image:
-                $('#canvas').css('background-image', `url(${this.url})`);
+                // $('#canvas').css('background-image', `url(${this.url})`);
+                $('#background-image').attr('src', this.url);
+                $('#background-image').show();
                 break;
             case BackgroundType.Video:
                 $('#canvas').css('background-image', '');
+                $('#background-image').attr('src', '');
+                $('#background-image').hide();
                 $('#video').attr('data-vbg', this.url);
                 _video = new VideoBackgrounds($('#video'));
                 break;
