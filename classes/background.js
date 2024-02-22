@@ -78,6 +78,10 @@ class Background {
             let imgUrl = currentBg.getPosterImgUrl();
             if (currentBg.type == BackgroundType.Video) {
                 imgUrl = await convertLinkToDataURL(imgUrl);
+                if (imgUrl == undefined) {
+                    // can't access image, use default black
+                    reject();
+                }
             }
             imgEl.src = imgUrl;
             imgEl.onload = function () {
@@ -85,7 +89,13 @@ class Background {
             };
         });
 
-        await imgLoadPromise;
+        let imgLoadFailed = false;
+        await imgLoadPromise.catch((c) => {
+            imgLoadFailed = true;
+            currentBg.averageColor = "#fff";
+        });
+
+        if (imgLoadFailed) return this.averageColor;
 
         var blockSize = 5, // only visit every 5 pixels
             defaultRGB = { r: 0, g: 0, b: 0 }, // for non-supporting envs

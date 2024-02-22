@@ -9,8 +9,9 @@ const downloadObjectAsJson = function (exportObj, exportName) {
 }
 
 const convertLinkToDataURL = async function (link) {
-    let blob = await fetch(link).then(r => r.blob());
-    return await new Promise(resolve => {
+    let blob = await fetch(link).then(r => r.blob()).catch(() => {});
+    if (blob === undefined) return blob;
+    return await new Promise((resolve, reject) => {
         let reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.readAsDataURL(blob);
