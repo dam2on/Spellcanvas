@@ -8,7 +8,7 @@ const downloadObjectAsJson = function (exportObj, exportName) {
     downloadAnchorNode.remove();
 }
 
-const convertLinkToDataURL = async function(link) {
+const convertLinkToDataURL = async function (link) {
     let blob = await fetch(link).then(r => r.blob());
     return await new Promise(resolve => {
         let reader = new FileReader();
@@ -23,6 +23,15 @@ const newGuid = function () {
     );
 }
 
+const loading = function (state) {
+    if (state) {
+        $('.loader').show();
+    }
+    else {
+        $('.loader').hide();
+    }
+}
+
 const toBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -30,7 +39,7 @@ const toBase64 = file => new Promise((resolve, reject) => {
     reader.onerror = reject;
 });
 
-const invertColor = function(hex) {
+const invertColor = function (hex) {
     if (hex.indexOf('#') === 0) {
         hex = hex.slice(1);
     }
@@ -49,7 +58,7 @@ const invertColor = function(hex) {
     return '#' + padZero(r) + padZero(g) + padZero(b);
 }
 
-const padZero = function(str, len) {
+const padZero = function (str, len) {
     len = len || 2;
     var zeros = new Array(len).join('0');
     return (zeros + str).slice(-len);

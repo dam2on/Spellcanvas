@@ -111,7 +111,7 @@
                 </div>
             </div>
             <div id="spell-ruler" class="form-group mb-3">
-                <label for="spell-ruler"><i class="fa-solid fa-ruler me-2"></i>Spell Ruler</label>
+                <span><i class="fa-solid fa-ruler me-2"></i>Spell Ruler</span>
                 <div class="row mt-1">
                     <div class="col d-inline-flex align-items-center">
                         <input class="btn-check" type="checkbox" id="checkbox-spell-line" value="line">
@@ -143,7 +143,7 @@
                 </div>
             </div>
             <div class="form-group host-only">
-                <label for="scene-list"><i class="fa-regular fa-map me-2"></i>Scenes</label>
+                <span><i class="fa-regular fa-map me-2"></i>Scenes</span>
                 <div id="scene-list" class="row row-cols-3 gy-2">
                     <div class="col d-flex justify-content-center align-items-center"><button id="btn-add-scene"
                             class="btn btn-primary btn-round"><i class="fa-solid fa-plus"></i></button></div>
@@ -209,46 +209,46 @@
                     <input id="piece-menu-name" class="form-control" />
                 </div>
                 <div class="form-group mb-3">
-                    <label>Size</label>
+                    <span>Size</span>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.5">
-                        <label class="form-check-label">
+                        <input id="radio-piece-menu-size-ty" class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.5">
+                        <label for="radio-piece-menu-size-ty" class="form-check-label">
                             Tiny (&half; by &half;)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.9">
-                        <label class="form-check-label">
+                        <input id="radio-piece-menu-size-sm" class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.9">
+                        <label for="radio-piece-menu-size-sm" class="form-check-label">
                             Small (¾ by ¾)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="1">
-                        <label class="form-check-label">
+                        <input id="radio-piece-menu-size-md" class="form-check-input" type="radio" name="radio-piece-menu-size" value="1">
+                        <label for="radio-piece-menu-size-md" class="form-check-label">
                             Medium (1 by 1)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="2">
-                        <label class="form-check-label">
+                        <input id="radio-piece-menu-size-lg" class="form-check-input" type="radio" name="radio-piece-menu-size" value="2">
+                        <label for="radio-piece-menu-size-lg" class="form-check-label">
                             Large (2 by 2)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="3">
-                        <label class="form-check-label">
+                        <input id="radio-piece-menu-size-hu" class="form-check-input" type="radio" name="radio-piece-menu-size" value="3">
+                        <label for="radio-piece-menu-size-hu" class="form-check-label">
                             Huge (3 by 3)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-piece-menu-size" value="4">
-                        <label class="form-check-label">
+                        <input id="radio-piece-menu-size-ga" class="form-check-input" type="radio" name="radio-piece-menu-size" value="4">
+                        <label for="radio-piece-menu-size-ga" class="form-check-label">
                             Gargantuan (4 by 4)
                         </label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Aura</label>
+                    <span>Aura</span>
                     <input class="btn-check" type="checkbox" id="checkbox-piece-menu-aura" value="circle">
                     <label class="btn btn-outline-secondary btn-sm no-focus me-1" for="checkbox-piece-menu-aura">
                         <i class="fa-solid fa-circle"></i>
@@ -273,7 +273,7 @@
                 </div>
                 <div class="form-group">
                     <label for="piece-menu-status-conditions">Status Conditions</label>
-                    <input class="form-control" id="piece-menu-status-conditions" data-role="tagsinput" />
+                    <input id="piece-menu-status-conditions" class="form-control" data-role="tagsinput" />
                 </div>
                 <div class="form-group mb-3">
                     <label for="piece-menu-dead">Dead?</label>
@@ -282,28 +282,28 @@
             </div>
             <div class="area-only">
                 <div class="form-group mb-3">
-                    <label>Shape</label>
+                    <span>Shape</span>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-area-menu-type" value="line">
-                        <label class="form-check-label">
+                        <input id="radio-area-menu-type-li" class="form-check-input" type="radio" name="radio-area-menu-type" value="line">
+                        <label for="radio-area-menu-type-li" class="form-check-label">
                             Line
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-area-menu-type" value="circle">
-                        <label class="form-check-label">
+                        <input id="radio-area-menu-type-ci" class="form-check-input" type="radio" name="radio-area-menu-type" value="circle">
+                        <label for="radio-area-menu-type-ci" class="form-check-label">
                             Circle
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-area-menu-type" value="square">
-                        <label class="form-check-label">
+                        <input id="radio-area-menu-type-sq" class="form-check-input" type="radio" name="radio-area-menu-type" value="square">
+                        <label for="radio-area-menu-type-sq" class="form-check-label">
                             Square
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="radio-area-menu-type" value="cone">
-                        <label class="form-check-label">
+                        <input id="radio-area-menu-type-co" class="form-check-input" type="radio" name="radio-area-menu-type" value="cone">
+                        <label for="radio-area-menu-type-co" class="form-check-label">
                             Cone
                         </label>
                     </div>
@@ -340,11 +340,11 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3 form-group">
-                            <label class="form-label" for="#input-piece-name">Name</label>
+                            <label class="form-label" for="input-piece-name">Name</label>
                             <input id="input-piece-name" class="form-control" type="text" />
                         </div>
                         <div class="form-group mb-3">
-                            <label for="#input-piece-art" class="form-label">Image</label>
+                            <label for="input-piece-art" class="form-label">Image</label>
                             <input id="input-piece-art" type="file" required />
                             <div class="invalid-feedback">
                                 Please upload a valid jpeg or png file.
@@ -439,14 +439,14 @@
                             </label>
                         </div>
                         <div class="mb-3" style="display: none;">
-                            <label class="form-label" for="#input-bg-video">Video Link</label>
+                            <label class="form-label" for="input-bg-video">Video Link</label>
                             <input id="input-bg-video" class="form-control" type="url" />
                             <div class="invalid-feedback">
                                 Please enter a valid youtube or vimeo url.
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="#input-bg-image">Background Image</label>
+                            <label class="form-label" for="input-bg-image">Background Image</label>
                             <input id="input-bg-image" type="file" required />
                             <div class="invalid-feedback">
                                 Please upload a valid jpeg or png file.

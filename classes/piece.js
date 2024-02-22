@@ -203,8 +203,9 @@ class Piece {
 
         // add conditions
         if (this.conditions.length > 0) {
-            // not the most efficient
+            // text settings
             this.ctx.font = fontSize.statuses + " Arial";
+            // use anyLetterHeight instead of this.getTextDims().height for a consistent height
             const anyLetterHeight = this.getTextDims("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ").height;
 
             let conditionWidths = this.conditions.map(c => {
@@ -219,7 +220,7 @@ class Piece {
                 width: 0
             }
             
-            // convert list of conditions into 2d array, describing conditions per row: 'conditionRows'
+            // prepare a list of objects to display multiple status's per row, centered
             for (var i = 0; i < conditionWidths.length; i++) {
                 if (currentRow.conditions.length > 1 && currentRow.width + conditionWidths[i].width + textMargin > this.width) {
                     conditionRows.push(currentRow);
@@ -256,6 +257,7 @@ class Piece {
             }
         }
 
+        // add trail
         if (trailColor != null && this.origin != undefined) {
             const prevStroke = this.ctx.strokeStyle;
             const prevFill = this.ctx.fillStyle;

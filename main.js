@@ -85,7 +85,7 @@ const onChangeBackgroundSubmit = function () {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).hide();
 }
 
-const onSpellRulerToggle = function (args) {
+const onSpellRulerToggle = async function (args) {
   const type = $(this).val();
   const sizeInput = $('#input-spell-size');
   const sizeLabel = $('label[for="input-spell-size"]');
@@ -102,6 +102,7 @@ const onSpellRulerToggle = function (args) {
   }
   else {
     _spellRuler = new Area(newGuid(), _player?.id ?? _host, type, $('#input-spell-size').val() / 5);
+    _spellRuler.color = invertColor(await CURRENT_SCENE.background.getAverageRGB());
     sizeInput.show();
     sizeLabel.show();
     switch (type) {
@@ -1046,21 +1047,13 @@ const initDom = function () {
   $('.menu-toggle').on('mouseout', function () {
     clearTimeout(menuToggleTimeout);
   });
-  document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
-    // reset piece form
-    _pieceInMenu = null;
-    $("#piece-menu-status-conditions").tagsinput('removeAll')
-    const imgInput = document.getElementById("piece-menu-image-input");
-    imgInput.value = null;
-    imgInput.type = "text";
-    imgInput.type = "file";
-  });
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
   // $('.quick-add').on('click', onQuickAdd);
-  document.getElementById('btn-add-scene').addEventListener('click', onAddScene)
-  document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange)
+  document.getElementById('canvas').addEventListener('contextmenu', onAddScene)
+  document.getElementById('btn-add-scene').addEventListener('click', onAddScene);
+  document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange);
   document.getElementById('form-modal-piece').addEventListener('submit', onAddPieceSubmit);
   document.getElementById('form-modal-bg').addEventListener('submit', onChangeBackgroundSubmit);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
@@ -1076,9 +1069,18 @@ const initDom = function () {
   document.getElementById('btn-clear-session').addEventListener('click', onClearSession);
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseenter', onRouteShow);
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseleave', onRouteHide);
-
-
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
+  
+  document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
+    // reset piece form
+    _pieceInMenu = null;
+    $("#piece-menu-status-conditions").tagsinput('removeAll')
+    const imgInput = document.getElementById("piece-menu-image-input");
+    imgInput.value = null;
+    imgInput.type = "text";
+    imgInput.type = "file";
+  });
+
   document.getElementById("modal-piece").addEventListener('shown.bs.modal', function () {
     // TODO: Clear image input
     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
@@ -1088,6 +1090,7 @@ const initDom = function () {
     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   });
 
+  // canvas
   can.addEventListener('mousedown', async function (args) {
     if (args.button == 0) {
       // left click
@@ -1180,7 +1183,6 @@ const initDom = function () {
     else {
       emitMovePieceEvent(_host, movedPiece);
     }
-
   });
 
   can.addEventListener('contextmenu', (e) => {
@@ -1224,15 +1226,6 @@ const initDom = function () {
       }
     }
   });
-}
-
-const loading = function (state) {
-  if (state) {
-    $('.loader').show();
-  }
-  else {
-    $('.loader').hide();
-  }
 }
 
 window.onload = async function () {

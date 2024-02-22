@@ -73,10 +73,15 @@ class Area extends Piece {
             const prevWidth = this.ctx.lineWidth;
             this.ctx.lineWidth = 2;
             this.ctx.strokeStyle = trailColor;
+            this.ctx.fillStyle = trailColor;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX(), this.getY());
             this.ctx.lineTo(this.getOriginX(), this.getOriginY());
             this.ctx.stroke();
+            this.ctx.beginPath();
+            const trailHeadRadius = Math.max(3, this.canvas.width * 0.0045);
+            this.ctx.arc(this.getOriginX(), this.getOriginY(), trailHeadRadius, 0, 2 * Math.PI);
+            this.ctx.fill();
             this.ctx.lineWidth = prevWidth;
         }
 
