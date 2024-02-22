@@ -724,6 +724,10 @@ const onAddScene = async function () {
 
   $('#scene-list').prepend(Scene.updateOrCreateDom(CURRENT_SCENE));
   $('#option-' + CURRENT_SCENE.id).prop('checked', true);
+
+  for (var player of PARTY.players) {
+    emitLoadSceneEvent(player.id);
+  }
 }
 
 const onSceneMenu = function (e, id) {
