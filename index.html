@@ -85,13 +85,9 @@
         <div class="offcanvas-body">
             <h4><i class="fa-solid fa-chess my-3 me-2"></i>Game Board</h4>
             <div class="form-group mb-3">
-                <button id="btn-change-bg" class="btn btn-primary me-2 host-only" data-bs-toggle="modal"
-                    data-bs-target="#modal-bg">
-                    Set Background <i class="fa-regular fa-image"></i></button>
-                <!-- </div>
-            <div class="form-group mb-3"> -->
-                <button id="btn-add-piece" class="btn btn-primary" data-bs-toggle="modal"
-                    data-bs-target="#modal-piece">New Game Piece <i class="fa-solid fa-chess-knight"></i></button>
+                <button id="btn-change-bg" class="btn btn-primary me-2 host-only" type="button"><i class="fa-regular fa-image"></i> 
+                    Set Background</button>
+                <button id="btn-add-piece" class="btn btn-primary"><i class="fa-solid fa-chess-knight"></i> New Game Piece</button>
             </div>
             <div class="form-group mb-3 host-only">
                 <label for="range-grid-size-x" class="form-label"><i class="fa-solid fa-border-none me-2"></i>Grid
@@ -339,13 +335,15 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <input hidden id="input-piece-init-pos-x" />
+                        <input hidden id="input-piece-init-pos-y" />
                         <div class="mb-3 form-group">
                             <label class="form-label" for="input-piece-name">Name</label>
                             <input id="input-piece-name" class="form-control" type="text" />
                         </div>
                         <div class="form-group mb-3">
-                            <label for="input-piece-art" class="form-label">Image</label>
-                            <input id="input-piece-art" type="file" required />
+                            <label for="input-piece-img" class="form-label">Image</label>
+                            <input id="input-piece-img" type="file" required />
                             <div class="invalid-feedback">
                                 Please upload a valid jpeg or png file.
                             </div>

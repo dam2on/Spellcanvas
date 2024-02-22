@@ -8,6 +8,7 @@ _host = null;
 _pieceInMenu = null;
 _spellRuler = null;
 _draggedPiece = null;
+_forceHideRoutes = false;
 
 const isHost = function () {
   return _peer.id == _host;
@@ -151,25 +152,45 @@ const onQuickAdd = function (args) {
   }
 }
 
+const onChangeBackgroundModal = function() {
+  bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).show();
+}
+
+const onAddPieceModal = function(initPos = null) {
+  bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).show();
+
+  if (initPos != null && !(initPos instanceof Event)) {
+    $('#input-piece-init-pos-x').val(initPos.x);
+    $('#input-piece-init-pos-y').val(initPos.y);
+  }
+}
+
 const onAddPieceSubmit = async function (e) {
   // e.preventDefault();
   $('#form-modal-piece').removeClass('was-validated');
-  const modalPieceInputs = document.getElementById('form-modal-piece').getElementsByTagName('input');
-  const name = modalPieceInputs[0].value;
-  const img = modalPieceInputs[1].files[0];
+  const name = $('#input-piece-name').val();
+  const img = $('#input-piece-img')[0].files[0];
   const size = document.querySelector('input[name="radio-piece-size"]:checked').value;
+  const initPos = {
+    x: Number($('#input-piece-init-pos-x').val() == '' ? 0.3 : $('#input-piece-init-pos-x').val()),
+    y: Number($('#input-piece-init-pos-y').val() == '' ? 0.3 : $('#input-piece-init-pos-y').val())
+  }
 
-  const piece = new Piece(newGuid(), _peer.id, name, img, size);
+  const piece = new Piece(newGuid(), _peer.id, name, img, size, initPos.x, initPos.y);
   CURRENT_SCENE.addPiece(piece);
 
   piece.imageEl.addEventListener('load', async () => {
     piece.draw();
     await CURRENT_SCENE.savePieces();
     initGamePieceTour(piece);
-    modalPieceInputs[0].value = null;
-    modalPieceInputs[1].value = null;
-    modalPieceInputs[1].type = "text";
-    modalPieceInputs[1].type = "file";
+    $('#input-piece-name').val(null);
+    $('#input-piece-img').val('');
+    $('#input-piece-img').attr('type', 'text');
+    $('#input-piece-img').attr('type', 'file');
+    $('#input-piece-init-pos-x').val(null);
+    $('#input-piece-init-pos-y').val(null);
 
     if (isHost()) {
       for (var player of PARTY.players) {
@@ -1010,26 +1031,25 @@ const onGridSizeChange = function () {
   }
 }
 
-let forceHideRoutes = false;
 const onRouteToggle = function () {
   if (document.getElementById('checkbox-route-toggle').checked) {
     // this is handled in scene.js:drawPieces();
 
   }
   else {
-    forceHideRoutes = true;
+    _forceHideRoutes = true;
     CURRENT_SCENE.drawPieces();
   }
 }
 
 const onRouteShow = function () {
-  if (!forceHideRoutes)
+  if (!_forceHideRoutes)
     CURRENT_SCENE.drawPieces(true);
 }
 
 const onRouteHide = function () {
   CURRENT_SCENE.drawPieces();
-  forceHideRoutes = false;
+  _forceHideRoutes = false;
 }
 
 const initDom = function () {
@@ -1065,7 +1085,8 @@ const initDom = function () {
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
   // $('.quick-add').on('click', onQuickAdd);
-  // document.getElementById('canvas').addEventListener('contextmenu', onAddScene)
+  document.getElementById('btn-change-bg').addEventListener('click', onChangeBackgroundModal);
+  document.getElementById('btn-add-piece').addEventListener('click', onAddPieceModal);
   document.getElementById('btn-add-scene').addEventListener('click', onAddScene);
   document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange);
   document.getElementById('form-modal-piece').addEventListener('submit', onAddPieceSubmit);
@@ -1089,20 +1110,18 @@ const initDom = function () {
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
     _pieceInMenu = null;
-    $("#piece-menu-status-conditions").tagsinput('removeAll')
+    $("#piece-menu-status-conditions").tagsinput('removeAll');
     const imgInput = document.getElementById("piece-menu-image-input");
     imgInput.value = null;
     imgInput.type = "text";
     imgInput.type = "file";
+    $('#btn-update-piece').removeClass('shake');
   });
 
-  document.getElementById("modal-piece").addEventListener('shown.bs.modal', function () {
-    // TODO: Clear image input
-    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
-  });
-  document.getElementById("modal-bg").addEventListener('shown.bs.modal', function () {
-    // TODO: Clear image input
-    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
+  document.getElementById("piece-menu").addEventListener("shown.bs.offcanvas", () => {
+    $('#piece-menu').find('input').one('change', function() {
+      $('#btn-update-piece').addClass('shake');
+    });
   });
 
   // canvas
@@ -1203,42 +1222,46 @@ const initDom = function () {
   can.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     _pieceInMenu = shapeIntersects(e.clientX, e.clientY);
-    if (_pieceInMenu == null) return;
-
-    $('.area-only').hide();
-    $('.piece-only').hide();
-    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
-
-    if (_pieceInMenu instanceof Area) {
-      $('.area-only').show();
-      $('input[name="radio-area-menu-type"]').prop('checked', false);
-      $(`input[name='radio-area-menu-type'][value='${_pieceInMenu.type}']`).prop("checked", true);
-      $('#input-area-menu-size').val(_pieceInMenu.size * 5);
-      $('#input-area-menu-color').val(_pieceInMenu.color);
-      $('#input-area-menu-opacity').val(_pieceInMenu.opacity);
-    }
-    else {
-      $('.piece-only').show();
-      // open piece submenu
-      document.getElementById("piece-menu-name").value = _pieceInMenu.name;
-      document.getElementById("piece-menu-image").src = _pieceInMenu.image;
-      document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
-      $('input[name="radio-piece-menu-size"]').prop('checked', false);
-      $(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).prop("checked", true);
-      $("#piece-menu-status-conditions").tagsinput('removeAll')
-      for (var cond of _pieceInMenu.conditions) {
-        $("#piece-menu-status-conditions").tagsinput('add', cond);
-      }
-      if (_pieceInMenu.aura != null) {
-        $('.aura-only').show();
-        document.getElementById("checkbox-piece-menu-aura").checked = true;
-        document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size * 2.5;
-        document.getElementById("input-aura-menu-color").value = _pieceInMenu.aura.color;
+    if (_pieceInMenu != null) {
+      $('.area-only').hide();
+      $('.piece-only').hide();
+      bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
+  
+      if (_pieceInMenu instanceof Area) {
+        $('.area-only').show();
+        $('input[name="radio-area-menu-type"]').prop('checked', false);
+        $(`input[name='radio-area-menu-type'][value='${_pieceInMenu.type}']`).prop("checked", true);
+        $('#input-area-menu-size').val(_pieceInMenu.size * 5);
+        $('#input-area-menu-color').val(_pieceInMenu.color);
+        $('#input-area-menu-opacity').val(_pieceInMenu.opacity);
       }
       else {
-        $('.aura-only').hide();
-        document.getElementById("checkbox-piece-menu-aura").checked = false;
+        $('.piece-only').show();
+        // open piece submenu
+        document.getElementById("piece-menu-name").value = _pieceInMenu.name;
+        document.getElementById("piece-menu-image").src = _pieceInMenu.image;
+        document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
+        $('input[name="radio-piece-menu-size"]').prop('checked', false);
+        $(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).prop("checked", true);
+        $("#piece-menu-status-conditions").tagsinput('removeAll')
+        for (var cond of _pieceInMenu.conditions) {
+          $("#piece-menu-status-conditions").tagsinput('add', cond);
+        }
+        if (_pieceInMenu.aura != null) {
+          $('.aura-only').show();
+          document.getElementById("checkbox-piece-menu-aura").checked = true;
+          document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size * 2.5;
+          document.getElementById("input-aura-menu-color").value = _pieceInMenu.aura.color;
+        }
+        else {
+          $('.aura-only').hide();
+          document.getElementById("checkbox-piece-menu-aura").checked = false;
+        }
       }
+    }
+    else {
+      // open add piece dialog
+      onAddPieceModal({x: e.x / document.getElementById('canvas').width, y: e.y / document.getElementById('canvas').height});
     }
   });
 }

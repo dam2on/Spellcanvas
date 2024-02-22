@@ -155,6 +155,30 @@ input[type="range"]::-webkit-slider-thumb {
   height: 100vh;
 }
 
+.shake {
+  -webkit-animation: shake 1.64s cubic-bezier(.36,.07,.19,.97) infinite;
+  -moz-animation: shake 1.64s cubic-bezier(.36,.07,.19,.97) infinite;
+  -o-animation: shake 1.64s cubic-bezier(.36,.07,.19,.97) infinite;
+  animation: shake 1.64s cubic-bezier(.36,.07,.19,.97) infinite;
+  transform: translate3d(0, 0, 0);
+  perspective: 1000px;
+}
+
+@keyframes shake {
+  5%, 45% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  10%, 40% {
+    transform: translate3d(2px, 0, 0);
+  }
+  15%, 25%, 35% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  20%, 30% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
 .blinking {
   -webkit-animation: blinkingAnimation 1.8s infinite;
   /* Safari 4+ */
