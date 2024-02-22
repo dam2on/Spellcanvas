@@ -237,7 +237,7 @@ const onUpdatePieceSubmit = async function () {
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
 }
 
-const onPieceAuraToggle = function(e) {
+const onPieceAuraToggle = function (e) {
   const auraEnabled = $(this).prop('checked');
   if (auraEnabled) {
     $('.aura-only').show();
@@ -705,7 +705,7 @@ const onAddScene = async function () {
   $('#option-' + CURRENT_SCENE.id).prop('checked', true);
 }
 
-const onSceneMenu = function(e, id) {
+const onSceneMenu = function (e, id) {
   e.preventDefault();
   $('.scene-label').each((i, el) => {
     bootstrap.Dropdown.getOrCreateInstance(el).hide();
@@ -828,7 +828,7 @@ const onImportSession = async function () {
   });
 }
 
-const onClearSession = async function() {
+const onClearSession = async function () {
   await localforage.clear();
   window.location.href = window.location.origin + window.location.pathname;
 }
@@ -1010,12 +1010,26 @@ const onGridSizeChange = function () {
   }
 }
 
-const onRouteShow = function() {
-  CURRENT_SCENE.drawPieces(true);
+let forceHideRoutes = false;
+const onRouteToggle = function () {
+  if (document.getElementById('checkbox-route-toggle').checked) {
+    // this is handled in scene.js:drawPieces();
+
+  }
+  else {
+    forceHideRoutes = true;
+    CURRENT_SCENE.drawPieces();
+  }
 }
 
-const onRouteHide = function() { 
+const onRouteShow = function () {
+  if (!forceHideRoutes)
+    CURRENT_SCENE.drawPieces(true);
+}
+
+const onRouteHide = function () {
   CURRENT_SCENE.drawPieces();
+  forceHideRoutes = false;
 }
 
 const initDom = function () {
@@ -1051,7 +1065,7 @@ const initDom = function () {
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
   // $('.quick-add').on('click', onQuickAdd);
-  document.getElementById('canvas').addEventListener('contextmenu', onAddScene)
+  // document.getElementById('canvas').addEventListener('contextmenu', onAddScene)
   document.getElementById('btn-add-scene').addEventListener('click', onAddScene);
   document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange);
   document.getElementById('form-modal-piece').addEventListener('submit', onAddPieceSubmit);
@@ -1063,14 +1077,15 @@ const initDom = function () {
   document.getElementById('range-grid-size-y').addEventListener('input', onGridSizeInput);
   document.getElementById('range-grid-size-y').addEventListener('change', onGridSizeChange);
   document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
-  document.getElementById('btn-reset-pieces').addEventListener("click", onResetPiecesSubmit);
+  document.getElementById('btn-reset-pieces').addEventListener('click', onResetPiecesSubmit);
+  document.getElementById('checkbox-route-toggle').addEventListener('change', onRouteToggle);
   document.getElementById('btn-export-session').addEventListener('click', onExportSession);
   document.getElementById('btn-import-session').addEventListener('click', onImportSession);
   document.getElementById('btn-clear-session').addEventListener('click', onClearSession);
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseenter', onRouteShow);
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseleave', onRouteHide);
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
-  
+
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
     _pieceInMenu = null;
@@ -1096,7 +1111,7 @@ const initDom = function () {
       // left click
       if (_spellRuler instanceof Area) {
         await CURRENT_SCENE.addPiece(_spellRuler);
-        const newPiece = {..._spellRuler};
+        const newPiece = { ..._spellRuler };
         $('#spell-ruler').find('input.btn-check:checked').click();
         CURRENT_SCENE.drawPieces();
 
@@ -1104,7 +1119,7 @@ const initDom = function () {
           for (var player of PARTY.players) {
             emitAddPieceEvent(player.id, newPiece);
           }
-    
+
           await CURRENT_SCENE.savePieces();
         }
         else {
