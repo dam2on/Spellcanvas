@@ -1060,6 +1060,7 @@ const initDom = function () {
   var ro = new ResizeObserver(e => {
     document.getElementById('canvas').width = window.innerWidth;
     document.getElementById('canvas').height = window.innerHeight;
+    displayDebugInfo(`${window.innerWidth}, ${window.innerHeight}`);
 
     if (_spellRuler instanceof Area) {
       _spellRuler.draw();
@@ -1264,6 +1265,10 @@ const initDom = function () {
       onAddPieceModal({x: e.x / document.getElementById('canvas').width, y: e.y / document.getElementById('canvas').height});
     }
   });
+}
+
+const displayDebugInfo = function(text) {
+  $('.debug-info').html(text);
 }
 
 window.onload = async function () {

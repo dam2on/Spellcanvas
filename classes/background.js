@@ -4,7 +4,7 @@ class Background {
     constructor(type, url) {
         this.type = type;
         this.url = url;
-        Object.defineProperty(this, 'vb', { value: null, enumerable: false, writable: true });
+        Object.defineProperty(this, 're', { value: null, enumerable: false, writable: true });
     }
 
     apply() {
