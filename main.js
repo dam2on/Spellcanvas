@@ -1022,7 +1022,7 @@ const onGridSizeChange = function () {
   const inputY = document.getElementById('range-grid-size-y');
   let newGridSize = {
     x: Number(inputX.value) / document.getElementById("canvas").width,
-    y: Number(inputY.value) / document.getElementById("canvas").width
+    y: Number(inputY.value) / document.getElementById("canvas").height
   };
 
   if (!controllingX && inputX.value == inputY.value) {

@@ -48,7 +48,7 @@ class Piece {
             this.size = Number(size);
         }
         this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
-        this.height = CURRENT_SCENE.gridRatio.y * this.canvas.width * this.size;
+        this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * this.size;
     }
 
     updateImage(img) {

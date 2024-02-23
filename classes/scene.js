@@ -164,7 +164,7 @@ class Scene {
 
     drawGridSetting() {
         const valX = parseInt(this.gridRatio.x * this.canvas.width);
-        const valY = parseInt(this.gridRatio.y * this.canvas.width);
+        const valY = parseInt(this.gridRatio.y * this.canvas.height);
         $('#range-grid-size-x').val(valX);
         $('#range-grid-size-y').val(valY);
         $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}`);
