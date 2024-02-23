@@ -97,10 +97,10 @@ class Area extends Piece {
         switch (this.type) {
             case AreaType.Line:
                 this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
-                this.height = this.width / this.size;
+                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.width;
                 if (heightWidthRatio != 1) {
                     this.width = this.width * (1 - Math.abs((1 - heightWidthRatio) * Math.sin(this.rotation)));
-                    this.height = this.height * (1 - Math.abs((1 - heightWidthRatio) * Math.cos(this.rotation)));
+                    this.height = this.height * (1 - Math.abs((1 - heightWidthRatio) * Math.sin(this.rotation)));
                 }
                 break;
             case AreaType.Circle:

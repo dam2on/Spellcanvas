@@ -997,8 +997,10 @@ const onGridSizeInput = function (args) {
   if (controllingX) {
     $('#range-grid-size-y').css('width', valueX + 'px');
     $('#range-grid-size-y').attr('max', valueX);
-    $('#range-grid-size-y').val(valueX);
-    valueY = valueX;
+    if (true || valueX == valueY) {
+      $('#range-grid-size-y').val(valueX);
+      valueY = valueX;
+    }
   }
 
   $('.grid-indicator').css('width', valueX + 'px');
