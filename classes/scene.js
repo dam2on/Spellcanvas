@@ -10,8 +10,8 @@ class Scene {
         this.pieces = [];
         this.background = new Background(BackgroundType.Image, 'img/bg.png');
 
-        Object.defineProperty(this, 'canvas', {value: document.getElementById('canvas'), enumerable: false, writable: true});
-        Object.defineProperty(this, 'ctx', {value: this.canvas.getContext('2d'), enumerable: false, writable: true});
+        Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
+        Object.defineProperty(this, 'ctx', { value: this.canvas.getContext('2d'), enumerable: false, writable: true });
     }
 
     static async load(partial) {
@@ -152,11 +152,17 @@ class Scene {
 
     bringPieceToFront(piece) {
         // makes piece appear on top of other pieces by moving to end of pieces array
-        const currentIndex = this.pieces.indexOf(piece); 
+        const currentIndex = this.pieces.indexOf(piece);
         this.pieces.push(this.pieces.splice(currentIndex, 1)[0]);
     }
 
     draw() {
+        this.drawGridSetting();
+        this.drawBackground();
+        this.drawPieces();
+    }
+
+    drawGridSetting() {
         const valX = parseInt(this.gridRatio.x * this.canvas.width);
         const valY = parseInt(this.gridRatio.y * this.canvas.width);
         $('#range-grid-size-x').val(valX);
@@ -175,8 +181,6 @@ class Scene {
         else {
             $('.extra-grid-controls').hide();
         }
-        this.drawBackground();
-        this.drawPieces();
     }
 
     drawBackground() {

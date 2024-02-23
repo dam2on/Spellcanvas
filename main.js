@@ -1074,8 +1074,7 @@ const initDom = function () {
     if (_spellRuler instanceof Area) {
       _spellRuler.draw();
     }
-    CURRENT_SCENE?.drawBackground();
-    CURRENT_SCENE?.drawPieces();
+    CURRENT_SCENE?.draw();
   }).observe(document.body);
 
   let menuToggleTimeout;
