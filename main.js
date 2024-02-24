@@ -1321,6 +1321,9 @@ const initDom = function () {
 
 const displayDebugInfo = function (text) {
   $('.debug-info').html(text);
+  if (window.location.host == '127.0.0.1:5500') {
+    $('.debug-info').show();
+  }
 }
 
 window.onload = async function () {
