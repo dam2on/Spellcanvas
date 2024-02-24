@@ -1,6 +1,6 @@
 const peerJsOptions = {
-    // host: '9000-peers-peerjsserver-jkghqaxbgb9.ws-us108.gitpod.io',
-    // port: 9000,
+    host: '18.220.220.104',
+    port: 9000,
     // path: '/myapp',
-    // debug: 3
+    debug: 0
 }

@@ -8,6 +8,7 @@ class Area extends Piece {
         this.y = y;
         this.rotation = 0;
         this.color = "#ffeeaa";
+        this.contrastColor = invertColor(this.color);
         this.opacity = 180;
         Object.defineProperty(this, 'path', { value: null, enumerable: false, writable: true });
     }
@@ -16,6 +17,7 @@ class Area extends Piece {
         const area = new Area(obj.id, obj.owner, obj.type, obj.size, obj.x, obj.y);
         area.rotation = obj.rotation;
         area.color = obj.color;
+        area.contrastColor = obj.contrastColor;
         area.opacity = obj.opacity;
         area.origin = obj.origin;
         return area;
@@ -52,8 +54,11 @@ class Area extends Piece {
                 this.path.ellipse(coords.x, coords.y, this.width, this.height, 0, 0, 2 * Math.PI);
                 break;
             case AreaType.Cone:
-                const coneAngle = (1 - Math.abs((1 - CURRENT_SCENE.gridRatio.y / CURRENT_SCENE.gridRatio.x) * Math.cos(this.rotation))) * Math.PI * 1 / 3.39622641509; // <= 53 degrees
-
+                const ratio = (CURRENT_SCENE.gridRatio.x * this.canvas.width) / (CURRENT_SCENE.gridRatio.y * this.canvas.height);
+                const horizontalAngle = (.9236) / ratio // weighted 53 degree angle
+                const verticalAngle = (.9236) * ratio;
+                const halfway = Math.abs(verticalAngle - horizontalAngle) / 2;
+                const coneAngle = (horizontalAngle + halfway) - halfway * Math.cos(2 * this.rotation)
                 this.path.moveTo(coords.x, coords.y);
                 this.path.arc(coords.x, coords.y, this.width, this.rotation - coneAngle / 2, this.rotation + coneAngle / 2);
                 this.path.lineTo(coords.x, coords.y);
@@ -93,14 +98,13 @@ class Area extends Piece {
         if (size != undefined) {
             this.size = Number(size);
         }
-        const heightWidthRatio = CURRENT_SCENE.gridRatio.y / CURRENT_SCENE.gridRatio.x;
         const baseWidth = CURRENT_SCENE.gridRatio.x * this.canvas.width;
         const widthHeightDiff = (baseWidth - CURRENT_SCENE.gridRatio.y * this.canvas.height) / 2;
         switch (this.type) {
             case AreaType.Line:
                 this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
                 this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height;
-                if (heightWidthRatio != 1) {
+                if (widthHeightDiff != 0) {
                     this.width = this.size * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
                     this.height = (baseWidth - widthHeightDiff) - widthHeightDiff * Math.cos(2 * this.rotation);
                 }
@@ -111,7 +115,7 @@ class Area extends Piece {
                 break;
             case AreaType.Cone:
                 this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
-                if (heightWidthRatio != 1) {
+                if (widthHeightDiff != 0) {
                     this.width = this.size * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
                 }
                 this.height = this.width; // only for intersection logic

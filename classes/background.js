@@ -71,20 +71,31 @@ class Background {
         return 'img/bg.png';
     }
 
-    async getAverageRGB() {
-        if (this.averageColor != undefined) {
-            return this.averageColor;
+    async getContrastColor() {
+        if (this.contrastedColor != undefined) {
+            return this.contrastedColor;
         }
 
+
+        await this.getAverageRGB().then((v) => {
+            this.contrastedColor = invertColor(v);
+        }).catch((e) => {
+            this.contrastedColor = "#ffeeaa";
+        });
+
+        return this.contrastedColor;
+    }
+
+    async getAverageRGB() {
         var imgEl = new Image;
         const currentBg = this;
         const imgLoadPromise = new Promise(async function (resolve, reject) {
             let imgUrl = currentBg.getPosterImgUrl();
             if (currentBg.type == BackgroundType.Video) {
                 imgUrl = await convertLinkToDataURL(imgUrl);
-                if (imgUrl == undefined) {
-                    // can't access image, use default black
+                if (imgUrl == null){
                     reject();
+                    return;
                 }
             }
             imgEl.src = imgUrl;
@@ -93,13 +104,9 @@ class Background {
             };
         });
 
-        let imgLoadFailed = false;
-        await imgLoadPromise.catch((c) => {
-            imgLoadFailed = true;
-            currentBg.averageColor = "#fff";
+        await imgLoadPromise.catch((e) => {
+            throw e;
         });
-
-        if (imgLoadFailed) return this.averageColor;
 
         var blockSize = 5, // only visit every 5 pixels
             defaultRGB = { r: 0, g: 0, b: 0 }, // for non-supporting envs
@@ -142,8 +149,6 @@ class Background {
         rgb.b = ~~(rgb.b / count);
 
         const hexStr = '#' + rgb.r.toString(16) + rgb.g.toString(16) + rgb.b.toString(16);
-
-        this.averageColor = hexStr;
         return hexStr;
     }
 

@@ -3,10 +3,12 @@ class Party {
         this.owner = owner;
         this.players = [];
         this.permissions = [];
+        this.deletedPlayerIds = [];
     }
 
     static fromObj(obj) {
-        const party = new Party();
+        const party = new Party(obj.owner);
+        party.deletedPlayerIds = obj.deletedPlayerIds;
         for (var player of obj.players) {
             party.players.push(Player.fromObj(player));
         }
@@ -24,6 +26,12 @@ class Party {
 
     getPlayer(id) {
         return this.players.find(p => p.id == id);
+    }
+
+    deletePlayer(id) {
+        this.deletedPlayerIds.push(id);
+        let index = this.players.indexOf(this.players.find(p => p.id == id));
+        this.players.splice(index, 1);
     }
 
     addPlayer(player) {

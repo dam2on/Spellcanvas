@@ -220,8 +220,8 @@ const initMainMenuTour = async function (isHost = true) {
 
     if (isHost) {
         tour.addStep({
-            title: 'Grid Size',
-            text: 'Adjust this slider to match the width of the grid lines in your background. The size of game pieces and spell ruler will be adjusted accordingly.',
+            title: "How big is your grid?",
+            text: "Dial in the width and height to match your background's grid to ensure game pieces and spell areas are drawn to scale.",
             attachTo: {
                 element: document.getElementById('range-grid-size-x').parentElement,
                 on: 'right'

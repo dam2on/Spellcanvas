@@ -105,8 +105,16 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 0.8em;
 }
 
+.scene-label, .player-label {
+  cursor: pointer;
+}
+
 .offcanvas {
   visibility: visible !important;
+}
+
+.aura-only {
+  display: none;
 }
 
 .menu-btn {

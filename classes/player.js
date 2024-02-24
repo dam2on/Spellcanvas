@@ -29,11 +29,18 @@ class Player {
             $('#player-pieces-' + this.id).html(pieceHtml);
         }
         else {
-            return $(`<li class="list-group-item" id="player-${this.id}">
-                <span class="col-1"><i id="player-status-${this.id}" class="${this.statusIconClassList()}"></i></span>
-                <span class="col-4">${this.name}</span>
-                <span id="player-pieces-${this.id}" class="col-7">${pieceHtml}</span>
-            </li>`);
+            return $(`
+            <div class="dropdown">
+                <li class="list-group-item player-label" id="player-${this.id}" oncontextmenu="onPlayerMenu(event, '${this.id}')">
+                    <span class="col-1"><i id="player-status-${this.id}" class="${this.statusIconClassList()}"></i></span>
+                    <span class="col-4">${this.name}</span>
+                    <span id="player-pieces-${this.id}" class="col-7">${pieceHtml}</span>
+                </li>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a class="dropdown-item" onclick="onDeletePlayer('${this.id}')" href="javascript:void(0)">Delete ${this.name}</a></li>
+                </ul>
+            </div>`);
+            
         }
     }
 

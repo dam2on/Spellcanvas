@@ -86,9 +86,11 @@
         <div class="offcanvas-body">
             <h4><i class="fa-solid fa-chess my-3 me-2"></i>Game Board</h4>
             <div class="form-group mb-3">
-                <button id="btn-change-bg" class="btn btn-primary me-2 host-only" type="button"><i class="fa-regular fa-image"></i> 
+                <button id="btn-change-bg" class="btn btn-primary me-2 host-only" type="button"><i
+                        class="fa-regular fa-image"></i>
                     Set Background</button>
-                <button id="btn-add-piece" class="btn btn-primary"><i class="fa-solid fa-chess-knight"></i> New Game Piece</button>
+                <button id="btn-add-piece" class="btn btn-primary"><i class="fa-solid fa-chess-knight"></i> New Game
+                    Piece</button>
             </div>
             <div class="form-group mb-3 host-only">
                 <label for="range-grid-size-x" class="form-label"><i class="fa-solid fa-border-none me-2"></i>Grid
@@ -103,7 +105,7 @@
                     </div>
                     <div class="col d-flex">
                         <input type="range" id="range-grid-size-y" orient="vertical" min="1" max="150" step="1"
-                            value="50" style="position: relative; left: -5em;">
+                            value="50" style="position: relative; left: -5em; width: 149px !important;">
                     </div>
                 </div>
             </div>
@@ -177,8 +179,8 @@
                 <input id="input-session-import" type="file" accept="text/json" hidden />
             </div>
             <div class="form-group">
-                <button id="btn-clear-session" type="button" class="btn btn-danger"><i
-                        class="fa-solid fa-trash"></i> Clear Session</button>
+                <button id="btn-clear-session" type="button" class="btn btn-danger"><i class="fa-solid fa-trash"></i>
+                    Clear Session</button>
             </div>
             <div class="debug-info">
 
@@ -190,7 +192,8 @@
                 <i class="fa-solid fa-gear"></i>
             </a>
             <input class="btn-check" type="checkbox" id="checkbox-route-toggle">
-            <label for="checkbox-route-toggle" style="position: relative; left: 399px; top: 1px;" class="btn btn-outline-warning me-1 bottom-btn">
+            <label for="checkbox-route-toggle" style="position: relative; left: 399px; top: 1px;"
+                class="btn btn-outline-warning me-1 bottom-btn">
                 <i class="fa-solid fa-route"></i>
             </label>
         </div>
@@ -211,102 +214,129 @@
                 <div class="form-group mb-3">
                     <span>Size</span>
                     <div class="form-check">
-                        <input id="radio-piece-menu-size-ty" class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.5">
+                        <input id="radio-piece-menu-size-ty" class="form-check-input" type="radio"
+                            name="radio-piece-menu-size" value="0.5">
                         <label for="radio-piece-menu-size-ty" class="form-check-label">
                             Tiny (&half; by &half;)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input id="radio-piece-menu-size-sm" class="form-check-input" type="radio" name="radio-piece-menu-size" value="0.9">
+                        <input id="radio-piece-menu-size-sm" class="form-check-input" type="radio"
+                            name="radio-piece-menu-size" value="0.9">
                         <label for="radio-piece-menu-size-sm" class="form-check-label">
                             Small (¾ by ¾)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input id="radio-piece-menu-size-md" class="form-check-input" type="radio" name="radio-piece-menu-size" value="1">
+                        <input id="radio-piece-menu-size-md" class="form-check-input" type="radio"
+                            name="radio-piece-menu-size" value="1">
                         <label for="radio-piece-menu-size-md" class="form-check-label">
                             Medium (1 by 1)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input id="radio-piece-menu-size-lg" class="form-check-input" type="radio" name="radio-piece-menu-size" value="2">
+                        <input id="radio-piece-menu-size-lg" class="form-check-input" type="radio"
+                            name="radio-piece-menu-size" value="2">
                         <label for="radio-piece-menu-size-lg" class="form-check-label">
                             Large (2 by 2)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input id="radio-piece-menu-size-hu" class="form-check-input" type="radio" name="radio-piece-menu-size" value="3">
+                        <input id="radio-piece-menu-size-hu" class="form-check-input" type="radio"
+                            name="radio-piece-menu-size" value="3">
                         <label for="radio-piece-menu-size-hu" class="form-check-label">
                             Huge (3 by 3)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input id="radio-piece-menu-size-ga" class="form-check-input" type="radio" name="radio-piece-menu-size" value="4">
+                        <input id="radio-piece-menu-size-ga" class="form-check-input" type="radio"
+                            name="radio-piece-menu-size" value="4">
                         <label for="radio-piece-menu-size-ga" class="form-check-label">
                             Gargantuan (4 by 4)
                         </label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <span>Aura</span>
-                    <input class="btn-check" type="checkbox" id="checkbox-piece-menu-aura" value="circle">
-                    <label class="btn btn-outline-secondary btn-sm no-focus me-1" for="checkbox-piece-menu-aura">
-                        <i class="fa-solid fa-circle"></i>
-                    </label>
-                    <div class="aura-only" style="display: none;">
-                        <div class="form-group w-50 mb-3">
-                            <label for="input-aura-menu-size">Size (radius)</label>
-                            <div class="input-group">
-                                <input class="form-control form-control-sm" type="number" id="input-aura-menu-size" value="15"/>
-                                <span class="input-group-text">ft</span>
-                            </div>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="input-aura-menu-color">Color</label>
-                            <input id="input-aura-menu-color" type="color" value="#ffeeaa"/>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="input-aura-menu-opacity">Opacity</label>
-                            <input class="mt-1" id="input-aura-menu-opacity" type="range" min="0" max="255" step="1" />
-                        </div>
-                    </div>
+                    <label for="piece-menu-dead">Dead?</label>
+                    <input class="form-check-input" type="checkbox" value="false" id="piece-menu-dead">
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="piece-menu-status-conditions">Status Conditions</label>
                     <input id="piece-menu-status-conditions" class="form-control" data-role="tagsinput" />
                 </div>
                 <div class="form-group mb-3">
-                    <label for="piece-menu-dead">Dead?</label>
-                    <input class="form-check-input" type="checkbox" value="false" id="piece-menu-dead">
+                    <div class="d-inline-flex align-items-center">
+                        <span class="me-1">Aura</span>
+                        <input class="btn-check" type="checkbox" id="checkbox-piece-menu-aura" value="circle">
+                        <label class="btn btn-outline-secondary btn-sm no-focus me-1" for="checkbox-piece-menu-aura">
+                            <i class="fa-solid fa-circle"></i>
+                        </label>
+                    </div>
+                    <div class="form-group d-inline-flex align-items-center" style="display: none;">
+                        <label for="input-aura-menu-color" class="me-1 aura-only">Color</label>
+                        <input id="input-aura-menu-color" type="color" class="aura-only" value="#ffeeaa" />
+                    </div>
+                    <div class="aura-only">
+                        <div class="form-group mb-3 d-inline-flex align-items-end">
+                            <div class="d-inline-flex flex-column pb-2 me-1">
+                                <label for="input-aura-menu-opacity">Transparency</label>
+                                <input class="mt-2" id="input-aura-menu-opacity" type="range" min="0" max="255" step="1" value="127"/>
+                            </div>
+                            <span id="value-aura-menu-opacity">50%</span>
+                        </div>
+                        <div class="form-group w-50 mb-3">
+                            <label for="input-aura-menu-size">Size (radius)</label>
+                            <div class="input-group">
+                                <input class="form-control form-control-sm" type="number" id="input-aura-menu-size"
+                                    value="15" />
+                                <span class="input-group-text">ft</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="area-only">
                 <div class="form-group mb-3">
                     <span>Shape</span>
                     <div class="form-check">
-                        <input id="radio-area-menu-type-li" class="form-check-input" type="radio" name="radio-area-menu-type" value="line">
+                        <input id="radio-area-menu-type-li" class="form-check-input" type="radio"
+                            name="radio-area-menu-type" value="line">
                         <label for="radio-area-menu-type-li" class="form-check-label">
                             Line
                         </label>
                     </div>
                     <div class="form-check">
-                        <input id="radio-area-menu-type-ci" class="form-check-input" type="radio" name="radio-area-menu-type" value="circle">
+                        <input id="radio-area-menu-type-ci" class="form-check-input" type="radio"
+                            name="radio-area-menu-type" value="circle">
                         <label for="radio-area-menu-type-ci" class="form-check-label">
                             Circle
                         </label>
                     </div>
                     <div class="form-check">
-                        <input id="radio-area-menu-type-sq" class="form-check-input" type="radio" name="radio-area-menu-type" value="square">
+                        <input id="radio-area-menu-type-sq" class="form-check-input" type="radio"
+                            name="radio-area-menu-type" value="square">
                         <label for="radio-area-menu-type-sq" class="form-check-label">
                             Square
                         </label>
                     </div>
                     <div class="form-check">
-                        <input id="radio-area-menu-type-co" class="form-check-input" type="radio" name="radio-area-menu-type" value="cone">
+                        <input id="radio-area-menu-type-co" class="form-check-input" type="radio"
+                            name="radio-area-menu-type" value="cone">
                         <label for="radio-area-menu-type-co" class="form-check-label">
                             Cone
                         </label>
                     </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="input-area-menu-color">Color</label>
+                    <input id="input-area-menu-color" type="color" />
+                </div>
+                <div class="form-group mb-3 d-inline-flex align-items-end">
+                    <div class="d-inline-flex flex-column pb-2 me-1">
+                        <label for="input-area-menu-opacity">Transparency</label>
+                        <input class="mt-2" id="input-area-menu-opacity" type="range" min="0" max="255" step="1" value="127"/>
+                    </div>
+                    <span id="value-area-menu-opacity">50%</span>
                 </div>
                 <div class="form-group w-50 mb-3">
                     <label for="input-area-menu-size">Size</label>
@@ -315,18 +345,9 @@
                         <span class="input-group-text">ft</span>
                     </div>
                 </div>
-                <div class="form-group mb-3">
-                    <label for="input-area-menu-color">Color</label>
-                    <input id="input-area-menu-color" type="color" />
-                </div>
-                <div class="form-group mb-3">
-                    <label for="input-area-menu-opacity">Opacity</label>
-                    <input class="mt-1" id="input-area-menu-opacity" type="range" min="0" max="255" step="1" />
-                </div>
             </div>
             <button id="btn-update-piece" class="btn btn-primary">Save</button>
             <button id="btn-delete-piece" class="btn btn-danger">Delete</button>
-
         </div>
     </div>
     <!-- Modals -->

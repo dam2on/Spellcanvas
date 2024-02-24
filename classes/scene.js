@@ -80,7 +80,7 @@ class Scene {
                 </label>
                 <ul class="dropdown-menu" role="menu">
                     <!-- <li><a class="dropdown-item" onclick="onChangeScene('${scene.id}')" href="javascript:void(0)">Select</a></li> -->
-                    <li><a class="dropdown-item" onclick="onDeleteScene('${scene.id}')" href="javascript:void(0)">Delete</a></li>
+                    <li><a class="dropdown-item" onclick="onDeleteScene('${scene.id}')" href="javascript:void(0)">Delete Scene</a></li>
                 </ul>
             </div>`);
         }
@@ -167,20 +167,21 @@ class Scene {
         const valY = parseInt(this.gridRatio.y * this.canvas.height);
         $('#range-grid-size-x').val(valX);
         $('#range-grid-size-y').val(valY);
-        $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}`);
+        $('.grid-indicator').css('margin-bottom', (149 - valY) + 'px');
+        $('label[for="range-grid-size-x"]').html();
 
         if (valX != valY) {
-            $('.extra-grid-controls').show();
-            $('#range-grid-size-y').css('width', valX + 'px');
-            $('#range-grid-size-y').attr('max', valX);
+            // $('.extra-grid-controls').show();
+            // $('#range-grid-size-y').css('width', valX + 'px');
+            // $('#range-grid-size-y').attr('max', valX);
             $('.grid-indicator').css('width', valX + 'px');
             $('.grid-indicator').css('height', valY + 'px');
-            $('.grid-indicator').css('margin-bottom', (valX - valY) + 'px');
-            $('label[for="range-grid-size-x"]').html($('label[for="range-grid-size-x"]').html() + `, ${valY}`);
         }
         else {
-            $('.extra-grid-controls').hide();
+            // $('.extra-grid-controls').hide();
         }
+
+        $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}, ${valY}`);
     }
 
     drawBackground() {
@@ -192,7 +193,7 @@ class Scene {
 
         let trailColor = null;
         if (addTrail || document.getElementById('checkbox-route-toggle').checked) {
-            trailColor = invertColor(await this.background.getAverageRGB());
+            trailColor = await this.background.getContrastColor();
         }
 
         for (var piece of this.pieces) {

@@ -103,7 +103,7 @@ const onSpellRulerToggle = async function (args) {
   }
   else {
     _spellRuler = new Area(newGuid(), _player?.id ?? _host, type, $('#input-spell-size').val() / 5);
-    _spellRuler.color = invertColor(await CURRENT_SCENE.background.getAverageRGB());
+    _spellRuler.color = await CURRENT_SCENE.background.getContrastColor();
     sizeInput.show();
     sizeLabel.show();
     switch (type) {
@@ -215,6 +215,7 @@ const onUpdatePieceSubmit = async function () {
     _pieceInMenu.type = type;
     _pieceInMenu.size = Number(size) / 5;
     _pieceInMenu.color = color;
+    _pieceInMenu.contrastColor = invertColor(_pieceInMenu.color);
     _pieceInMenu.opacity = opacity;
   }
   else {
@@ -231,6 +232,7 @@ const onUpdatePieceSubmit = async function () {
     if (auraEnabled) {
       _pieceInMenu.aura = new Area(_pieceInMenu.id, _pieceInMenu.owner, $('#checkbox-piece-menu-aura').val(), $('#input-aura-menu-size').val() / 2.5, _pieceInMenu.x, _pieceInMenu.y);
       _pieceInMenu.aura.color = $('#input-aura-menu-color').val();
+      _pieceInMenu.aura.contrastColor = invertColor(_pieceInMenu.aura.color);
       _pieceInMenu.aura.opacity = $('#input-aura-menu-opacity').val();
     }
     else {
@@ -319,6 +321,7 @@ const onConnectedToHostEvent = function (host) {
 
   loading(true);
   alert(`Successfully connected to ${host}'s party!`);
+  initMainMenuTour(false);
 }
 
 const onPermissionsUpdateEvent = function (permissions) {
@@ -609,6 +612,20 @@ const onPlayerJoinEvent = async function (player) {
   emitLoadSceneEvent(player.id);
 }
 
+const onDeletePlayer = async function (id) {
+  if (!isHost()) {
+    console.warn("only host should receive new player events");
+    return;
+  }
+
+  PARTY.deletePlayer(id);
+  await PARTY.save();
+  $('#player-' + id).parent().remove();
+  if ($('#list-connected-party-members').children().length == 0) {
+    $('#empty-party-msg').show();
+  }
+}
+
 const initInviteLink = function () {
   $('#input-invite-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + `?host=${encodeURI(_host)}`);
   $("#btn-copy-invite-link").click(async function () {
@@ -626,7 +643,7 @@ const initInviteLink = function () {
 const initPeerEvents = function () {
   _peer.on('disconnected', function (a, e, i) {
     // leave here to learn about mmore errors
-
+    _peer.reconnect();
     debugger;
   });
 
@@ -650,6 +667,11 @@ const initPeerEvents = function () {
 
   _peer.on('connection', function (conn) {
     conn.on('data', function (data) {
+      if (isHost() && PARTY.deletedPlayerIds.indexOf(conn.peer) >= 0) {
+        // refuse connection from deleted player
+        conn.close();
+        return;
+      }
       switch (data.event) {
         case EventTypes.AddPiece:
           onAddPieceEvent(conn.peer, data.piece);
@@ -698,11 +720,6 @@ const initPeerEvents = function () {
     console.log('peer closed');
     debugger;
   });
-
-  _peer.on('disconnect', function (e, a) {
-    console.log('peer disconnect');
-    debugger;
-  });
 }
 
 const displaySceneList = async function (scenePartials) {
@@ -728,6 +745,22 @@ const onAddScene = async function () {
   for (var player of PARTY.players) {
     emitLoadSceneEvent(player.id);
   }
+}
+
+const onPlayerMenu = function (e, id) {
+  e.preventDefault();
+  $('.player-label').each((i, el) => {
+    bootstrap.Dropdown.getOrCreateInstance(el).hide();
+  });
+
+  // close any dropdowns on next click
+  $(document.body).one('click', () => {
+    $('.player-label').each((i, el) => {
+      bootstrap.Dropdown.getOrCreateInstance(el).hide();
+    });
+  });
+
+  bootstrap.Dropdown.getOrCreateInstance($(`#player-${id}`)[0]).show();
 }
 
 const onSceneMenu = function (e, id) {
@@ -854,17 +887,34 @@ const onImportSession = async function () {
 }
 
 const onClearSession = async function () {
+  // items to preserve on session clear
+  const tutorials = await localforage.getItem(StorageKeys.Tutorial);
+
   await localforage.clear();
+
+  // restore items
+  await localforage.setItem(StorageKeys.Tutorial, tutorials);
+  // reload page
   window.location.href = window.location.origin + window.location.pathname;
 }
 
 const onDeleteScene = async function (id) {
-  if (CURRENT_SCENE.id == id) {
-    alert('You cannot delete the scene you are currently viewing');
+  const scenes = $('#scene-list').find('label.scene-label');
+  if (scenes.length == 1) {
+    alert("Cannot delete last remaining scene");
     return;
   }
 
   if (confirm("Are you sure you wish to delete this scene?")) {
+    if (CURRENT_SCENE.id == id) {
+      for (var scene of scenes) {
+        let sceneToLoadId = scene.getAttribute('for').replace('option-', '');
+        if (sceneToLoadId != id) {
+          await onChangeScene(sceneToLoadId);
+          break;
+        }
+      }
+    }
     await Scene.delete(id);
     $(`label[for="option-${id}"]`).parent().remove();
   }
@@ -964,7 +1014,6 @@ const initPeer = function () {
 
           $("#modal-player").on('hidden.bs.modal', async function () {
             const playerName = $("#input-player-name").val();
-            initMainMenuTour(false);
 
             _player = new Player(id, playerName);
             await localforage.setItem(StorageKeys.Player, _player);
@@ -987,30 +1036,15 @@ const initPeer = function () {
 const onGridSizeInput = function (args) {
   if (!isHost()) return;
   const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
-  const inputX = document.getElementById('range-grid-size-x');
-  const labelX = document.querySelector('label[for="range-grid-size-x"]');
-  const valueX = inputX.value;
-  let valueY = $('#range-grid-size-y').val();
+  let valX = $('#range-grid-size-x').val();
+  let valY = $('#range-grid-size-y').val();
   $('.modal-backdrop.show').css('opacity', 0.0);
   $('.extra-grid-controls').show();
 
-  if (controllingX) {
-    $('#range-grid-size-y').css('width', valueX + 'px');
-    $('#range-grid-size-y').attr('max', valueX);
-    if (true || valueX == valueY) {
-      $('#range-grid-size-y').val(valueX);
-      valueY = valueX;
-    }
-  }
-
-  $('.grid-indicator').css('width', valueX + 'px');
-  $('.grid-indicator').css('height', valueY + 'px');
-  $('.grid-indicator').css('margin-bottom', (valueX - valueY) + 'px');
-
-  labelX.innerHTML = `<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valueX}`
-  if (valueX != valueY) {
-    labelX.innerHTML += `, ${valueY}`;
-  }
+  $('.grid-indicator').css('width', valX + 'px');
+  $('.grid-indicator').css('height', valY + 'px');
+  $('.grid-indicator').css('margin-bottom', (149 - valY) + 'px');
+  $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}, ${valY}`);
 }
 
 const onGridSizeChange = function () {
@@ -1018,14 +1052,14 @@ const onGridSizeChange = function () {
   const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
   $('.modal-backdrop.show').css('opacity', 0.5);
   // $('.grid-indicator').hide();
-  const inputX = document.getElementById('range-grid-size-x');
-  const inputY = document.getElementById('range-grid-size-y');
+  const valX = $('#range-grid-size-x').val();
+  const valY = $('#range-grid-size-y').val();
   let newGridSize = {
-    x: Number(inputX.value) / document.getElementById("canvas").width,
-    y: Number(inputY.value) / document.getElementById("canvas").height
+    x: Number(valX) / document.getElementById("canvas").width,
+    y: Number(valY) / document.getElementById("canvas").height
   };
 
-  if (!controllingX && inputX.value == inputY.value) {
+  if (!controllingX && valX == valY) {
     $('.extra-grid-controls').hide();
   }
 
@@ -1068,9 +1102,9 @@ const initDom = function () {
     document.getElementById('canvas').height = window.innerHeight;
     document.getElementById('background-image').width = window.innerWidth;
     document.getElementById('background-image').height = window.innerHeight;
-  
+
     displayDebugInfo(`${window.innerWidth}, ${window.innerHeight}`);
-  
+
     if (_spellRuler instanceof Area) {
       _spellRuler.draw();
     }
@@ -1112,6 +1146,12 @@ const initDom = function () {
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseenter', onRouteShow);
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseleave', onRouteHide);
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
+  document.getElementById('input-aura-menu-opacity').addEventListener('input', (e) => {
+    $('#value-aura-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
+  });
+  document.getElementById('input-area-menu-opacity').addEventListener('input', (e) => {
+    $('#value-area-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
+  });
 
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
@@ -1122,6 +1162,10 @@ const initDom = function () {
     imgInput.type = "text";
     imgInput.type = "file";
     $('#btn-update-piece').removeClass('shake');
+  });
+
+  document.getElementById("main-menu").addEventListener("hide.bs.offcanvas", () => {
+    $('.extra-grid-controls').hide();
   });
 
   document.getElementById("piece-menu").addEventListener("shown.bs.offcanvas", () => {
@@ -1240,6 +1284,7 @@ const initDom = function () {
         $('#input-area-menu-size').val(_pieceInMenu.size * 5);
         $('#input-area-menu-color').val(_pieceInMenu.color);
         $('#input-area-menu-opacity').val(_pieceInMenu.opacity);
+        $('#value-area-menu-opacity').html(parseInt(100 * _pieceInMenu.opacity / 255) + '%');
       }
       else {
         $('.piece-only').show();
@@ -1258,6 +1303,8 @@ const initDom = function () {
           document.getElementById("checkbox-piece-menu-aura").checked = true;
           document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size * 2.5;
           document.getElementById("input-aura-menu-color").value = _pieceInMenu.aura.color;
+          document.getElementById('input-aura-menu-opacity').value = _pieceInMenu.aura.opacity;
+          $('#value-aura-menu-opacity').html(parseInt(100 * _pieceInMenu.aura?.opacity ?? 0 / 255) + '%');
         }
         else {
           $('.aura-only').hide();

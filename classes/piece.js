@@ -259,6 +259,10 @@ class Piece {
 
         // add trail
         if (trailColor != null && this.origin != undefined) {
+            // use inverted aura color for trail color
+            if (this.aura?.contrastColor != null) {
+                trailColor = this.aura.contrastColor;
+            }
             const prevStroke = this.ctx.strokeStyle;
             const prevFill = this.ctx.fillStyle;
             const prevWidth = this.ctx.lineWidth;
