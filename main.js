@@ -15,7 +15,7 @@ const isHost = function () {
 }
 
 const shapeIntersects = function (x, y) {
-  for (var piece of CURRENT_SCENE.pieces) {
+  for (var piece of CURRENT_SCENE?.pieces) {
     if (piece.intersects(x, y)) {
       if (!isHost() && piece.owner != _player.id) {
         if (PARTY.getPermissionValue(PermissionType.OnlyMoveOwnedPieces)) continue;
@@ -319,7 +319,6 @@ const onConnectedToHostEvent = function (host) {
     return;
   }
 
-  loading(true);
   alert(`Successfully connected to ${host}'s party!`);
   initMainMenuTour(false);
 }
