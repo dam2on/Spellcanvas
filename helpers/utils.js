@@ -1,3 +1,7 @@
+const isLocal = function() {
+    return window.location.host == '127.0.0.1:5500'
+}
+
 const downloadObjectAsJson = function (exportObj, exportName) {
     var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
     var downloadAnchorNode = document.createElement('a');

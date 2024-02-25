@@ -1,6 +1,7 @@
 const peerJsOptions = {
-    host: '18.220.220.104',
-    port: 9000,
+    host: 'dndcombatapp-413415.uc.r.appspot.com',
+    port: 443,
     path: '/',
+    secure: true,
     debug: 0
 }

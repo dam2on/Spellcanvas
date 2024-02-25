@@ -1103,8 +1103,6 @@ const initDom = function () {
     document.getElementById('background-image').width = window.innerWidth;
     document.getElementById('background-image').height = window.innerHeight;
 
-    displayDebugInfo(`${window.innerWidth}, ${window.innerHeight}`);
-
     if (_spellRuler instanceof Area) {
       _spellRuler.draw();
     }
@@ -1321,7 +1319,7 @@ const initDom = function () {
 
 const displayDebugInfo = function (text) {
   $('.debug-info').html(text);
-  if (window.location.host == '127.0.0.1:5500') {
+  if (isLocal()) {
     $('.debug-info').show();
   }
 }
