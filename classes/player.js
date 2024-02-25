@@ -12,6 +12,7 @@ class Player {
 
     updateOrCreateDom(pieces = null) {
         $("#empty-party-msg").hide();
+        $("#section-permissions").show();
 
         let pieceHtml = "";
 
