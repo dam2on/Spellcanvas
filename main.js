@@ -323,8 +323,10 @@ const onConnectedToHostEvent = function (host) {
     return;
   }
 
-  alert(`Successfully connected to ${host}'s party!`);
-  initMainMenuTour(false);
+  console.log("successfully connected to host: " + _host);
+
+  // alert(`Successfully connected to ${host}'s party!`);
+  // initMainMenuTour(false);
 }
 
 const onPermissionsUpdateEvent = function (permissions) {
@@ -758,7 +760,7 @@ const initPeerEvents = function () {
           onGridChangeEvent(data.gridSize);
           break;
         case EventTypes.ConnectedToHost:
-          onConnectedToHostEvent(data.host);
+          onConnectedToHostEvent(conn.peer);
           break;
         case EventTypes.PermissionsUpdate:
           onPermissionsUpdateEvent(data.permissions);
