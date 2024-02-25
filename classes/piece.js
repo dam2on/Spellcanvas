@@ -14,6 +14,7 @@ class Piece {
         this.imageUpdated = false;
         this.aura = null;
         this.objectType = this.constructor.name;
+        this.lock = false;
         Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
         Object.defineProperty(this, 'ctx', { value: this.canvas.getContext('2d'), enumerable: false, writable: true });
         Object.defineProperty(this, 'imageEl', { value: null, enumerable: false, writable: true });
@@ -24,6 +25,7 @@ class Piece {
         let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         piece.dead = obj.dead;
         piece.origin = obj.origin;
+        piece.lock = obj.lock;
         if (obj.conditions != null) {
             piece.conditions = obj.conditions;
         }
@@ -162,11 +164,14 @@ class Piece {
     }
 
 
-    draw(trailColor = null) {
+    draw(options = {}) {
         this.updateSize();
         const textMargin = 3;
         const deadImage = document.getElementById("image-dead");
         const fontSize = this.getFontSizeByPiece(this.size);
+        const prevStroke = this.ctx.strokeStyle;
+        const prevFill = this.ctx.fillStyle;
+        const prevWidth = this.ctx.lineWidth;
 
         if (this.aura instanceof Area) {
             this.aura.x = this.x + (this.width / (2 * this.canvas.width));
@@ -258,17 +263,15 @@ class Piece {
         }
 
         // add trail
-        if (trailColor != null && this.origin != undefined) {
+        if (options.trailColor != null && this.origin != undefined) {
             // use inverted aura color for trail color
             if (this.aura?.contrastColor != null) {
-                trailColor = this.aura.contrastColor;
+                options.trailColor = this.aura.contrastColor;
             }
-            const prevStroke = this.ctx.strokeStyle;
-            const prevFill = this.ctx.fillStyle;
-            const prevWidth = this.ctx.lineWidth;
+
             this.ctx.lineWidth = 2;
-            this.ctx.strokeStyle = trailColor;
-            this.ctx.fillStyle = trailColor;
+            this.ctx.strokeStyle = options.trailColor;
+            this.ctx.fillStyle = options.trailColor;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX() + this.width / 2, this.getY() + this.height / 2);
             this.ctx.lineTo(this.getOriginX() + this.width / 2, this.getOriginY() + this.height / 2);
@@ -277,9 +280,24 @@ class Piece {
             const trailHeadRadius = Math.max(3, this.canvas.width * 0.004);
             this.ctx.arc(this.getOriginX() + this.width / 2, this.getOriginY() + this.height / 2, trailHeadRadius, 0, 2 * Math.PI);
             this.ctx.fill();
-            this.ctx.strokeStyle = prevStroke;
-            this.ctx.fillStyle = prevFill;
-            this.ctx.lineWidth = prevWidth;
+
         }
+
+        // add border
+        if (options.border) {
+            this.ctx.lineWidth = 4;
+            this.ctx.strokeStyle = "#FFEA00";
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.getX(), this.getY());
+            this.ctx.lineTo(this.getX() + this.width, this.getY());
+            this.ctx.lineTo(this.getX() + this.width, this.getY() + this.height);
+            this.ctx.lineTo(this.getX(), this.getY() + this.height);
+            this.ctx.lineTo(this.getX(), this.getY());
+            this.ctx.stroke();
+        }
+
+        this.ctx.strokeStyle = prevStroke;
+        this.ctx.fillStyle = prevFill;
+        this.ctx.lineWidth = prevWidth;
     }
 }

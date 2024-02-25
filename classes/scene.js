@@ -209,7 +209,7 @@ class Scene {
         }
 
         for (var piece of this.pieces) {
-            piece.draw(trailColor);
+            piece.draw({trailColor});
         }
     }
 

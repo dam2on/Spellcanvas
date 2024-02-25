@@ -14,12 +14,13 @@ const isHost = function () {
   return _peer.id == _host;
 }
 
-const shapeIntersects = function (x, y) {
+const shapeIntersects = function (x, y, respectLock = false) {
   for (var piece of CURRENT_SCENE?.pieces) {
     if (piece.intersects(x, y)) {
       if (!isHost() && piece.owner != _player.id) {
         if (PARTY.getPermissionValue(PermissionType.OnlyMoveOwnedPieces)) continue;
       }
+      if (piece.lock && respectLock) continue;
 
       return piece;
     }
@@ -206,6 +207,9 @@ const onAddPieceSubmit = async function (e) {
 
 const onUpdatePieceSubmit = async function () {
   if (_pieceInMenu == null) return;
+
+  const lock = document.getElementById('piece-menu-lock').checked;
+  _pieceInMenu.lock = lock;
 
   if (_pieceInMenu instanceof Area) {
     const type = document.querySelector('input[name="radio-area-menu-type"]:checked').value;
@@ -1216,6 +1220,7 @@ const initDom = function () {
     imgInput.type = "text";
     imgInput.type = "file";
     $('#btn-update-piece').removeClass('shake');
+    CURRENT_SCENE.drawPieces();
   });
 
   document.getElementById("main-menu").addEventListener("hide.bs.offcanvas", () => {
@@ -1250,7 +1255,7 @@ const initDom = function () {
         }
       }
       else {
-        _draggedPiece = shapeIntersects(args.x, args.y);
+        _draggedPiece = shapeIntersects(args.x, args.y, true);
         if (_draggedPiece != null) {
           _draggedPiece.origin = {
             x: _draggedPiece.x,
@@ -1330,6 +1335,9 @@ const initDom = function () {
       $('.area-only').hide();
       $('.piece-only').hide();
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
+      _pieceInMenu.draw({border: true});
+
+      document.getElementById("piece-menu-lock").checked = _pieceInMenu.lock;
 
       if (_pieceInMenu instanceof Area) {
         $('.area-only').show();

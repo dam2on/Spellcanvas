@@ -27,10 +27,12 @@ class Area extends Piece {
         return this.ctx.isPointInPath(this.path, x, y);
     }
 
-    draw(trailColor = null) {
+    draw(options = {}) {
         this.updateSize();
         const currentFillStyle = this.ctx.fillStyle;
         const currentStrokeStyle = this.ctx.strokeStyle;
+        const currentLineWidth = this.ctx.lineWidth;
+
         this.path = new Path2D();
         this.ctx.fillStyle = this.color + Number(this.opacity).toString(16);
         this.ctx.strokeStyle = this.ctx.fillStyle;
@@ -62,8 +64,6 @@ class Area extends Piece {
                 this.path.moveTo(coords.x, coords.y);
                 this.path.arc(coords.x, coords.y, this.width, this.rotation - coneAngle / 2, this.rotation + coneAngle / 2);
                 this.path.lineTo(coords.x, coords.y);
-
-                this.ctx.stroke(this.path);
                 break;
             case AreaType.Square:
                 this.path.rect(coords.x - (this.width / 2), coords.y - (this.height / 2), this.width, this.height);
@@ -74,11 +74,16 @@ class Area extends Piece {
         }
         this.ctx.fill(this.path);
 
-        if (trailColor != null && this.origin != undefined) {
-            const prevWidth = this.ctx.lineWidth;
+        if (options.border) {
+            this.ctx.strokeStyle = "#FFEA00";
+            this.ctx.lineWidth = 4;
+            this.ctx.stroke(this.path);
+        }
+
+        if (options.trailColor != null && this.origin != undefined) {
             this.ctx.lineWidth = 2;
-            this.ctx.strokeStyle = trailColor;
-            this.ctx.fillStyle = trailColor;
+            this.ctx.strokeStyle = options.trailColor;
+            this.ctx.fillStyle = options.trailColor;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX(), this.getY());
             this.ctx.lineTo(this.getOriginX(), this.getOriginY());
@@ -87,9 +92,9 @@ class Area extends Piece {
             const trailHeadRadius = Math.max(3, this.canvas.width * 0.004);
             this.ctx.arc(this.getOriginX(), this.getOriginY(), trailHeadRadius, 0, 2 * Math.PI);
             this.ctx.fill();
-            this.ctx.lineWidth = prevWidth;
         }
 
+        this.ctx.lineWidth = currentLineWidth;
         this.ctx.fillStyle = currentFillStyle;
         this.ctx.strokeStyle = currentStrokeStyle;
     }
