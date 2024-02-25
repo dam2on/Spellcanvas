@@ -329,18 +329,62 @@ const onPermissionsUpdateEvent = function (permissions) {
 }
 
 const onLoadSceneEvent = async function (scene) {
+  if (isHost()) {
+    console.warn('host cannot recieve load scene event');
+    return;
+  }
+
   loading(true);
+
   CURRENT_SCENE = await Scene.fromObj(scene);
-  CURRENT_SCENE.draw();
-  loading(false);
+  if (!!CURRENT_SCENE.unloadedPieces.length) {
+    emitRequestPiecesEvent(scene.pieces);
+    CURRENT_SCENE.drawBackground();
+  }
+  else {
+    CURRENT_SCENE.draw();
+    loading(false);
+    emitLoadSceneSuccessEvent();
+  }
+}
+
+const onLoadSceneSuccessEvent = function (peerId) {
+  if (!isHost()) {
+    console.warn('only host can recieve load scene success event');
+    return;
+  }
+
+  const player = PARTY.getPlayer(peerId);
+  player.status = PlayerStatus.Connected;
+  player.updateOrCreateDom(CURRENT_SCENE.pieces);
 }
 
 const emitLoadSceneEvent = function (peerId) {
+  const player = PARTY.getPlayer(peerId);
+  player.status = PlayerStatus.Loading;
+  player.updateOrCreateDom();
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
     conn.send({
       event: EventTypes.LoadScene,
-      scene: CURRENT_SCENE
+      scene: {
+        ...CURRENT_SCENE,
+        pieces: CURRENT_SCENE.getSizeMB() > 3 ? CURRENT_SCENE.pieces.map(p => p.id) : CURRENT_SCENE.pieces
+      }
+    });
+  });
+}
+
+const emitLoadSceneSuccessEvent = function () {
+  if (isHost()) {
+    console.warn('host cannot emit load scene success event');
+    return;
+  }
+
+  var conn = _peer.connect(_host);
+  conn.on('open', function () {
+    conn.send({
+      event: EventTypes.LoadSceneSuccess
     });
   });
 }
@@ -426,17 +470,17 @@ const emitGridSizeChangeEvent = function (peerId) {
   })
 }
 
-const emitRequestPieceEvent = function (pieceId) {
+const emitRequestPiecesEvent = function (ids) {
   if (isHost()) {
     console.warn("cannot request piece as host");
     return;
   }
-  // fetch piece from host
+
   var conn = _peer.connect(_host);
   conn.on('open', function () {
     conn.send({
-      event: EventTypes.RequestPiece,
-      id: pieceId
+      event: EventTypes.RequestPieces,
+      ids: ids
     });
   });
 }
@@ -497,6 +541,10 @@ const onAddPieceEvent = async function (peerId, piece) {
 
   const newPiece = await CURRENT_SCENE.addPiece(piece);
   CURRENT_SCENE.drawPieces();
+  if (!CURRENT_SCENE.unloadedPieces.length) {
+    loading(false);
+    emitLoadSceneSuccessEvent();
+  }
 
   if (isHost()) {
     PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
@@ -512,7 +560,6 @@ const onAddPieceEvent = async function (peerId, piece) {
 const onMovePieceEvent = async function (peerId, movedPiece) {
   let pieceToMove = CURRENT_SCENE.getPieceById(movedPiece.id);
   if (pieceToMove == null) {
-    // emitRequestPieceEvent(movedPiece.id);
     return;
   }
   pieceToMove.x = movedPiece.x;
@@ -552,9 +599,15 @@ const onDeletePieceEvent = async function (peerId, id) {
   }
 }
 
-const onRequestPieceEvent = function (peerId, id) {
-  let piece = CURRENT_SCENE.getPieceById(id);
-  emitAddPieceEvent(peerId, piece);
+const onRequestPiecesEvent = function (peerId, ids) {
+  if (!isHost()) {
+    console.warn("Only host can recieve request pieces event");
+    return;
+  }
+
+  for (var id of ids) {
+    emitAddPieceEvent(peerId, CURRENT_SCENE.getPieceById(id));
+  }
 }
 
 const onUpdatePieceEvent = async function (peerId, piece) {
@@ -596,17 +649,18 @@ const onPlayerJoinEvent = async function (player) {
 
   const existingPlayer = PARTY.getPlayer(player.id);
   if (existingPlayer != null) {
-    existingPlayer.status = PlayerStatus.Connected;
+    player = existingPlayer
   }
   else {
     player = Player.fromObj(player);
-    player.status = PlayerStatus.Connected;
 
     PARTY.addPlayer(player);
     await PARTY.save();
   }
 
-  $('#list-connected-party-members').append((existingPlayer ?? player).updateOrCreateDom(CURRENT_SCENE.pieces));
+
+  player.status = PlayerStatus.Pending;
+  $('#list-connected-party-members').append(player.updateOrCreateDom(CURRENT_SCENE.pieces));
   emitPermissionsChangeEvent(player.id);
   emitConnectedToHostEvent(player.id);
   emitLoadSceneEvent(player.id);
@@ -688,8 +742,8 @@ const initPeerEvents = function () {
         case EventTypes.ResetPieces:
           onResetPiecesEvent();
           break;
-        case EventTypes.RequestPiece:
-          onRequestPieceEvent(conn.peer, data.id);
+        case EventTypes.RequestPieces:
+          onRequestPiecesEvent(conn.peer, data.ids);
           break;
         case EventTypes.PlayerJoin:
           onPlayerJoinEvent(data.player);
@@ -708,6 +762,9 @@ const initPeerEvents = function () {
           break;
         case EventTypes.LoadScene:
           onLoadSceneEvent(data.scene);
+          break;
+        case EventTypes.LoadSceneSuccess:
+          onLoadSceneSuccessEvent(conn.peer);
           break;
         default:
           console.log("unrecognized event type: " + data.event);
@@ -1078,17 +1135,17 @@ const onRouteToggle = function () {
   }
   else {
     _forceHideRoutes = true;
-    CURRENT_SCENE.drawPieces();
+    CURRENT_SCENE?.drawPieces();
   }
 }
 
 const onRouteShow = function () {
   if (!_forceHideRoutes)
-    CURRENT_SCENE.drawPieces(true);
+    CURRENT_SCENE?.drawPieces(true);
 }
 
 const onRouteHide = function () {
-  CURRENT_SCENE.drawPieces();
+  CURRENT_SCENE?.drawPieces();
   _forceHideRoutes = false;
 }
 

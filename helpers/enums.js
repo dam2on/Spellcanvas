@@ -2,7 +2,7 @@ const EventTypes = {
   AddPiece: 'add piece',
   MovePiece: 'move piece',
   DeletePiece: 'delete piece',
-  RequestPiece: 'request peice',
+  RequestPieces: 'request peice',
   UpdatePiece: 'update piece',
   ChangeBackground: 'change background',
   GridChange: 'grid change',
@@ -10,7 +10,8 @@ const EventTypes = {
   ResetPieces: 'reset pieces',
   PlayerJoin: 'player join',
   PermissionsUpdate: 'permissions update',
-  LoadScene: 'load scene'
+  LoadScene: 'load scene',
+  LoadSceneSuccess: 'load scene success'
 }
 
 const BackgroundType = {
@@ -49,6 +50,7 @@ const AreaType = {
 const PlayerStatus = {
   Pending: 'pending',
   Connected: 'connected',
+  Loading: 'loading',
   Disconnected: 'disconnected'
 }
 

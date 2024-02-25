@@ -41,7 +41,7 @@ class Player {
                     <li><a class="dropdown-item" onclick="onDeletePlayer('${this.id}')" href="javascript:void(0)">Delete ${this.name}</a></li>
                 </ul>
             </div>`);
-            
+
         }
     }
 
@@ -53,6 +53,9 @@ class Player {
                 break;
             case PlayerStatus.Connected:
                 classList += " text-success fa-user-check";
+                break;
+            case PlayerStatus.Loading:
+                classList += " text-primary fa-spinner";
                 break;
             case PlayerStatus.Disconnected:
                 classList += " text-danger fa-user-xmark";

@@ -8,6 +8,7 @@ class Scene {
             y: 0.025
         };
         this.pieces = [];
+        this.unloadedPieces = [];
         this.background = new Background(BackgroundType.Image, 'img/bg.png');
 
         Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
@@ -53,7 +54,14 @@ class Scene {
 
         const piecePromises = [];
         for (var piece of obj.pieces) {
-            piecePromises.push(piece.objectType == "Area" ? Area.fromObj(piece) : Piece.fromObj(piece));
+            if (typeof(piece) == 'string') {
+                // guids detected, let's bail and wait for pieces
+                scene.unloadedPieces = obj.pieces;
+                break;
+            }
+            else {
+                piecePromises.push(piece.objectType == "Area" ? Area.fromObj(piece) : Piece.fromObj(piece));
+            }
         }
         await Promise.all(piecePromises).then((pieces) => {
             scene.pieces = pieces;
@@ -126,6 +134,10 @@ class Scene {
         }
 
         await localforage.setItem(StorageKeys.Scenes, scenes);
+    }
+
+    getSizeMB() {
+        return new Blob([JSON.stringify(this)]).size / Math.pow(10, 6);
     }
 
     async save() {
@@ -215,6 +227,11 @@ class Scene {
     }
 
     async addPiece(piece) {
+        let unloadedIndex = this.unloadedPieces.indexOf(piece.id);
+        if (unloadedIndex >= 0) {
+            this.unloadedPieces.splice(unloadedIndex, 1);
+        }
+      
         if (piece instanceof Piece) {
             this.pieces.push(piece);
             return piece;
