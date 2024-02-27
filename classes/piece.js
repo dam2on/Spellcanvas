@@ -56,22 +56,13 @@ class Piece {
     updateImage(img) {
         if (img == null) return;
 
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            this.imageEl = new Image();
             if (img instanceof File) {
-                this.imageEl = new Image();
-                // load image
-                let reader = new FileReader();
-                reader.onload = (event) => {
-                    this.image = event.target.result;
-                    this.imageEl.src = event.target.result;
-                    resolve(event.target.result);
-                };
-
-                reader.readAsDataURL(img);
+                this.image = await resizeImage(img, this.imageEl, 1000);
             }
             else if (typeof (img) == 'string') {
                 this.image = img;
-                this.imageEl = new Image();
                 this.imageEl.src = img;
                 resolve(img);
             }
@@ -293,6 +284,7 @@ class Piece {
             this.ctx.lineTo(this.getX() + this.width, this.getY() + this.height);
             this.ctx.lineTo(this.getX(), this.getY() + this.height);
             this.ctx.lineTo(this.getX(), this.getY());
+            this.ctx.lineTo(this.getX() + this.width, this.getY());
             this.ctx.stroke();
         }
 

@@ -1,4 +1,4 @@
-const isLocal = function() {
+const isLocal = function () {
     return window.location.host == '127.0.0.1:5500'
 }
 
@@ -12,8 +12,54 @@ const downloadObjectAsJson = function (exportObj, exportName) {
     downloadAnchorNode.remove();
 }
 
+const resizeImage = async function (file, imgEl, targetWidth) {
+    return new Promise(function(resolve, reject) {
+        let reader = new FileReader();
+        reader.onload = (event) => {
+            imgEl.onload = function () {
+                if (imgEl.width < targetWidth) {
+                    resolve(imgEl.src);
+                    return;
+                }
+                var canvas = document.createElement('canvas'),
+                    ctx = canvas.getContext("2d"),
+                    oc = document.createElement('canvas'),
+                    octx = oc.getContext('2d');
+    
+                canvas.width = targetWidth; // destination canvas size
+                canvas.height = canvas.width * imgEl.height / imgEl.width;
+    
+                var cur = {
+                    width: Math.floor(imgEl.width * 0.5),
+                    height: Math.floor(imgEl.height * 0.5)
+                }
+    
+                oc.width = cur.width;
+                oc.height = cur.height;
+    
+                octx.drawImage(imgEl, 0, 0, cur.width, cur.height);
+    
+                while (cur.width * 0.5 > targetWidth) {
+                    cur = {
+                        width: Math.floor(cur.width * 0.5),
+                        height: Math.floor(cur.height * 0.5)
+                    };
+                    octx.drawImage(oc, 0, 0, cur.width * 2, cur.height * 2, 0, 0, cur.width, cur.height);
+                }
+    
+                ctx.drawImage(oc, 0, 0, cur.width, cur.height, 0, 0, canvas.width, canvas.height);
+    
+                resolve(canvas.toDataURL());
+            }
+            imgEl.src = event.target.result;
+        }
+    
+        reader.readAsDataURL(file);
+    });
+}
+
 const convertLinkToDataURL = async function (link) {
-    let blob = await fetch(link).then(r => r.blob()).catch(() => {});
+    let blob = await fetch(link).then(r => r.blob()).catch(() => { });
     if (blob == undefined) return blob;
     return await new Promise((resolve, reject) => {
         let reader = new FileReader();

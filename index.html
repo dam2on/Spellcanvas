@@ -20,12 +20,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"
         integrity="sha512-+BMamP0e7wn39JGL8nKAZ3yAQT2dL5oaXWr4ZYlTGkKOaoXM/Yj7c4oy50Ngz5yoUutAG17flueD4F6QpTlPng=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"
-        integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw=="
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"
+        integrity="sha512-9KkIqdfN7ipEW6B6k+Aq20PV31bjODg4AA52W+tYtAE0jE0kMx49bjJ3FgvS56wzmyfMUHbQ4Km2b7l9+Y/+Eg=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
-        integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
+        integrity="sha512-hvNR0F/e2J7zPPfLC9auFe3/SE0yG4aJCOd/qxew74NN7eyiSKjr7xJJMu1Jy2wf7FXITpWS1E/RY8yzuXN7VA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
     <script type="text/javascript" src="classes/piece.js"></script>
     <script type="text/javascript" src="classes/player.js"></script>
     <script type="text/javascript" src="classes/permission.js"></script>
@@ -39,13 +42,6 @@
     <script type="text/javascript" src="helpers/peerjs-options.js"></script>
     <script type="text/javascript" src="main.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css"
-        integrity="sha512-tS3S5qG0BlhnQROyJXvNjeEM4UpMXHrQfTGmbQ1gKmelCxlSEBUaxhRBj/EFTzpbP4RVSrpEikbmdJobCvhE3g=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css"
-        integrity="sha512-sMXtMNL1zRzolHYKEujM2AqCLUR9F2C4/05cdbxjjLSRvMQIciEPCQZo++nk7go3BtSuK9kfa/s+a4f4i5pLkw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.css"
         integrity="sha512-xmGTNt20S0t62wHLmQec2DauG9T+owP9e6VU8GigI0anN7OXLip9i7IwEhelasml2osdxX71XcYm6BQunTQeQg=="
@@ -201,9 +197,11 @@
         <div class="offcanvas-body">
             <div class="piece-only">
                 <div class="form-group text-center my-2">
-                    <img id="piece-menu-image" style="width: 50%;" />
                     <div class="text-center mt-2">
-                        <input id="piece-menu-image-input" type="file" />
+                        <input id="piece-menu-image-input" type="file" class="form-control" />
+                    </div>
+                    <div>
+                        <img id="piece-menu-image" class="cropper-hidden" style="max-width: 100%;" />
                     </div>
                 </div>
                 <div class="form-group mb-3">
@@ -255,10 +253,6 @@
                         </label>
                     </div>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch" id="piece-menu-dead">
-                    <label class="form-check-label" for="piece-menu-dead">Dead?</label>
-                </div>
                 <div class="form-group mb-3">
                     <label for="piece-menu-status-conditions">Status Conditions</label>
                     <input id="piece-menu-status-conditions" class="form-control" data-role="tagsinput" />
@@ -273,7 +267,7 @@
                     </div>
                     <div class="form-group d-inline-flex align-items-center" style="display: none;">
                         <label for="input-aura-menu-color" class="me-1 aura-only">Color</label>
-                        <input id="input-aura-menu-color" type="color" class="aura-only" value="#ffeeaa" />
+                        <input id="input-aura-menu-color" type="color" class="aura-only form-control form-control-color" style="width: 3rem;" value="#ffeeaa" />
                     </div>
                     <div class="aura-only">
                         <div class="form-group mb-3 d-inline-flex align-items-end">
@@ -293,6 +287,10 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="piece-menu-dead">
+                    <label class="form-check-label" for="piece-menu-dead">Dead?</label>
                 </div>
             </div>
             <div class="area-only">
@@ -329,7 +327,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label for="input-area-menu-color">Color</label>
-                    <input id="input-area-menu-color" type="color" />
+                    <input id="input-area-menu-color" type="color" class="form-control form-control-color"/>
                 </div>
                 <div class="form-group mb-3 d-inline-flex align-items-end">
                     <div class="d-inline-flex flex-column pb-2 me-1">
@@ -374,12 +372,17 @@
                             <input id="input-piece-name" class="form-control" type="text" />
                         </div>
                         <div class="form-group mb-3">
-                            <label for="input-piece-img" class="form-label">Image</label>
-                            <input id="input-piece-img" type="file" required />
+                            <label for="input-piece-img" class="form-label">Image <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
+                            </label>
+                            <input id="input-piece-img" type="file" class="form-control" required />
                             <div class="invalid-feedback">
                                 Please upload a valid jpeg or png file.
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <img id="img-piece-preview" class="cropper-hidden" style="max-width: 100%;"></img>
+                        </div>
+                        <span>Size</span>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="radio-piece-size"
                                 id="radio-piece-size-ty" value="0.5">
@@ -470,17 +473,21 @@
                         </div>
                         <div class="mb-3" style="display: none;">
                             <label class="form-label" for="input-bg-video">Video Link</label>
-                            <input id="input-bg-video" class="form-control" type="url" />
+                            <input id="input-bg-video" class="form-control mb-2" type="url" placeholder="Enter a youtube or vimeo link" />
+                            <em style="font-size: 0.9rem;"><i class="fa-solid fa-triangle-exclamation text-warning"></i> Some videos may not load. Additionally, game pieces may be inconsistently positioned across various devices.</em>
                             <div class="invalid-feedback">
                                 Please enter a valid youtube or vimeo url.
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="input-bg-image">Background Image</label>
-                            <input id="input-bg-image" type="file" required />
+                            <label class="form-label" for="input-bg-image">Background Image <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span></label>
+                            <input id="input-bg-image" type="file" class="form-control" required />
                             <div class="invalid-feedback">
                                 Please upload a valid jpeg or png file.
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <img id="img-bg-preview" class="cropper-hidden" style="max-width: 100%;"></img>
                         </div>
                     </div>
                     <div class="modal-footer">

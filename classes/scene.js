@@ -136,6 +136,10 @@ class Scene {
         await localforage.setItem(StorageKeys.Scenes, scenes);
     }
 
+    getGridAspectRatio() {
+        return this.gridRatio.x * this.canvas.width / (this.gridRatio.y * this.canvas.height);
+    }
+
     getSizeMB() {
         return new Blob([JSON.stringify(this)]).size / Math.pow(10, 6);
     }

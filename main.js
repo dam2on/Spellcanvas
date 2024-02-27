@@ -9,6 +9,9 @@ _pieceInMenu = null;
 _spellRuler = null;
 _draggedPiece = null;
 _forceHideRoutes = false;
+_modalPieceCropper = null;
+_modalBgCropper = null;
+_menuPieceCropper = null;
 
 const isHost = function () {
   return _peer.id == _host;
@@ -36,6 +39,7 @@ const onBackgroundTypeChange = function () {
       document.getElementById("input-bg-image").setAttribute("required", "required");
 
       document.getElementById("input-bg-video").parentNode.setAttribute("style", "display: none;");
+      document.getElementById('img-bg-preview').parentNode.removeAttribute("style");
       document.getElementById("input-bg-image").parentNode.removeAttribute("style");
       break;
     case BackgroundType.Video:
@@ -43,6 +47,7 @@ const onBackgroundTypeChange = function () {
       document.getElementById("input-bg-video").setAttribute("required", "required");
 
       document.getElementById("input-bg-image").parentNode.setAttribute("style", "display: none;");
+      document.getElementById('img-bg-preview').parentNode.setAttribute("style", "display: none;");
       document.getElementById("input-bg-video").parentNode.removeAttribute("style");
       break;
     default:
@@ -62,26 +67,22 @@ const onChangeBackgroundSubmit = function () {
 
   switch (bgType) {
     case BackgroundType.Image:
-      const bgImg = document.getElementById('input-bg-image').files[0];
-      Promise.resolve(toBase64(bgImg)).then((dataUrl) => {
-        CURRENT_SCENE.setBackground(new Background(BackgroundType.Image, dataUrl));
-        onChangeBackgroundEvent();
-        for (var player of PARTY.players) {
-          emitChangeBackgroundEvent(player.id);
-        }
-      });
+      const bgImgFile = document.getElementById('input-bg-image').files[0];
+      const croppedImg = _modalBgCropper.getCroppedCanvas().toDataURL(bgImgFile.type);
+      CURRENT_SCENE.setBackground(new Background(BackgroundType.Image, croppedImg));
       break;
     case BackgroundType.Video:
       const videoUrl = document.getElementById('input-bg-video').value;
       CURRENT_SCENE.setBackground(new Background(BackgroundType.Video, videoUrl));
-      onChangeBackgroundEvent();
-      for (var player of PARTY.players) {
-        emitChangeBackgroundEvent(player.id);
-      }
       break;
     default:
       console.warn("background type not recognized: " + bgType);
       break;
+  }
+
+  onChangeBackgroundEvent();
+  for (var player of PARTY.players) {
+    emitChangeBackgroundEvent(player.id);
   }
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).hide();
@@ -168,30 +169,46 @@ const onAddPieceModal = function (initPos = null) {
   }
 }
 
+const resetModalPieceForm = function () {
+  $('#input-piece-name').val(null);
+  $('#img-piece-preview').attr('src', '');
+  $('#input-piece-img').val('');
+  $('#input-piece-img').attr('type', 'text');
+  $('#input-piece-img').attr('type', 'file');
+  $('#input-piece-init-pos-x').val(null);
+  $('#input-piece-init-pos-y').val(null);
+  _modalPieceCropper?.destroy();
+}
+
+const resetModalBgForm = function () {
+  $('#img-bg-preview').attr('src', '');
+  $('#input-bg-video').val(null);
+  $('#input-bg-image').val('');
+  $('#input-bg-image').attr('type', 'text');
+  $('#input-bg-image').attr('type', 'file');
+  _modalBgCropper?.destroy();
+}
+
 const onAddPieceSubmit = async function (e) {
   // e.preventDefault();
   $('#form-modal-piece').removeClass('was-validated');
   const name = $('#input-piece-name').val();
-  const img = $('#input-piece-img')[0].files[0];
+  const file = $('#input-piece-img')[0].files[0];
+  const croppedImg = _modalPieceCropper.getCroppedCanvas().toDataURL(file.type);
   const size = document.querySelector('input[name="radio-piece-size"]:checked').value;
   const initPos = {
     x: Number($('#input-piece-init-pos-x').val() == '' ? 0.3 : $('#input-piece-init-pos-x').val()),
     y: Number($('#input-piece-init-pos-y').val() == '' ? 0.3 : $('#input-piece-init-pos-y').val())
   }
 
-  const piece = new Piece(newGuid(), _peer.id, name, img, size, initPos.x, initPos.y);
+  const piece = new Piece(newGuid(), _peer.id, name, croppedImg, size, initPos.x, initPos.y);
   CURRENT_SCENE.addPiece(piece);
 
   piece.imageEl.addEventListener('load', async () => {
     piece.draw();
     await CURRENT_SCENE.savePieces();
     initGamePieceTour(piece);
-    $('#input-piece-name').val(null);
-    $('#input-piece-img').val('');
-    $('#input-piece-img').attr('type', 'text');
-    $('#input-piece-img').attr('type', 'file');
-    $('#input-piece-init-pos-x').val(null);
-    $('#input-piece-init-pos-y').val(null);
+    resetModalPieceForm();
 
     if (isHost()) {
       for (var player of PARTY.players) {
@@ -247,8 +264,6 @@ const onUpdatePieceSubmit = async function () {
       _pieceInMenu.imageUpdated = true;
     }
   }
-
-  CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
     await CURRENT_SCENE.savePieces();
@@ -1165,11 +1180,56 @@ const initDom = function () {
     document.getElementById('background-image').width = window.innerWidth;
     document.getElementById('background-image').height = window.innerHeight;
 
+    if (_modalBgCropper instanceof Cropper) {
+      _modalBgCropper.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height)
+    }
+
+    if (_modalPieceCropper instanceof Cropper) {
+      _modalPieceCropper.setAspectRatio(CURRENT_SCENE.getGridAspectRatio())
+    }
+
     if (_spellRuler instanceof Area) {
       _spellRuler.draw();
     }
     CURRENT_SCENE?.draw();
   }).observe(document.body);
+
+  // init cropper
+  Cropper.setDefaults({
+    viewMode: 2,
+    autoCropArea: 1
+  })
+
+  document.getElementById('input-piece-img').addEventListener('change', async function (e) {
+    $('.img-preview-loader').show();
+    const data = await resizeImage(e.target.files[0], new Image(), 1000);
+
+    $('#img-piece-preview').on('load', function () {
+      _modalPieceCropper?.destroy();
+      _modalPieceCropper = new Cropper(document.getElementById('img-piece-preview'), {
+        initialAspectRatio: CURRENT_SCENE.getGridAspectRatio(),
+        ready() {
+          $('.img-preview-loader').hide();
+        }
+      });
+    }).attr('src', data);
+
+  });
+
+  document.getElementById('input-bg-image').addEventListener('change', async function (e) {
+    $('.img-preview-loader').show();
+    const data = await resizeImage(e.target.files[0], new Image(), CURRENT_SCENE.canvas.width);
+
+    $('#img-bg-preview').on('load', function () {
+      _modalBgCropper?.destroy();
+      _modalBgCropper = new Cropper(document.getElementById('img-bg-preview'), {
+        initialAspectRatio: CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height,
+        ready() {
+          $('.img-preview-loader').hide();
+        }
+      });
+    }).attr('src', data);
+  });
 
   let menuToggleTimeout;
   $('.menu-toggle').on('mouseover', function () {
@@ -1213,6 +1273,10 @@ const initDom = function () {
     $('#value-area-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
   });
 
+  document.getElementById("main-menu").addEventListener("hidden.bs.offcanvas", () => {
+    $('.extra-grid-controls').hide();
+  });
+
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
     _pieceInMenu = null;
@@ -1221,19 +1285,19 @@ const initDom = function () {
     imgInput.value = null;
     imgInput.type = "text";
     imgInput.type = "file";
-    $('#btn-update-piece').removeClass('shake');
     CURRENT_SCENE.drawPieces();
-  });
-
-  document.getElementById("main-menu").addEventListener("hide.bs.offcanvas", () => {
-    $('.extra-grid-controls').hide();
+    $('#btn-update-piece').removeClass('shake');
   });
 
   document.getElementById("piece-menu").addEventListener("shown.bs.offcanvas", () => {
+    // animate save button on change
     $('#piece-menu').find('input').one('change', function () {
       $('#btn-update-piece').addClass('shake');
     });
   });
+
+  document.getElementById('modal-piece').addEventListener("show.bs.modal", () => resetModalPieceForm());
+  document.getElementById('modal-bg').addEventListener("show.bs.modal", () => resetModalBgForm());
 
   // canvas
   can.addEventListener('mousedown', async function (args) {
@@ -1337,7 +1401,7 @@ const initDom = function () {
       $('.area-only').hide();
       $('.piece-only').hide();
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
-      _pieceInMenu.draw({border: true});
+      _pieceInMenu.draw({ border: true });
 
       document.getElementById("piece-menu-lock").checked = _pieceInMenu.lock;
 
@@ -1354,6 +1418,7 @@ const initDom = function () {
         $('.piece-only').show();
         // open piece submenu
         document.getElementById("piece-menu-name").value = _pieceInMenu.name;
+        document.getElementById("piece-menu-image-input").value = _pieceInMenu.name;
         document.getElementById("piece-menu-image").src = _pieceInMenu.image;
         document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
         $('input[name="radio-piece-menu-size"]').prop('checked', false);
@@ -1368,7 +1433,7 @@ const initDom = function () {
           document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size * 2.5;
           document.getElementById("input-aura-menu-color").value = _pieceInMenu.aura.color;
           document.getElementById('input-aura-menu-opacity').value = _pieceInMenu.aura.opacity;
-          $('#value-aura-menu-opacity').html(parseInt(100 * _pieceInMenu.aura?.opacity ?? 0 / 255) + '%');
+          $('#value-aura-menu-opacity').html(parseInt(100 * (_pieceInMenu.aura?.opacity ?? 0) / 255) + '%');
         }
         else {
           $('.aura-only').hide();
@@ -1388,6 +1453,19 @@ const displayDebugInfo = function (text) {
   if (isLocal()) {
     $('.debug-info').show();
   }
+}
+
+const initFilepond = function () {
+  FilePond.registerPlugin(
+    FilePondPluginImageExifOrientation,
+    FilePondPluginImagePreview,
+    FilePondPluginImageCrop,
+    FilePondPluginImageResize,
+    FilePondPluginImageTransform,
+    FilePondPluginImageEdit
+  );
+
+  initImageInput('#input-piece-image-input', {});
 }
 
 window.onload = async function () {
