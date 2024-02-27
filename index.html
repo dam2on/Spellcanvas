@@ -197,7 +197,8 @@
         <div class="offcanvas-body">
             <div class="piece-only">
                 <div class="form-group text-center my-2">
-                    <div class="text-center mt-2">
+                    <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
+                    <div class="text-center my-2">
                         <input id="piece-menu-image-input" type="file" class="form-control" />
                     </div>
                     <div>
@@ -254,7 +255,9 @@
                     </div>
                 </div>
                 <div class="form-group mb-3">
-                    <label for="piece-menu-status-conditions">Status Conditions</label>
+                    <div>
+                        <label for="piece-menu-status-conditions">Status Conditions</label>
+                    </div>
                     <input id="piece-menu-status-conditions" class="form-control" data-role="tagsinput" />
                 </div>
                 <div class="form-group mb-3">

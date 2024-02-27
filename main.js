@@ -244,7 +244,7 @@ const onUpdatePieceSubmit = async function () {
     const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
     const statusConds = document.getElementById("piece-menu-status-conditions").value;
     const dead = document.getElementById("piece-menu-dead").checked;
-    const image = document.getElementById("piece-menu-image-input").files[0];
+    const file = document.getElementById("piece-menu-image-input").files[0];
     const auraEnabled = document.getElementById("checkbox-piece-menu-aura").checked;
     _pieceInMenu.name = name;
     _pieceInMenu.dead = dead;
@@ -259,8 +259,9 @@ const onUpdatePieceSubmit = async function () {
     else {
       _pieceInMenu.aura = undefined;
     }
-    if (image != null) {
-      await _pieceInMenu.updateImage(image);
+    if (file != null || _pieceInMenu.imageCropped) {
+      const croppedImg = _menuPieceCropper.getCroppedCanvas().toDataURL(file?.type);
+      await _pieceInMenu.updateImage(croppedImg);
       _pieceInMenu.imageUpdated = true;
     }
   }
@@ -1197,7 +1198,10 @@ const initDom = function () {
   // init cropper
   Cropper.setDefaults({
     viewMode: 2,
-    autoCropArea: 1
+    autoCropArea: 1,
+    ready() {
+      $('.img-preview-loader').hide();
+    }
   })
 
   document.getElementById('input-piece-img').addEventListener('change', async function (e) {
@@ -1207,10 +1211,7 @@ const initDom = function () {
     $('#img-piece-preview').on('load', function () {
       _modalPieceCropper?.destroy();
       _modalPieceCropper = new Cropper(document.getElementById('img-piece-preview'), {
-        initialAspectRatio: CURRENT_SCENE.getGridAspectRatio(),
-        ready() {
-          $('.img-preview-loader').hide();
-        }
+        initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
       });
     }).attr('src', data);
 
@@ -1223,10 +1224,19 @@ const initDom = function () {
     $('#img-bg-preview').on('load', function () {
       _modalBgCropper?.destroy();
       _modalBgCropper = new Cropper(document.getElementById('img-bg-preview'), {
-        initialAspectRatio: CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height,
-        ready() {
-          $('.img-preview-loader').hide();
-        }
+        initialAspectRatio: CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height
+      });
+    }).attr('src', data);
+  });
+
+  document.getElementById('piece-menu-image-input').addEventListener('change', async function (e) {
+    $('.img-preview-loader').show();
+    const data = await resizeImage(e.target.files[0], new Image(), 1000);
+
+    $('#piece-menu-image').on('load', function () {
+      _menuPieceCropper?.destroy();
+      _menuPieceCropper = new Cropper(document.getElementById('piece-menu-image'), {
+        initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
       });
     }).attr('src', data);
   });
@@ -1416,9 +1426,17 @@ const initDom = function () {
       }
       else {
         $('.piece-only').show();
+        $('#piece-menu-image').one('load', function () {
+          _menuPieceCropper?.destroy();
+          _menuPieceCropper = new Cropper(document.getElementById('piece-menu-image'));
+        });
+        $('#piece-menu-image').on('cropstart', function() {
+          _pieceInMenu.imageCropped = true;
+          $('#btn-update-piece').addClass('shake');
+        });
+
         // open piece submenu
         document.getElementById("piece-menu-name").value = _pieceInMenu.name;
-        document.getElementById("piece-menu-image-input").value = _pieceInMenu.name;
         document.getElementById("piece-menu-image").src = _pieceInMenu.image;
         document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
         $('input[name="radio-piece-menu-size"]').prop('checked', false);
