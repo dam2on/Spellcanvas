@@ -194,10 +194,10 @@
         <div class="offcanvas-body">
             <div class="piece-only">
                 <h5 class="text-center">Edit Game Piece</h5>
-                <div class="row mb-3">
-                    <label for="piece-menu-name" class="form-label col-sm-2">Name</label>
-                    <div class="col-sm-10">
-                        <input id="piece-menu-name" class="form-control form-control-sm" />
+                <div class="text-center">
+                    <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
+                    <div>
+                        <img id="piece-menu-image" class="cropper-hidden" style="max-width: 100%;" />
                     </div>
                 </div>
                 <div class="row my-2">
@@ -206,10 +206,10 @@
                         <input id="piece-menu-image-input" type="file" class="form-control form-control-sm" />
                     </div>
                 </div>
-                <div class="text-center">
-                    <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
-                    <div>
-                        <img id="piece-menu-image" class="cropper-hidden" style="max-width: 100%;" />
+                <div class="row mb-3">
+                    <label for="piece-menu-name" class="form-label col-sm-2">Name</label>
+                    <div class="col-sm-10">
+                        <input id="piece-menu-name" class="form-control form-control-sm" />
                     </div>
                 </div>
                 <fieldset class="row my-3">
@@ -277,7 +277,19 @@
                 </div>
                 <div class="aura-only">
                     <hr />
-                    <div class="row">
+                    <div class="row mb-3">
+                        <label for="input-aura-menu-size" class="form-label col-sm-2">Radius</label>
+                        <div class="col-sm-4">
+                            <div class="input-group input-group-sm">
+                                <input class="form-control form-control-sm" type="number" id="input-aura-menu-size"
+                                    value="15" />
+                                <div class="input-group-text">ft</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="offset-sm-6"></div>
+                    </div>
+                    <div class="row mb-2">
                         <label for="input-aura-menu-color" class="form-label col-sm-2">Color</label>
                         <div class="col-sm-10">
                             <input id="input-aura-menu-color" type="color"
@@ -293,17 +305,6 @@
                         </div>
                         <span class="col ms-2" id="value-aura-menu-opacity">50%</span>
                     </div>
-                    <div class="row mb-3">
-                        <label for="input-aura-menu-size" class="form-label col-sm-2">Radius</label>
-                        <div class="col-sm-10">
-                            <div class="input-group input-group-sm">
-                                <input class="form-control form-control-sm" type="number" id="input-aura-menu-size"
-                                    value="15" />
-                                <div class="input-group-text">ft</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <hr />
                 </div>
                 <div class="row">
@@ -317,15 +318,6 @@
             </div>
             <div class="area-only">
                 <h5 class="text-center">Edit Shape</h5>
-                <div class="row mb-3">
-                    <label for="input-area-menu-size" class="col-sm-2">Size</label>
-                    <div class="col-sm-10">
-                        <div class="input-group input-group-sm">
-                            <input class="form-control form-control-sm" type="number" id="input-area-menu-size" />
-                            <span class="input-group-text">ft</span>
-                        </div>
-                    </div>
-                </div>
                 <fieldset class="row mb-3">
                     <legend class="col-form-label col-sm-2 pt-0">Shape</legend>
                     <div class="col-sm-10">
@@ -360,6 +352,16 @@
                     </div>
                 </fieldset>
                 <div class="row mb-3">
+                    <label for="input-area-menu-size" class="col-sm-2">Size</label>
+                    <div class="col-sm-4">
+                        <div class="input-group input-group-sm">
+                            <input class="form-control form-control-sm" type="number" id="input-area-menu-size" />
+                            <span class="input-group-text">ft</span>
+                        </div>
+                    </div>
+                    <div class="offset-sm-6"></div>
+                </div>
+                <div class="row mb-2">
                     <label for="input-area-menu-color" class="form-label col-sm-2">Color</label>
                     <div class="col-sm-10">
                         <input id="input-area-menu-color" type="color" class="form-control form-control-color" />
@@ -405,10 +407,10 @@
                     <div class="modal-body py-0">
                         <input hidden id="input-piece-init-pos-x" />
                         <input hidden id="input-piece-init-pos-y" />
-                        <div class="mb-3 row">
-                            <label class="form-label col-sm-2" for="input-piece-name">Name</label>
-                            <div class="col-sm-10">
-                                <input id="input-piece-name" class="form-control form-control-sm" type="text" />
+                        <div class="mb-3 text-center">
+                            <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
+                            <div>
+                                <img id="img-piece-preview" class="cropper-hidden" style="max-width: 100%;"></img>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -421,10 +423,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="mb-3 text-center">
-                            <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
-                            <div>
-                                <img id="img-piece-preview" class="cropper-hidden" style="max-width: 100%;"></img>
+                        <div class="row mb-3">
+                            <label class="form-label col-sm-2" for="input-piece-name">Name</label>
+                            <div class="col-sm-10">
+                                <input id="input-piece-name" class="form-control form-control-sm" type="text" />
                             </div>
                         </div>
                         <fieldset class="row">
@@ -523,7 +525,13 @@
                                 </div>
                             </div>
                         </fieldset>
-                        <div class="row mt-3 piece-only">
+                        <div class="image-only my-3 text-center">
+                            <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
+                            <div>
+                                <img id="img-bg-preview" class="cropper-hidden" style="max-width: 100%;"></img>
+                            </div>
+                        </div>
+                        <div class="row mt-3 image-only">
                             <label class="form-label col-sm-2" for="input-bg-image">Source</label>
                             <div class="col-sm-10">
                                 <input id="input-bg-image" type="file" class="form-control form-control-sm" required />
@@ -552,12 +560,6 @@
                                 <div class="invalid-feedback">
                                     Please enter a valid youtube or vimeo url.
                                 </div>
-                            </div>
-                        </div>
-                        <div class="video-only my-3 text-center">
-                            <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
-                            <div>
-                                <img id="img-bg-preview" class="cropper-hidden" style="max-width: 100%;"></img>
                             </div>
                         </div>
                     </div>

@@ -36,14 +36,14 @@ const onBackgroundTypeChange = function () {
       document.getElementById("input-bg-video").removeAttribute("required");
       document.getElementById("input-bg-image").setAttribute("required", "required");
 
-      $('.piece-only').show();
+      $('.image-only').show();
       $('.video-only').hide();
       break;
     case BackgroundType.Video:
       document.getElementById("input-bg-image").removeAttribute("required");
       document.getElementById("input-bg-video").setAttribute("required", "required");
 
-      $('.piece-only').hide();
+      $('.image-only').hide();
       $('.video-only').show();
       break;
     default:
