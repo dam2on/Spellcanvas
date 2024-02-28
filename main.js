@@ -594,6 +594,10 @@ const onChangeBackgroundEvent = async function (obj = null) {
 }
 
 const onAddPieceEvent = async function (peerId, piece) {
+  if (CURRENT_SCENE == null) {
+    console.warn('cannot add piece when scene is null...try refreshing');
+    return null;
+  }
   if (CURRENT_SCENE.getPieceById(piece.id) != null) {
     // redundant piece
     return;
@@ -618,7 +622,7 @@ const onAddPieceEvent = async function (peerId, piece) {
 }
 
 const onMovePieceEvent = async function (peerId, movedPiece) {
-  let pieceToMove = CURRENT_SCENE.getPieceById(movedPiece.id);
+  let pieceToMove = CURRENT_SCENE?.getPieceById(movedPiece.id);
   if (pieceToMove == null) {
     return;
   }
@@ -671,7 +675,7 @@ const onRequestPiecesEvent = function (peerId, ids) {
 }
 
 const onUpdatePieceEvent = async function (peerId, piece) {
-  if (CURRENT_SCENE.getPieceById(piece.id) == null) return;
+  if (CURRENT_SCENE?.getPieceById(piece.id) == null) return;
   const updatedPiece = await CURRENT_SCENE.updatePiece(piece);
 
   CURRENT_SCENE.drawPieces();
@@ -1230,7 +1234,10 @@ const initDom = function () {
   var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
   popoverTriggerList.map(function (popoverTriggerEl) {
     return new bootstrap.Popover(popoverTriggerEl)
-  })
+  });
+  $('a[data-bs-trigger="focus"]').on('click', function() {
+    $(this).trigger('focus');
+  });
 
   document.getElementById('input-piece-img').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
@@ -1325,9 +1332,7 @@ const initDom = function () {
       show: true
     });
 
-    $('#modal-grid').find('.modal-dialog').draggable({
-      handle: ".modal-header"
-    });
+    $('#modal-grid').find('.modal-dialog').draggable();
   });
 
   document.getElementById('modal-grid').addEventListener('hidden.bs.modal', function () {
