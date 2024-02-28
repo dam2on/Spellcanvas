@@ -152,6 +152,10 @@ input[type=number] {
   position: relative;
 }
 
+.popover-header {
+  color: black;
+}
+
 .draggable-modal {
   position: fixed;
   width: 100%;

@@ -392,19 +392,19 @@
     </div>
     <!-- Modals -->
     <div class="modal" id="modal-grid" tabindex="-1" data-bs-backdrop="false">
-        <div class="modal-dialog draggable-modal modal-sm">
+        <div class="modal-dialog draggable-modal">
             <div class="modal-content">
                 <form id="form-modal-grid">
                     <div class="modal-header text-center">
-                        <h5 class="w-100">1x1 Grid Size</h5>
+                        <h5 class="w-100">Click & drag on the background to set grid size</h5>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body pb-0">
                         <input id="input-grid-width" hidden type="number" class="form-control form-control-sm">
                         <input id="input-grid-height" hidden type="number" class="form-control form-control-sm">
                         <div class="row">
-                            <!-- <div class="col">
-                                <label style="font-size: 1em;">1x1 Grid Size: </label>
-                            </div> -->
+                            <div class="col">
+                                <label style="font-size: 1em; float: inline-end;">1x1 Grid Size: </label>
+                            </div>
                             <!-- grid box -->
                             <div class="grid-indicator ms-auto mb-2">
                             </div>
@@ -412,9 +412,9 @@
                             <div id="grid-indicator-end-buffer" style="width: 3.5rem;"
                                 class="d-flex justify-content-center flex-column">
                                 <div class="btn-group-vertical btn-group-sm">
-                                    <button id="btn-grid-up" class="btn btn-secondary btn-grid-size" type="button"><i
+                                    <button id="btn-grid-up" class="btn btn-secondary btn-grid-size no-focus" type="button"><i
                                             class="fa-solid fa-arrow-up"></i></button>
-                                    <button id="btn-grid-down" class="btn btn-secondary btn-grid-size" type="button"><i
+                                    <button id="btn-grid-down" class="btn btn-secondary btn-grid-size no-focus" type="button"><i
                                             class="fa-solid fa-arrow-down"></i></button>
                                 </div>
                                 <div id="grid-height-display" style="font-size: 0.8rem;">
@@ -422,18 +422,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row mt-2">
+                        <div class="row my-2">
                             <!-- left & right -->
-                            <div class="offset-md-4 col-md-4">
+                            <div class="offset-md-5 col-md-4">
                                 <div class="input-group input-group-sm">
-                                    <button id="btn-grid-left" class="btn btn-secondary btn-grid-size" type="button"><i
+                                    <button id="btn-grid-left" class="btn btn-secondary btn-grid-size no-focus" type="button"><i
                                             class="fa-solid fa-arrow-left"></i></button>
-                                    <button id="btn-grid-right" class="btn btn-secondary btn-grid-size" type="button"><i
+                                    <button id="btn-grid-right" class="btn btn-secondary btn-grid-size no-focus" type="button"><i
                                             class="fa-solid fa-arrow-right"></i></button>
                                 </div>
                                 <div id="grid-width-display" style="font-size: 0.8rem;">
                                 </div>
                             </div>
+                        </div>
+                        <div class="row text-center" style="font-size: 0.9em;">
+                            <a tabindex="0" class="" role="button" data-bs-toggle="popover" data-bs-trigger="focus" title="1x1 Grid Size" data-bs-content="Match the size of a 1x1 grid in your background for consistent game piece sizing.">What is this <i class="fa-solid fa-circle-question"></i></a>
                         </div>
                     </div>
                     <div class="modal-footer">

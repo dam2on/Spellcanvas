@@ -191,7 +191,7 @@ class Scene {
         $('.grid-indicator').css('width', $('#input-grid-width').val() + 'px');
         $('.grid-indicator').css('height', $('#input-grid-height').val() + 'px');
 
-        $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}, ${valY}`);
+        $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX} x ${valY}`);
     }
 
     drawBackground() {

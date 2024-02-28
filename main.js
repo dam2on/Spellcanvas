@@ -102,6 +102,15 @@ const onGridReset = function (e) {
   _gridArea = null;
 }
 
+const initGridArea = function(x, y) {
+  if (_gridArea == null) {
+    _gridArea = new Area(newGuid(), _host, AreaType.Square, 1, x, y);
+    _gridArea.color = '#eaf0f0';
+    _gridArea.opacity = 100;
+    _gridArea.updateSize();
+  }
+}
+
 const onGridSizeChange = function (e) {
   let valX = Number($('#input-grid-width').val());
   let valY = Number($('#input-grid-height').val());
@@ -129,6 +138,7 @@ const onGridSizeChange = function (e) {
   $('.grid-indicator').css('height', $('#input-grid-height').val() + 'px');
 
   CURRENT_SCENE.drawPieces();
+  initGridArea(0.5, 0.5);
   _gridArea.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
 }
 
@@ -837,9 +847,15 @@ const onAddScene = async function () {
 }
 
 const onGridMode = function () {
+  if (!($('#modal-grid.modal.show').length)) {
+    $('#modal-grid').find('.modal-dialog').css({
+      top: '5vh',
+      left: '20vw'
+    });
+  }
+  CURRENT_SCENE.drawGridSetting();
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).show();
-  alert('Click & drag anywhere to quickly set the grid size!');
 
   _gridSettingMode = true;
   $('#spell-ruler').find('input.btn-check').prop("checked", false);
@@ -1227,6 +1243,12 @@ const initDom = function () {
     ready() {
       $('.img-preview-loader').hide();
     }
+  });
+
+  // init popovers
+  var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+  popoverTriggerList.map(function (popoverTriggerEl) {
+    return new bootstrap.Popover(popoverTriggerEl)
   })
 
   document.getElementById('input-piece-img').addEventListener('change', async function (e) {
@@ -1315,13 +1337,7 @@ const initDom = function () {
   document.getElementById('modal-grid').addEventListener('show.bs.modal', function () {
     $('.menu-toggle').hide();
     $('.menu-btn').prop('disabled', true);
-    // reset modal if it isn't visible
-    if (!($('.modal.in').length)) {
-      $('#modal-grid').find('.modal-dialog').css({
-        top: '5vh',
-        left: '20vw'
-      });
-    }
+
     $('#modal-grid').modal({
       backdrop: false,
       show: true
@@ -1371,14 +1387,11 @@ const initDom = function () {
     if (args.button == 0) {
       if (_gridSettingMode) {
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
-        const pos = {
+        let pos = {
           x: args.x / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
           y: args.y / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
         }
-        _gridArea = new Area(newGuid(), _host, AreaType.Square, 1, pos.x, pos.y);
-        _gridArea.color = '#eaf0f0';
-        _gridArea.opacity = 100;
-        _gridArea.updateSize();
+        initGridArea(pos.x, pos.y);
         return;
       }
       // left click
