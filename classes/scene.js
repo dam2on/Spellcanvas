@@ -13,6 +13,10 @@ class Scene {
 
         Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
         Object.defineProperty(this, 'ctx', { value: this.canvas.getContext('2d'), enumerable: false, writable: true });
+
+        // global shadow size (color is set individually)
+        this.ctx.shadowOffsetX = 5;
+        this.ctx.shadowOffsetY = 5;
     }
 
     static async load(partial) {

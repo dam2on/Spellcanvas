@@ -24,6 +24,7 @@ class Piece {
     static async fromObj(obj) {
         let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         piece.dead = obj.dead;
+        piece.hideShadow = obj.hideShadow;
         piece.origin = obj.origin;
         piece.lock = obj.lock;
         if (obj.conditions != null) {
@@ -170,7 +171,9 @@ class Piece {
             this.aura.draw();
         }
 
+        this.ctx.shadowColor = this.hideShadow ? "transparent" : "#000000a0";
         this.ctx.drawImage(this.imageEl, this.getX(), this.getY(), this.width, this.height);
+        this.ctx.shadowColor = "transparent";
 
         // dead overlay
         if (this.dead) {

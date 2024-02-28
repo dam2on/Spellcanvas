@@ -2,6 +2,10 @@ const isLocal = function () {
     return window.location.host == '127.0.0.1:5500'
 }
 
+const refreshPage = function(includePath = true) {
+    window.location.href = window.location.origin + includePath ? window.location.pathname : '';
+}
+
 const downloadObjectAsJson = function (exportObj, exportName) {
     var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
     var downloadAnchorNode = document.createElement('a');

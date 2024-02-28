@@ -31,7 +31,7 @@ const shapeIntersects = function (x, y, respectLock = false) {
   return null;
 }
 
-const onCropperRotate = function(e) {
+const onCropperRotate = function (e) {
   if ($(this).hasClass('rotate-left')) {
     _cropper?.rotate(-90);
   }
@@ -95,7 +95,7 @@ const onChangeBackgroundSubmit = function () {
   }
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).hide();
-  
+
   // trigger grid setting mode
   onGridMode();
 }
@@ -116,7 +116,7 @@ const onGridReset = function (e) {
   _gridArea = null;
 }
 
-const initGridArea = function(x, y) {
+const initGridArea = function (x, y) {
   if (_gridArea == null) {
     _gridArea = new Area(newGuid(), _host, AreaType.Square, 1, x, y);
     _gridArea.color = '#eaf0f0';
@@ -313,10 +313,12 @@ const onUpdatePieceSubmit = async function () {
     const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
     const statusConds = document.getElementById("piece-menu-status-conditions").value;
     const dead = document.getElementById("piece-menu-dead").checked;
+    const hideShadow = document.getElementById("piece-menu-shadow").checked;
     const file = document.getElementById("piece-menu-image-input").files[0];
     const auraEnabled = document.getElementById("checkbox-piece-menu-aura").checked;
     _pieceInMenu.name = name;
     _pieceInMenu.dead = dead;
+    _pieceInMenu.hideShadow = hideShadow;
     _pieceInMenu.updateSize(size);
     _pieceInMenu.updateConditions(statusConds);
     if (auraEnabled) {
@@ -645,7 +647,7 @@ const onMovePieceEvent = async function (peerId, movedPiece) {
 }
 
 const onDeletePieceEvent = async function (peerId, id) {
-  let piece = CURRENT_SCENE.getPieceById(id);
+  let piece = CURRENT_SCENE?.getPieceById(id);
   if (piece == null) return;
 
   CURRENT_SCENE.deletePiece(piece);
@@ -792,6 +794,26 @@ const initPeerEvents = function () {
         conn.close();
         return;
       }
+      if (!isHost() && CURRENT_SCENE == null) {
+        switch (data.event) {
+          case EventTypes.AddPiece:
+          case EventTypes.UpdatePiece:
+          case EventTypes.MovePiece:
+          case EventTypes.DeletePiece:
+          case EventTypes.ChangeBackground:
+          case EventTypes.GridChange:
+            /* 
+             CURRENT_SCENE may be null during initial connection to host which
+             can cause errors if other events come through. Refreshing the page should resolve this.
+            */
+            refreshPage();
+            return;
+          default:
+            // continue;
+            break;
+        }
+      }
+
       switch (data.event) {
         case EventTypes.AddPiece:
           onAddPieceEvent(conn.peer, data.piece);
@@ -1020,7 +1042,7 @@ const onImportSession = async function () {
       }
 
       loading(false);
-      window.location.href = window.location.origin + window.location.pathname;
+      refreshPage();
     };
 
     reader.readAsText(file);
@@ -1036,7 +1058,7 @@ const onClearSession = async function () {
   // restore items
   await localforage.setItem(StorageKeys.Tutorial, tutorials);
   // reload page
-  window.location.href = window.location.origin + window.location.pathname;
+  refreshPage(false);
 }
 
 const onDeleteScene = async function (id) {
@@ -1235,7 +1257,7 @@ const initDom = function () {
   popoverTriggerList.map(function (popoverTriggerEl) {
     return new bootstrap.Popover(popoverTriggerEl)
   });
-  $('a[data-bs-trigger="focus"]').on('click', function() {
+  $('a[data-bs-trigger="focus"]').on('click', function () {
     $(this).trigger('focus');
   });
 
@@ -1424,7 +1446,7 @@ const initDom = function () {
       _gridArea.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
       _gridArea.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
 
-      _gridArea.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2});
+      _gridArea.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2 });
       return;
     }
     if (_draggedPiece != null) {
@@ -1537,6 +1559,7 @@ const initDom = function () {
         document.getElementById("piece-menu-name").value = _pieceInMenu.name;
         document.getElementById("piece-menu-image").src = _pieceInMenu.image;
         document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
+        document.getElementById("piece-menu-shadow").checked = _pieceInMenu.hideShadow;
         $('input[name="radio-piece-menu-size"]').prop('checked', false);
         $(`input[name='radio-piece-menu-size'][value='${_pieceInMenu.size}']`).prop("checked", true);
         $("#piece-menu-status-conditions").tagsinput('removeAll')
