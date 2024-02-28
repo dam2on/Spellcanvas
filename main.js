@@ -9,9 +9,7 @@ _pieceInMenu = null;
 _spellRuler = null;
 _draggedPiece = null;
 _forceHideRoutes = false;
-_modalPieceCropper = null;
-_modalBgCropper = null;
-_menuPieceCropper = null;
+_cropper = null;
 
 const isHost = function () {
   return _peer.id == _host;
@@ -38,17 +36,15 @@ const onBackgroundTypeChange = function () {
       document.getElementById("input-bg-video").removeAttribute("required");
       document.getElementById("input-bg-image").setAttribute("required", "required");
 
-      document.getElementById("input-bg-video").parentNode.setAttribute("style", "display: none;");
-      document.getElementById('img-bg-preview').parentNode.removeAttribute("style");
-      document.getElementById("input-bg-image").parentNode.removeAttribute("style");
+      $('.piece-only').show();
+      $('.video-only').hide();
       break;
     case BackgroundType.Video:
       document.getElementById("input-bg-image").removeAttribute("required");
       document.getElementById("input-bg-video").setAttribute("required", "required");
 
-      document.getElementById("input-bg-image").parentNode.setAttribute("style", "display: none;");
-      document.getElementById('img-bg-preview').parentNode.setAttribute("style", "display: none;");
-      document.getElementById("input-bg-video").parentNode.removeAttribute("style");
+      $('.piece-only').hide();
+      $('.video-only').show();
       break;
     default:
       console.warn("background type not recognized: " + bgType);
@@ -68,7 +64,7 @@ const onChangeBackgroundSubmit = function () {
   switch (bgType) {
     case BackgroundType.Image:
       const bgImgFile = document.getElementById('input-bg-image').files[0];
-      const croppedImg = _modalBgCropper.getCroppedCanvas().toDataURL(bgImgFile.type);
+      const croppedImg = _cropper.getCroppedCanvas().toDataURL(bgImgFile.type);
       CURRENT_SCENE.setBackground(new Background(BackgroundType.Image, croppedImg));
       break;
     case BackgroundType.Video:
@@ -177,7 +173,7 @@ const resetModalPieceForm = function () {
   $('#input-piece-img').attr('type', 'file');
   $('#input-piece-init-pos-x').val(null);
   $('#input-piece-init-pos-y').val(null);
-  _modalPieceCropper?.destroy();
+  _cropper?.destroy();
 }
 
 const resetModalBgForm = function () {
@@ -186,7 +182,7 @@ const resetModalBgForm = function () {
   $('#input-bg-image').val('');
   $('#input-bg-image').attr('type', 'text');
   $('#input-bg-image').attr('type', 'file');
-  _modalBgCropper?.destroy();
+  _cropper?.destroy();
 }
 
 const onAddPieceSubmit = async function (e) {
@@ -194,7 +190,7 @@ const onAddPieceSubmit = async function (e) {
   $('#form-modal-piece').removeClass('was-validated');
   const name = $('#input-piece-name').val();
   const file = $('#input-piece-img')[0].files[0];
-  const croppedImg = _modalPieceCropper.getCroppedCanvas().toDataURL(file.type);
+  const croppedImg = _cropper.getCroppedCanvas().toDataURL(file.type);
   const size = document.querySelector('input[name="radio-piece-size"]:checked').value;
   const initPos = {
     x: Number($('#input-piece-init-pos-x').val() == '' ? 0.3 : $('#input-piece-init-pos-x').val()),
@@ -260,7 +256,7 @@ const onUpdatePieceSubmit = async function () {
       _pieceInMenu.aura = undefined;
     }
     if (file != null || _pieceInMenu.imageCropped) {
-      const croppedImg = _menuPieceCropper.getCroppedCanvas().toDataURL(file?.type);
+      const croppedImg = _cropper.getCroppedCanvas().toDataURL(file?.type);
       await _pieceInMenu.updateImage(croppedImg);
       _pieceInMenu.imageUpdated = true;
     }
@@ -283,7 +279,7 @@ const onUpdatePieceSubmit = async function () {
 const onPieceAuraToggle = function (e) {
   const auraEnabled = $(this).prop('checked');
   if (auraEnabled) {
-    $('.aura-only').show();
+    $('.aura-only').fadeIn();
   }
   else {
     $('.aura-only').hide();
@@ -309,27 +305,6 @@ const onDeletePieceSubmit = async function () {
     }
 
     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
-  }
-}
-
-const onResetPiecesSubmit = async function () {
-  if (!isHost()) return;
-  if (confirm("Are you sure you want to remove all pieces from the board?")) {
-    onResetPiecesEvent();
-    await CURRENT_SCENE.savePieces();
-  }
-}
-
-const onResetPiecesEvent = async function () {
-  CURRENT_SCENE.clearPieces();
-  CURRENT_SCENE.drawPieces();
-
-  if (isHost()) {
-    await CURRENT_SCENE.savePieces();
-
-    for (var player of PARTY.players) {
-      emitResetPiecesEvent(player.id);
-    }
   }
 }
 
@@ -449,15 +424,6 @@ const emitDeletePieceEvent = function (peerId, id) {
     conn.send({
       event: EventTypes.DeletePiece,
       id: id
-    });
-  });
-}
-
-const emitResetPiecesEvent = function (peerId) {
-  var conn = _peer.connect(peerId);
-  conn.on('open', function () {
-    conn.send({
-      event: EventTypes.ResetPieces
     });
   });
 }
@@ -760,9 +726,6 @@ const initPeerEvents = function () {
         case EventTypes.DeletePiece:
           onDeletePieceEvent(conn.peer, data.id);
           break;
-        case EventTypes.ResetPieces:
-          onResetPiecesEvent();
-          break;
         case EventTypes.RequestPieces:
           onRequestPiecesEvent(conn.peer, data.ids);
           break;
@@ -817,7 +780,8 @@ const onAddScene = async function () {
   CURRENT_SCENE.draw();
   await CURRENT_SCENE.saveScene();
 
-  $('#scene-list').prepend(Scene.updateOrCreateDom(CURRENT_SCENE));
+  // $('#scene-list').prepend(Scene.updateOrCreateDom(CURRENT_SCENE));
+  Scene.updateOrCreateDom(CURRENT_SCENE).insertBefore($('#btn-add-scene').parent());
   $('#option-' + CURRENT_SCENE.id).prop('checked', true);
 
   for (var player of PARTY.players) {
@@ -1181,12 +1145,12 @@ const initDom = function () {
     document.getElementById('background-image').width = window.innerWidth;
     document.getElementById('background-image').height = window.innerHeight;
 
-    if (_modalBgCropper instanceof Cropper) {
-      _modalBgCropper.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height)
+    if (_cropper instanceof Cropper) {
+      _cropper.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height)
     }
 
-    if (_modalPieceCropper instanceof Cropper) {
-      _modalPieceCropper.setAspectRatio(CURRENT_SCENE.getGridAspectRatio())
+    if (_cropper instanceof Cropper) {
+      _cropper.setAspectRatio(CURRENT_SCENE.getGridAspectRatio())
     }
 
     if (_spellRuler instanceof Area) {
@@ -1209,8 +1173,8 @@ const initDom = function () {
     const data = await resizeImage(e.target.files[0], new Image(), 1000);
 
     $('#img-piece-preview').on('load', function () {
-      _modalPieceCropper?.destroy();
-      _modalPieceCropper = new Cropper(document.getElementById('img-piece-preview'), {
+      _cropper?.destroy();
+      _cropper = new Cropper(document.getElementById('img-piece-preview'), {
         initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
       });
     }).attr('src', data);
@@ -1222,8 +1186,8 @@ const initDom = function () {
     const data = await resizeImage(e.target.files[0], new Image(), CURRENT_SCENE.canvas.width);
 
     $('#img-bg-preview').on('load', function () {
-      _modalBgCropper?.destroy();
-      _modalBgCropper = new Cropper(document.getElementById('img-bg-preview'), {
+      _cropper?.destroy();
+      _cropper = new Cropper(document.getElementById('img-bg-preview'), {
         initialAspectRatio: CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height
       });
     }).attr('src', data);
@@ -1234,8 +1198,8 @@ const initDom = function () {
     const data = await resizeImage(e.target.files[0], new Image(), 1000);
 
     $('#piece-menu-image').on('load', function () {
-      _menuPieceCropper?.destroy();
-      _menuPieceCropper = new Cropper(document.getElementById('piece-menu-image'), {
+      _cropper?.destroy();
+      _cropper = new Cropper(document.getElementById('piece-menu-image'), {
         initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
       });
     }).attr('src', data);
@@ -1268,7 +1232,6 @@ const initDom = function () {
   document.getElementById('range-grid-size-y').addEventListener('input', onGridSizeInput);
   document.getElementById('range-grid-size-y').addEventListener('change', onGridSizeChange);
   document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
-  document.getElementById('btn-reset-pieces').addEventListener('click', onResetPiecesSubmit);
   document.getElementById('checkbox-route-toggle').addEventListener('change', onRouteToggle);
   document.getElementById('btn-export-session').addEventListener('click', onExportSession);
   document.getElementById('btn-import-session').addEventListener('click', onImportSession);
@@ -1427,8 +1390,8 @@ const initDom = function () {
       else {
         $('.piece-only').show();
         $('#piece-menu-image').one('load', function () {
-          _menuPieceCropper?.destroy();
-          _menuPieceCropper = new Cropper(document.getElementById('piece-menu-image'));
+          _cropper?.destroy();
+          _cropper = new Cropper(document.getElementById('piece-menu-image'));
         });
         $('#piece-menu-image').on('cropstart', function() {
           _pieceInMenu.imageCropped = true;

@@ -5,15 +5,27 @@ body,
 .card {
   background-color: #36454F !important;
   color: #f7f7f7 !important;
-  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
-  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
-  box-sizing: border-box;         /* Opera/IE 8+ */
+  -webkit-box-sizing: border-box;
+  /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;
+  /* Firefox, other Gecko */
+  box-sizing: border-box;
+  /* Opera/IE 8+ */
 }
 
-*, *:before, *:after {
-  -webkit-box-sizing: inherit; /* Safari/Chrome, other WebKit */
-  -moz-box-sizing: inherit;    /* Firefox, other Gecko */
-  box-sizing: inherit;         /* Opera/IE 8+ */
+.subtle-text {
+  color: #cfcfcf !important
+}
+
+*,
+*:before,
+*:after {
+  -webkit-box-sizing: inherit;
+  /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: inherit;
+  /* Firefox, other Gecko */
+  box-sizing: inherit;
+  /* Opera/IE 8+ */
 }
 
 .bg-img-cover {
@@ -29,7 +41,7 @@ body,
   height: 100%;
 }
 
-input[type="radio"]:checked ~ .bg-img-cover {
+input[type="radio"]:checked~.bg-img-cover {
   border: 0.25rem solid #0d6efd;
 }
 
@@ -100,12 +112,30 @@ input[type="range"]::-webkit-slider-thumb {
   width: 0.33rem;
 }
 
+.bootstrap-tagsinput {
+  /* "form-control form-control-sm" */
+  display: block;
+  width: 100%;
+  font-weight: 400;
+  line-height: 1.5;
+  background-clip: padding-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.25rem;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+  min-height: calc(1.5em +(0.5rem + 2px));
+  padding: 0.25rem 0.5rem;
+  font-size: .875rem;
+}
+
 #input-party-link {
   background-color: #fff;
   font-size: 0.8em;
 }
 
-.scene-label, .player-label {
+.scene-label,
+.player-label {
   cursor: pointer;
 }
 
@@ -164,25 +194,34 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .shake {
-  -webkit-animation: shake 1.64s cubic-bezier(.36,.07,.19,.97) infinite;
-  -moz-animation: shake 1.64s cubic-bezier(.36,.07,.19,.97) infinite;
-  -o-animation: shake 1.64s cubic-bezier(.36,.07,.19,.97) infinite;
-  animation: shake 1.64s cubic-bezier(.36,.07,.19,.97) infinite;
+  -webkit-animation: shake 1.64s cubic-bezier(.36, .07, .19, .97) infinite;
+  -moz-animation: shake 1.64s cubic-bezier(.36, .07, .19, .97) infinite;
+  -o-animation: shake 1.64s cubic-bezier(.36, .07, .19, .97) infinite;
+  animation: shake 1.64s cubic-bezier(.36, .07, .19, .97) infinite;
   transform: translate3d(0, 0, 0);
   perspective: 1000px;
 }
 
 @keyframes shake {
-  5%, 45% {
+
+  5%,
+  45% {
     transform: translate3d(-1px, 0, 0);
   }
-  10%, 40% {
+
+  10%,
+  40% {
     transform: translate3d(2px, 0, 0);
   }
-  15%, 25%, 35% {
+
+  15%,
+  25%,
+  35% {
     transform: translate3d(-4px, 0, 0);
   }
-  20%, 30% {
+
+  20%,
+  30% {
     transform: translate3d(4px, 0, 0);
   }
 }

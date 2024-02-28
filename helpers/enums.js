@@ -7,7 +7,6 @@ const EventTypes = {
   ChangeBackground: 'change background',
   GridChange: 'grid change',
   ConnectedToHost: 'connected to host',
-  ResetPieces: 'reset pieces',
   PlayerJoin: 'player join',
   PermissionsUpdate: 'permissions update',
   LoadScene: 'load scene',
