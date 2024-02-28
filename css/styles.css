@@ -144,8 +144,19 @@ input[type=number] {
 }
 
 .scene-label,
-.player-label {
+.player-label, .draggable-modal {
   cursor: pointer;
+}
+
+#modal-grid {
+  position: relative;
+}
+
+.draggable-modal {
+  position: fixed;
+  width: 100%;
+  margin: 0;
+  padding: 10px;
 }
 
 .offcanvas {

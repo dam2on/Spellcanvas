@@ -5,7 +5,7 @@ class Scene {
         this.owner = ownerId;
         this.gridRatio = {
             x: 0.025,
-            y: 0.025
+            y: 0.04
         };
         this.pieces = [];
         this.unloadedPieces = [];
@@ -181,21 +181,15 @@ class Scene {
     drawGridSetting() {
         const valX = parseInt(this.gridRatio.x * this.canvas.width);
         const valY = parseInt(this.gridRatio.y * this.canvas.height);
-        $('#range-grid-size-x').val(valX);
-        $('#range-grid-size-y').val(valY);
-        $('.grid-indicator').css('margin-bottom', (149 - valY) + 'px');
-        $('label[for="range-grid-size-x"]').html();
-
-        if (valX != valY) {
-            // $('.extra-grid-controls').show();
-            // $('#range-grid-size-y').css('width', valX + 'px');
-            // $('#range-grid-size-y').attr('max', valX);
-            $('.grid-indicator').css('width', valX + 'px');
-            $('.grid-indicator').css('height', valY + 'px');
-        }
-        else {
-            // $('.extra-grid-controls').hide();
-        }
+        
+        $('#input-grid-width').val(valX);
+        $('#input-grid-height').val(valY);
+        $('#grid-width-display').html(parseInt(valX) + 'px');
+        $('#grid-height-display').html(parseInt(valY) + 'px');
+      
+        $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${$('#input-grid-width').val() / 2}px)`);
+        $('.grid-indicator').css('width', $('#input-grid-width').val() + 'px');
+        $('.grid-indicator').css('height', $('#input-grid-height').val() + 'px');
 
         $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}, ${valY}`);
     }
