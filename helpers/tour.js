@@ -36,23 +36,38 @@ const initGamePieceTour = async function (piece) {
                     piece.click();
                     return this.next();
                 },
-                text: 'OK'
+                text: 'Show me!'
+            }
+        ]
+    });
+
+    newGamePieceTour.addStep({
+        title: 'Image',
+        text: "Crop existing image or upload a new one!",
+        attachTo: {
+            element: document.getElementById('piece-menu-image-input').parentElement.parentElement,
+            on: 'left'
+        },
+        buttons: [
+            {
+                action() {
+                    return this.next();
+                },
+                text: 'Next'
             }
         ]
     });
 
     newGamePieceTour.addStep({
         title: 'Piece Details',
-        text: "Modify the image, name, size and other properties.",
+        text: "Modify the name, size and other properties.",
         attachTo: {
-            element: document.getElementById('piece-menu-name'),
+            element: document.getElementById('piece-menu-name').parentElement.parentElement,
             on: 'left'
         },
         buttons: [
             {
                 action() {
-                    menuState = 'close';
-                    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
                     return this.back();
                 },
                 classes: 'shepherd-button-secondary',
@@ -68,10 +83,10 @@ const initGamePieceTour = async function (piece) {
     });
 
     newGamePieceTour.addStep({
-        title: 'Conditions',
-        text: 'Add different status conditions or mark your piece as dead.',
+        title: 'Status',
+        text: 'Add buffs/debuffs to display on your game piece.',
         attachTo: {
-            element: document.getElementById('piece-menu-status-conditions').parentElement,
+            element: document.getElementById('piece-menu-status-conditions').parentElement.parentElement,
             on: 'left'
         },
         buttons: [
@@ -84,6 +99,55 @@ const initGamePieceTour = async function (piece) {
             },
             {
                 action() {
+                    return this.next();
+                },
+                text: 'Next'
+            }
+        ]
+    });
+
+    newGamePieceTour.addStep({
+        title: 'Aura',
+        text: 'Include an aura around your piece (i.e. Spirit Guardians).',
+        attachTo: {
+            element: document.getElementById('checkbox-piece-menu-aura').parentElement.parentElement,
+            on: 'left'
+        },
+        buttons: [
+            {
+                action() {
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
+                    return this.next();
+                },
+                text: 'Next'
+            }
+        ]
+    });
+
+    newGamePieceTour.addStep({
+        title: 'Other settings',
+        text: 'Mark your piece as dead, prevent it from being re-positioned, or hide the shadow border.',
+        attachTo: {
+            element: document.getElementById('piece-menu-dead').parentElement.parentElement,
+            on: 'left'
+        },
+        buttons: [
+            {
+                action() {
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
+                    $('#btn-update-piece').addClass('shake');
                     return this.next();
                 },
                 text: 'Next'
@@ -101,6 +165,7 @@ const initGamePieceTour = async function (piece) {
         buttons: [
             {
                 action() {
+                    $('#btn-update-piece').removeClass('shake');
                     return this.back();
                 },
                 classes: 'shepherd-button-secondary',
@@ -154,8 +219,8 @@ const initMainMenuTour = async function (isHost = true) {
     });
 
     tour.addStep({
-        title: 'Welcome to SpellTable!',
-        text: 'SpellTable is a multiplayer, virtual tabletop built with DnD in mind!',
+        title: 'Welcome to Spellcanvas!',
+        text: 'Spellcanvas is a minimalistic virtual tabletop intended to facilitate online play.',
         buttons: [
             {
                 action() {
@@ -169,22 +234,13 @@ const initMainMenuTour = async function (isHost = true) {
     });
 
     tour.addStep({
-        title: 'Game Board Controls',
-        text: isHost ? 'Change your background and add interactive pieces!' : 'Add interactive pieces!',
+        title: 'Manage Content',
+        text: isHost ? 'Set your background and add interactive game pieces!' : 'Add interactive game pieces!',
         attachTo: {
             element: document.getElementById("btn-add-piece").parentElement,
             on: 'right'
         },
         buttons: [
-            {
-                action() {
-                    menuState = 'close';
-                    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
-                    return this.back();
-                },
-                classes: 'shepherd-button-secondary',
-                text: 'Back'
-            },
             {
                 action() {
                     return this.next();
@@ -194,9 +250,36 @@ const initMainMenuTour = async function (isHost = true) {
         ]
     });
 
+    if (isHost) {
+        tour.addStep({
+            title: "Grid Size",
+            text: "Dial in the size of your background's grid to ensure game pieces and spell areas are drawn to scale.",
+            attachTo: {
+                element: document.getElementById('btn-grid-mode').parentElement,
+                on: 'right'
+            },
+            buttons: [
+                {
+                    action() {
+                        return this.back();
+                    },
+                    classes: 'shepherd-button-secondary',
+                    text: 'Back'
+                },
+                {
+                    action() {
+                        return this.next();
+                    },
+                    text: 'Next'
+                }
+            ]
+        });
+    }
+
+
     tour.addStep({
         title: 'Spell Ruler',
-        text: 'Measure spell coverage and range',
+        text: 'Measure spell coverage and range. Left click to create a permanent & interactive spell area. Scroll to rotate lines & cones!',
         attachTo: {
             element: document.getElementById('spell-ruler'),
             on: 'right'
@@ -220,10 +303,10 @@ const initMainMenuTour = async function (isHost = true) {
 
     if (isHost) {
         tour.addStep({
-            title: "How big is your grid?",
-            text: "Dial in the width and height to match your background's grid to ensure game pieces and spell areas are drawn to scale.",
+            title: 'Manage Scenes',
+            text: "Create, select, or delete scenes.",
             attachTo: {
-                element: document.getElementById('btn-grid-mode').parentElement,
+                element: document.getElementById("scene-list"),
                 on: 'right'
             },
             buttons: [
@@ -243,13 +326,35 @@ const initMainMenuTour = async function (isHost = true) {
             ]
         });
 
-
-
         tour.addStep({
-            title: 'Party View',
+            title: 'Party',
             text: 'Invite players and view your current party',
             attachTo: {
                 element: document.getElementById("section-party-menu"),
+                on: 'right'
+            },
+            buttons: [
+                {
+                    action() {
+                        return this.back();
+                    },
+                    classes: 'shepherd-button-secondary',
+                    text: 'Back'
+                },
+                {
+                    action() {
+                        return this.next();
+                    },
+                    text: 'Next'
+                }
+            ]
+        });
+
+        tour.addStep({
+            title: 'Manage Sessions',
+            text: 'Import/export session files to transfer progress between computers!',
+            attachTo: {
+                element: document.getElementById("btn-import-session"),
                 on: 'right'
             },
             buttons: [
@@ -275,7 +380,7 @@ const initMainMenuTour = async function (isHost = true) {
 
     tour.addStep({
         title: 'Hover Me!',
-        text: 'Open settings menu',
+        text: 'Open settings',
         attachTo: {
             element: document.querySelector(".menu-toggle"),
             on: 'right'
@@ -302,7 +407,7 @@ const initMainMenuTour = async function (isHost = true) {
 
     tour.addStep({
         title: 'Or Click Me!',
-        text: 'Open settings menu',
+        text: 'Open settings',
         attachTo: {
             element: document.querySelector("a.menu-btn"),
             on: 'top'
@@ -311,6 +416,30 @@ const initMainMenuTour = async function (isHost = true) {
             {
                 action() {
                     $('.menu-toggle').addClass('blinking');
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
+                    return this.next();
+                },
+                text: 'OK'
+            }
+        ]
+    });
+
+    tour.addStep({
+        title: 'Toggle Routes',
+        text: 'Hover or click me to show most recent piece positions',
+        attachTo: {
+            element: document.querySelector('label[for="checkbox-route-toggle"]'),
+            on: 'top'
+        },
+        buttons: [
+            {
+                action() {
                     return this.back();
                 },
                 classes: 'shepherd-button-secondary',

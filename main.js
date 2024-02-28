@@ -13,10 +13,6 @@ _forceHideRoutes = false;
 _cropper = null;
 _gridSettingMode = false;
 
-const isHost = function () {
-  return _peer.id == _host;
-}
-
 const shapeIntersects = function (x, y, respectLock = false) {
   for (var piece of CURRENT_SCENE?.pieces) {
     if (piece.intersects(x, y)) {
@@ -190,6 +186,8 @@ const onSpellRulerToggle = async function (args) {
         $(at).prop('checked', false);
       }
     }
+
+    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   }
 }
 

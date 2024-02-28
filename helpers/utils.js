@@ -2,7 +2,11 @@ const isLocal = function () {
     return window.location.host == '127.0.0.1:5500'
 }
 
-const refreshPage = function(includePath = true) {
+const isHost = function () {
+    return _peer.id == _host;
+}
+
+const refreshPage = function (includePath = true) {
     window.location.href = window.location.origin + includePath ? window.location.pathname : '';
 }
 
@@ -17,7 +21,7 @@ const downloadObjectAsJson = function (exportObj, exportName) {
 }
 
 const resizeImage = async function (file, imgEl, targetWidth) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         let reader = new FileReader();
         reader.onload = (event) => {
             imgEl.onload = function () {
@@ -29,20 +33,20 @@ const resizeImage = async function (file, imgEl, targetWidth) {
                     ctx = canvas.getContext("2d"),
                     oc = document.createElement('canvas'),
                     octx = oc.getContext('2d');
-    
+
                 canvas.width = targetWidth; // destination canvas size
                 canvas.height = canvas.width * imgEl.height / imgEl.width;
-    
+
                 var cur = {
                     width: Math.floor(imgEl.width * 0.5),
                     height: Math.floor(imgEl.height * 0.5)
                 }
-    
+
                 oc.width = cur.width;
                 oc.height = cur.height;
-    
+
                 octx.drawImage(imgEl, 0, 0, cur.width, cur.height);
-    
+
                 while (cur.width * 0.5 > targetWidth) {
                     cur = {
                         width: Math.floor(cur.width * 0.5),
@@ -50,14 +54,14 @@ const resizeImage = async function (file, imgEl, targetWidth) {
                     };
                     octx.drawImage(oc, 0, 0, cur.width * 2, cur.height * 2, 0, 0, cur.width, cur.height);
                 }
-    
+
                 ctx.drawImage(oc, 0, 0, cur.width, cur.height, 0, 0, canvas.width, canvas.height);
-    
+
                 resolve(canvas.toDataURL());
             }
             imgEl.src = event.target.result;
         }
-    
+
         reader.readAsDataURL(file);
     });
 }
