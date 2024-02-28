@@ -111,6 +111,15 @@ input[type="range"]::-webkit-slider-thumb {
   height: 1rem;
   width: 0.33rem;
 }
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
 
 .bootstrap-tagsinput {
   /* "form-control form-control-sm" */

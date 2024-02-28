@@ -95,9 +95,9 @@
                     style="width: 149px !important;">
                 <div class="mt-3 row extra-grid-controls" style="display: none;">
                     <div class="col">
-                        <div class="grid-indicator" style="width: 50px; height: 50px;">
+                        <!-- <div class="grid-indicator" style="width: 50px; height: 50px;">
 
-                        </div>
+                        </div> -->
                     </div>
                     <div class="col d-flex">
                         <input type="range" id="range-grid-size-y" orient="vertical" min="1" max="150" step="1"
@@ -396,6 +396,60 @@
         </div>
     </div>
     <!-- Modals -->
+    <div class="modal" id="modal-grid" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="form-modal-grid">
+                    <div class="modal-header">
+                        <h5>Does this look right?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="font-size: 0.70rem;">
+                        <input id="input-grid-width" hidden type="number" class="form-control form-control-sm">
+                        <input id="input-grid-height" hidden type="number" class="form-control form-control-sm">
+
+                        <div class="row">
+                            <div class="grid-indicator ms-auto mb-2">
+
+
+                            </div>
+                            <div id="grid-indicator-end-buffer" style="width: 3.5rem;"
+                                class="d-flex justify-content-center flex-column">
+                                <div class="btn-group-vertical btn-group-sm">
+                                    <button id="btn-grid-up" class="btn btn-secondary btn-grid-size" type="button"><i
+                                            class="fa-solid fa-arrow-up"></i></button>
+                                    <button id="btn-grid-down" class="btn btn-secondary btn-grid-size" type="button"><i
+                                            class="fa-solid fa-arrow-down"></i></button>
+                                </div>
+                                <div id="grid-height-display">
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="offset-md-5 col-md-3">
+
+                                <div class="input-group input-group-sm">
+                                    <button id="btn-grid-left" class="btn btn-secondary btn-grid-size" type="button"><i
+                                            class="fa-solid fa-arrow-left"></i></button>
+                                    <button id="btn-grid-right" class="btn btn-secondary btn-grid-size" type="button"><i
+                                            class="fa-solid fa-arrow-right"></i></button>
+                                </div>
+                                <div id="grid-width-display" style="margin-left: 15%;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btn-modal-grid-ok">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
     <div class="modal" id="modal-piece" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -490,8 +544,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="btn-modal-piece-ok">Submit</button>
+                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btn-modal-piece-ok">Create</button>
                     </div>
                 </form>
 
@@ -564,8 +618,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="btn-modal-bg-ok">Submit</button>
+                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btn-modal-bg-ok">Apply</button>
                     </div>
                 </form>
             </div>
@@ -592,6 +646,7 @@
     <div style="display: none;">
         <img id="image-dead" src="img/dead.png" />
     </div>
+    <!-- <script type="text/javascript" src="helpers/bootstrap-form-validation.js"></script> -->
 </body>
 
 </html>

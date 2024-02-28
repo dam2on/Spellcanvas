@@ -8,6 +8,7 @@
     Array.prototype.slice.call(forms)
         .forEach(function (form) {
             form.addEventListener('submit', function (event) {
+                debugger;
                 event.preventDefault(); // never refresh page
                 if (!form.checkValidity()) {
 

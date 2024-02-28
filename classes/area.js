@@ -28,14 +28,25 @@ class Area extends Piece {
     }
 
     draw(options = {}) {
-        this.updateSize();
+        if (options.width == null && options.height == null) {
+            this.updateSize();
+        }
+        else {
+            this.width = options.width;
+            this.height = options.height;
+        }
         const currentFillStyle = this.ctx.fillStyle;
         const currentStrokeStyle = this.ctx.strokeStyle;
         const currentLineWidth = this.ctx.lineWidth;
 
+        if (options.backdrop) {
+            this.ctx.fillStyle = options.backdrop;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
         this.path = new Path2D();
         this.ctx.fillStyle = this.color + Number(this.opacity).toString(16);
-        this.ctx.strokeStyle = this.ctx.fillStyle;
+        this.ctx.strokeStyle = options.strokeStyle ?? this.ctx.fillStyle;
         const coords = {
             x: this.getX(),
             y: this.getY()
@@ -75,8 +86,10 @@ class Area extends Piece {
         this.ctx.fill(this.path);
 
         if (options.border) {
-            this.ctx.strokeStyle = "#FFEA00";
-            this.ctx.lineWidth = 4;
+            this.ctx.strokeStyle = options.border;
+            if (!!options.borderWidth) {
+                this.ctx.lineWidth = options.borderWidth;
+            }
             this.ctx.stroke(this.path);
         }
 

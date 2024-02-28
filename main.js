@@ -84,6 +84,49 @@ const onChangeBackgroundSubmit = function () {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).hide();
 }
 
+const onGridSubmit = function (e) {
+  e.preventDefault();
+
+  gridSettingMode = false;
+  onGridChangeEvent({
+    x: $('#input-grid-width').val() / CURRENT_SCENE.canvas.width,
+    y: $('#input-grid-height').val() / CURRENT_SCENE.canvas.height
+  });
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
+}
+
+const onGridSizeChange = function (e) {
+  let valX = Number($('#input-grid-width').val());
+  let valY = Number($('#input-grid-height').val());
+
+
+  if ($(this)[0] == $('#btn-grid-left')[0]) {
+    valX -= 1;
+  }
+  if ($(this)[0] == $('#btn-grid-right')[0]) {
+    valX += 1;
+  }
+  if ($(this)[0] == $('#btn-grid-down')[0]) {
+    valY += 1;
+  }
+  if ($(this)[0] == $('#btn-grid-up')[0]) {
+    valY -= 1;
+  }
+
+
+  $('#input-grid-width').val(valX);
+  $('#input-grid-height').val(valY);
+  $('#grid-width-display').html(parseInt(valX) + 'px');
+  $('#grid-height-display').html(parseInt(valY) + 'px');
+
+
+  $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${$('#input-grid-width').val() / 2}px)`);
+  $('.grid-indicator').css('width', $('#input-grid-width').val() + 'px');
+  // $('.grid-indicator').css('margin-right', `${$('#input-grid-width').val()}px`);
+  $('.grid-indicator').css('height', $('#input-grid-height').val() + 'px');
+  // $('.grid-indicator').css('margin-bottom', $('#input-grid-width').val() / 2 + 'px');
+}
+
 const onSpellRulerToggle = async function (args) {
   const type = $(this).val();
   const sizeInput = $('#input-spell-size');
@@ -186,7 +229,6 @@ const resetModalBgForm = function () {
 }
 
 const onAddPieceSubmit = async function (e) {
-  // e.preventDefault();
   $('#form-modal-piece').removeClass('was-validated');
   const name = $('#input-piece-name').val();
   const file = $('#input-piece-img')[0].files[0];
@@ -1075,43 +1117,43 @@ const initPeer = function () {
   });
 }
 
-const onGridSizeInput = function (args) {
-  if (!isHost()) return;
-  const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
-  let valX = $('#range-grid-size-x').val();
-  let valY = $('#range-grid-size-y').val();
-  $('.modal-backdrop.show').css('opacity', 0.0);
-  $('.extra-grid-controls').show();
+// const onGridSizeInput = function (args) {
+//   if (!isHost()) return;
+//   const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
+//   let valX = $('#range-grid-size-x').val();
+//   let valY = $('#range-grid-size-y').val();
+//   $('.modal-backdrop.show').css('opacity', 0.0);
+//   $('.extra-grid-controls').show();
 
-  $('.grid-indicator').css('width', valX + 'px');
-  $('.grid-indicator').css('height', valY + 'px');
-  $('.grid-indicator').css('margin-bottom', (149 - valY) + 'px');
-  $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}, ${valY}`);
-}
+//   $('.grid-indicator').css('width', valX + 'px');
+//   $('.grid-indicator').css('height', valY + 'px');
+//   $('.grid-indicator').css('margin-bottom', (149 - valY) + 'px');
+//   $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}, ${valY}`);
+// }
 
-const onGridSizeChange = function () {
-  if (!isHost()) return;
-  const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
-  $('.modal-backdrop.show').css('opacity', 0.5);
-  // $('.grid-indicator').hide();
-  const valX = $('#range-grid-size-x').val();
-  const valY = $('#range-grid-size-y').val();
-  let newGridSize = {
-    x: Number(valX) / document.getElementById("canvas").width,
-    y: Number(valY) / document.getElementById("canvas").height
-  };
+// const onGridSizeChange = function () {
+//   if (!isHost()) return;
+//   const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
+//   $('.modal-backdrop.show').css('opacity', 0.5);
+//   // $('.grid-indicator').hide();
+//   const valX = $('#range-grid-size-x').val();
+//   const valY = $('#range-grid-size-y').val();
+//   let newGridSize = {
+//     x: Number(valX) / document.getElementById("canvas").width,
+//     y: Number(valY) / document.getElementById("canvas").height
+//   };
 
-  if (!controllingX && valX == valY) {
-    $('.extra-grid-controls').hide();
-  }
+//   if (!controllingX && valX == valY) {
+//     $('.extra-grid-controls').hide();
+//   }
 
-  onGridChangeEvent(newGridSize);
+//   onGridChangeEvent(newGridSize);
 
-  // broadcast grid change
-  for (var player of PARTY.players) {
-    emitGridSizeChangeEvent(player.id);
-  }
-}
+//   // broadcast grid change
+//   for (var player of PARTY.players) {
+//     emitGridSizeChangeEvent(player.id);
+//   }
+// }
 
 const onRouteToggle = function () {
   if (document.getElementById('checkbox-route-toggle').checked) {
@@ -1218,6 +1260,7 @@ const initDom = function () {
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
+  $('.btn-grid-size').on('click', onGridSizeChange);
   // $('.quick-add').on('click', onQuickAdd);
   document.getElementById('btn-change-bg').addEventListener('click', onChangeBackgroundModal);
   document.getElementById('btn-add-piece').addEventListener('click', onAddPieceModal);
@@ -1225,12 +1268,13 @@ const initDom = function () {
   document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange);
   document.getElementById('form-modal-piece').addEventListener('submit', onAddPieceSubmit);
   document.getElementById('form-modal-bg').addEventListener('submit', onChangeBackgroundSubmit);
+  document.getElementById('form-modal-grid').addEventListener('submit', onGridSubmit);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
   document.getElementById('checkbox-piece-menu-aura').addEventListener('change', onPieceAuraToggle);
-  document.getElementById('range-grid-size-x').addEventListener('input', onGridSizeInput);
-  document.getElementById('range-grid-size-x').addEventListener('change', onGridSizeChange);
-  document.getElementById('range-grid-size-y').addEventListener('input', onGridSizeInput);
-  document.getElementById('range-grid-size-y').addEventListener('change', onGridSizeChange);
+  // document.getElementById('range-grid-size-x').addEventListener('input', onGridSizeInput);
+
+  // document.getElementById('range-grid-size-y').addEventListener('input', onGridSizeInput);
+
   document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
   document.getElementById('checkbox-route-toggle').addEventListener('change', onRouteToggle);
   document.getElementById('btn-export-session').addEventListener('click', onExportSession);
@@ -1272,9 +1316,27 @@ const initDom = function () {
   document.getElementById('modal-piece').addEventListener("show.bs.modal", () => resetModalPieceForm());
   document.getElementById('modal-bg').addEventListener("show.bs.modal", () => resetModalBgForm());
 
+  document.getElementById("modal-grid").addEventListener("hide.bs.modal", () => {
+    if (gridSettingMode) {
+      gridArea = null;
+      CURRENT_SCENE.drawPieces();
+    }
+  });
+
   // canvas
   can.addEventListener('mousedown', async function (args) {
     if (args.button == 0) {
+      if (gridSettingMode) {
+        const pos = {
+          x: args.x / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
+          y: args.y / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
+        }
+        gridArea = new Area(newGuid(), _host, AreaType.Square, 1, pos.x, pos.y);
+        gridArea.color = '#eaf0f0';
+        gridArea.opacity = 0;
+        gridArea.updateSize();
+        return;
+      }
       // left click
       if (_spellRuler instanceof Area) {
         await CURRENT_SCENE.addPiece(_spellRuler);
@@ -1306,6 +1368,20 @@ const initDom = function () {
     }
   });
   can.addEventListener('mousemove', function (args) {
+    if (gridSettingMode && gridArea != null) {
+      CURRENT_SCENE.drawPieces();
+      const origin = {
+        x: gridArea.getX() - gridArea.width / 2,
+        y: gridArea.getY() - gridArea.height / 2
+      }
+      const dW = (args.x - origin.x);
+      const dH = (args.y - origin.y);
+      gridArea.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
+      gridArea.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
+
+      gridArea.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
+      return;
+    }
     if (_draggedPiece != null) {
       $('.menu-toggle').hide(); // disable invisible menu toggle
       if (_draggedPiece instanceof Area) {
@@ -1343,6 +1419,19 @@ const initDom = function () {
     }
   });
   can.addEventListener('mouseup', async function () {
+    if (gridSettingMode) {
+      bootstrap.Modal.getOrCreateInstance($('#modal-grid')).show();
+      const width = Math.abs(gridArea.width);
+      const height = Math.abs(gridArea.height);
+      $('.grid-indicator').css('width', width + 'px');
+      $('.grid-indicator').css('height', height + 'px');
+      $('#input-grid-width').val(width);
+      $('#input-grid-height').val(height);
+      onGridSizeChange();
+      // gridArea = null;
+      // CURRENT_SCENE.drawPieces();
+    }
+
     if (_draggedPiece == null) return;
     $('.menu-toggle').show();
 
@@ -1374,7 +1463,7 @@ const initDom = function () {
       $('.area-only').hide();
       $('.piece-only').hide();
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
-      _pieceInMenu.draw({ border: true });
+      _pieceInMenu.draw({ border: "#FFEA00" });
 
       document.getElementById("piece-menu-lock").checked = _pieceInMenu.lock;
 
@@ -1393,7 +1482,7 @@ const initDom = function () {
           _cropper?.destroy();
           _cropper = new Cropper(document.getElementById('piece-menu-image'));
         });
-        $('#piece-menu-image').on('cropstart', function() {
+        $('#piece-menu-image').on('cropstart', function () {
           _pieceInMenu.imageCropped = true;
           $('#btn-update-piece').addClass('shake');
         });
@@ -1428,6 +1517,9 @@ const initDom = function () {
     }
   });
 }
+
+var gridSettingMode = true;
+var gridArea = null;
 
 const displayDebugInfo = function (text) {
   $('.debug-info').html(text);
