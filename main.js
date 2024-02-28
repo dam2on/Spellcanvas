@@ -31,6 +31,17 @@ const shapeIntersects = function (x, y, respectLock = false) {
   return null;
 }
 
+const onCropperRotate = function(e) {
+  if ($(this).hasClass('rotate-left')) {
+    _cropper?.rotate(-90);
+  }
+  else {
+    _cropper?.rotate(90);
+  }
+
+  _cropper?.zoom(-1);
+}
+
 const onBackgroundTypeChange = function () {
   const bgType = document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value;
   switch (bgType) {
@@ -84,6 +95,9 @@ const onChangeBackgroundSubmit = function () {
   }
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).hide();
+  
+  // trigger grid setting mode
+  onGridMode();
 }
 
 const onGridSubmit = function (e) {
@@ -231,6 +245,7 @@ const resetModalPieceForm = function () {
   $('#input-piece-img').attr('type', 'file');
   $('#input-piece-init-pos-x').val(null);
   $('#input-piece-init-pos-y').val(null);
+  $('.rotate-btn').parent().hide();
   _cropper?.destroy();
 }
 
@@ -240,6 +255,7 @@ const resetModalBgForm = function () {
   $('#input-bg-image').val('');
   $('#input-bg-image').attr('type', 'text');
   $('#input-bg-image').attr('type', 'file');
+  $('.rotate-btn').parent().hide();
   _cropper?.destroy();
 }
 
@@ -678,6 +694,8 @@ const onGridChangeEvent = async function (gridSize) {
   if (_spellRuler instanceof Area) {
     _spellRuler.draw();
   }
+
+  CURRENT_SCENE.drawGridSetting();
   CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
@@ -862,8 +880,8 @@ const onGridMode = function () {
   _spellRuler = null;
 
   CURRENT_SCENE.drawPieces();
-  CURRENT_SCENE.ctx.fillStyle = "#000000cc";
-  CURRENT_SCENE.ctx.fillRect(0, 0, CURRENT_SCENE.canvas.width, CURRENT_SCENE.canvas.height);
+  // CURRENT_SCENE.ctx.fillStyle = "#000000cc";
+  // CURRENT_SCENE.ctx.fillRect(0, 0, CURRENT_SCENE.canvas.width, CURRENT_SCENE.canvas.height);
 }
 
 const onPlayerMenu = function (e, id) {
@@ -1152,44 +1170,6 @@ const initPeer = function () {
   });
 }
 
-// const onGridSizeInput = function (args) {
-//   if (!isHost()) return;
-//   const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
-//   let valX = $('#range-grid-size-x').val();
-//   let valY = $('#range-grid-size-y').val();
-//   $('.modal-backdrop.show').css('opacity', 0.0);
-//   $('.extra-grid-controls').show();
-
-//   $('.grid-indicator').css('width', valX + 'px');
-//   $('.grid-indicator').css('height', valY + 'px');
-//   $('.grid-indicator').css('margin-bottom', (149 - valY) + 'px');
-//   $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX}, ${valY}`);
-// }
-
-// const onGridSizeChange = function () {
-//   if (!isHost()) return;
-//   const controllingX = $(this)[0] === $('#range-grid-size-x')[0];
-//   $('.modal-backdrop.show').css('opacity', 0.5);
-//   // $('.grid-indicator').hide();
-//   const valX = $('#range-grid-size-x').val();
-//   const valY = $('#range-grid-size-y').val();
-//   let newGridSize = {
-//     x: Number(valX) / document.getElementById("canvas").width,
-//     y: Number(valY) / document.getElementById("canvas").height
-//   };
-
-//   if (!controllingX && valX == valY) {
-//     $('.extra-grid-controls').hide();
-//   }
-
-//   onGridChangeEvent(newGridSize);
-
-//   // broadcast grid change
-//   for (var player of PARTY.players) {
-//     emitGridSizeChangeEvent(player.id);
-//   }
-// }
-
 const onRouteToggle = function () {
   if (document.getElementById('checkbox-route-toggle').checked) {
     // this is handled in scene.js:drawPieces();
@@ -1242,6 +1222,7 @@ const initDom = function () {
     autoCropArea: 1,
     ready() {
       $('.img-preview-loader').hide();
+      $('.rotate-btn').parent().show();
     }
   });
 
@@ -1302,6 +1283,7 @@ const initDom = function () {
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
   $('.btn-grid-size').on('click', onGridSizeChange);
+  $('.rotate-btn').on('click', onCropperRotate);
   // $('.quick-add').on('click', onQuickAdd);
   document.getElementById('btn-change-bg').addEventListener('click', onChangeBackgroundModal);
   document.getElementById('btn-add-piece').addEventListener('click', onAddPieceModal);
@@ -1362,6 +1344,7 @@ const initDom = function () {
     imgInput.type = "text";
     imgInput.type = "file";
     CURRENT_SCENE.drawPieces();
+    $('.rotate-btn').parent().hide();
     $('#btn-update-piece').removeClass('shake');
   });
 
@@ -1436,7 +1419,7 @@ const initDom = function () {
       _gridArea.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
       _gridArea.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
 
-      _gridArea.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
+      _gridArea.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2});
       return;
     }
     if (_draggedPiece != null) {

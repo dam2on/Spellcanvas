@@ -96,7 +96,7 @@
                     Size: 50</label>
                 <div class="row">
                     <div class="col">
-                        <button id="btn-grid-mode" class="btn btn-sm btn-primary">Calibrate</button>
+                        <button id="btn-grid-mode" class="btn btn-sm btn-primary">Resize</button>
                     </div>
                 </div>
             </div>
@@ -193,6 +193,10 @@
                     <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
                     <div>
                         <img id="piece-menu-image" class="cropper-hidden" style="max-width: 100%;" />
+                    </div>
+                    <div class="btn-group-sm btn-group mt-2" style="display: none;">
+                        <button type="button" class="btn btn-sm btn-secondary no-focus rotate-btn rotate-left"><i class="fa-solid fa-rotate-left"></i></button>
+                        <button type="button" class="btn btn-sm btn-secondary no-focus rotate-btn rotate-right"><i class="fa-solid fa-rotate-right"></i></button>
                     </div>
                 </div>
                 <div class="row my-2">
@@ -396,15 +400,15 @@
             <div class="modal-content">
                 <form id="form-modal-grid">
                     <div class="modal-header text-center">
-                        <h5 class="w-100">Click & drag on the background to set grid size</h5>
+                        <h5 class="w-100">Choose your grid size</h5>
                     </div>
                     <div class="modal-body pb-0">
                         <input id="input-grid-width" hidden type="number" class="form-control form-control-sm">
                         <input id="input-grid-height" hidden type="number" class="form-control form-control-sm">
                         <div class="row">
-                            <div class="col">
+                            <!-- <div class="col">
                                 <label style="font-size: 1em; float: inline-end;">1x1 Grid Size: </label>
-                            </div>
+                            </div> -->
                             <!-- grid box -->
                             <div class="grid-indicator ms-auto mb-2">
                             </div>
@@ -412,10 +416,10 @@
                             <div id="grid-indicator-end-buffer" style="width: 3.5rem;"
                                 class="d-flex justify-content-center flex-column">
                                 <div class="btn-group-vertical btn-group-sm">
-                                    <button id="btn-grid-up" class="btn btn-secondary btn-grid-size no-focus" type="button"><i
-                                            class="fa-solid fa-arrow-up"></i></button>
-                                    <button id="btn-grid-down" class="btn btn-secondary btn-grid-size no-focus" type="button"><i
-                                            class="fa-solid fa-arrow-down"></i></button>
+                                    <button id="btn-grid-up" class="btn btn-secondary btn-grid-size no-focus"
+                                        type="button"><i class="fa-solid fa-arrow-up"></i></button>
+                                    <button id="btn-grid-down" class="btn btn-secondary btn-grid-size no-focus"
+                                        type="button"><i class="fa-solid fa-arrow-down"></i></button>
                                 </div>
                                 <div id="grid-height-display" style="font-size: 0.8rem;">
 
@@ -426,17 +430,25 @@
                             <!-- left & right -->
                             <div class="offset-md-5 col-md-4">
                                 <div class="input-group input-group-sm">
-                                    <button id="btn-grid-left" class="btn btn-secondary btn-grid-size no-focus" type="button"><i
-                                            class="fa-solid fa-arrow-left"></i></button>
-                                    <button id="btn-grid-right" class="btn btn-secondary btn-grid-size no-focus" type="button"><i
-                                            class="fa-solid fa-arrow-right"></i></button>
+                                    <button id="btn-grid-left" class="btn btn-secondary btn-grid-size no-focus"
+                                        type="button"><i class="fa-solid fa-arrow-left"></i></button>
+                                    <button id="btn-grid-right" class="btn btn-secondary btn-grid-size no-focus"
+                                        type="button"><i class="fa-solid fa-arrow-right"></i></button>
                                 </div>
                                 <div id="grid-width-display" style="font-size: 0.8rem;">
                                 </div>
                             </div>
                         </div>
                         <div class="row text-center" style="font-size: 0.9em;">
-                            <a tabindex="0" class="" role="button" data-bs-toggle="popover" data-bs-trigger="focus" title="1x1 Grid Size" data-bs-content="Match the size of a 1x1 grid in your background for consistent game piece sizing.">What is this <i class="fa-solid fa-circle-question"></i></a>
+                            <a tabindex="0" class="" role="button" data-bs-toggle="popover" data-bs-trigger="focus"
+                                data-bs-html="true"
+                                data-bs-content="<b>Click & drag</b> to set a 1 x 1 grid.
+                                <br/>
+                                <br/>
+                                <img src='img/grid-gif.gif' width='250' />
+                                <br/>
+                                <em>In tabletop games, the grid represents a 5 x 5 ft square.</em> ">How do I use this
+                                 <i class="fa-solid fa-circle-question"></i></a>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -463,6 +475,10 @@
                             <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
                             <div>
                                 <img id="img-piece-preview" class="cropper-hidden" style="max-width: 100%;"></img>
+                            </div>
+                            <div class="btn-group-sm btn-group mt-2" style="display: none;">
+                                <button type="button" class="btn btn-sm btn-secondary no-focus rotate-btn rotate-left"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button type="button" class="btn btn-sm btn-secondary no-focus rotate-btn rotate-right"><i class="fa-solid fa-rotate-right"></i></button>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -581,6 +597,10 @@
                             <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
                             <div>
                                 <img id="img-bg-preview" class="cropper-hidden" style="max-width: 100%;"></img>
+                            </div>
+                            <div class="btn-group-sm btn-group mt-2" style="display: none;">
+                                <button type="button" class="btn btn-sm btn-secondary no-focus rotate-btn rotate-left"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button type="button" class="btn btn-sm btn-secondary no-focus rotate-btn rotate-right"><i class="fa-solid fa-rotate-right"></i></button>
                             </div>
                         </div>
                         <div class="row mt-3 image-only">
