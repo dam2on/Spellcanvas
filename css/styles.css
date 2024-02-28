@@ -211,6 +211,17 @@ input[type=number] {
   border: 1px dashed;
 }
 
+.grid-mode-overlay {
+  text-align: center;
+  background-color: #eaf0f0;
+  color: #5f8585;
+  z-index: 1059;
+  opacity: 0.6;
+  font-size: 20px;
+  width: 100%;
+  position: absolute;
+}
+
 .menu-toggle {
   width: 2.4em;
   position: absolute;

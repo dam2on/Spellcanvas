@@ -99,6 +99,7 @@ const onChangeBackgroundSubmit = function () {
 const onGridSubmit = function (e) {
   e.preventDefault();
 
+  $('.grid-mode-overlay').hide();
   _gridSettingMode = false;
   onGridChangeEvent({
     x: $('#input-grid-width').val() / CURRENT_SCENE.canvas.width,
@@ -108,6 +109,7 @@ const onGridSubmit = function (e) {
 }
 
 const onGridReset = function (e) {
+  $('.grid-mode-overlay').hide();
   _gridSettingMode = false;
   _gridArea = null;
 }
@@ -889,10 +891,12 @@ const onAddScene = async function () {
 }
 
 const onGridMode = function () {
+  $('.grid-mode-overlay').show();
+
   if (!($('#modal-grid.modal.show').length)) {
     $('#modal-grid').find('.modal-dialog').css({
       top: '5vh',
-      left: '20vw'
+      left: '10vw'
     });
   }
   CURRENT_SCENE.drawGridSetting();
