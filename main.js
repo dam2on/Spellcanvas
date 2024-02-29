@@ -225,6 +225,14 @@ const onQuickAdd = function (args) {
 const onChangeBackgroundModal = function () {
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).show();
+
+  if (CURRENT_SCENE.background.type == BackgroundType.Image) {
+    $('#img-bg-preview').one('load', function () {
+      _cropper?.destroy();
+      _cropper = new Cropper(document.getElementById('img-bg-preview'));
+    });
+    $('#img-bg-preview').attr('src', CURRENT_SCENE.background.url);;
+  }
 }
 
 const onAddPieceModal = function (initPos = null) {
