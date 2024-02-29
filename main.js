@@ -145,9 +145,9 @@ const onGridSizeChange = function (e) {
   $('#grid-width-display').html(parseInt(valX) + 'px');
   $('#grid-height-display').html(parseInt(valY) + 'px');
 
-  $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${$('#input-grid-width').val() / 2}px)`);
-  $('.grid-indicator').css('width', $('#input-grid-width').val() + 'px');
-  $('.grid-indicator').css('height', $('#input-grid-height').val() + 'px');
+  $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${valX / 2}px)`);
+  $('.grid-indicator').css('width', valX + 'px');
+  $('.grid-indicator').css('height', valY + 'px');
 
   CURRENT_SCENE.drawPieces();
   initGridArea(0.5, 0.5);
@@ -1250,6 +1250,16 @@ const initDom = function () {
       _spellRuler.draw();
     }
     CURRENT_SCENE?.draw();
+
+    if (CURRENT_SCENE != null) {
+      const currGridWidth = $('#input-grid-width').val();
+      const currGridHeight = $('#input-grid-height').val();
+      if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
+        // redraw
+      }
+    }
+
+
   }).observe(document.body);
 
   // init cropper
