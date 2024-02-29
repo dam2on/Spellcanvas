@@ -101,9 +101,10 @@ const onGridSubmit = function (e) {
 
   $('.grid-mode-overlay').hide();
   _gridSettingMode = false;
+  _gridArea = null;
   onGridChangeEvent({
-    x: $('#input-grid-width').val() / CURRENT_SCENE.canvas.width,
-    y: $('#input-grid-height').val() / CURRENT_SCENE.canvas.height
+    x: $('#input-grid-width').val(),
+    y: $('#input-grid-height').val()
   });
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
 }
@@ -124,8 +125,8 @@ const initGridArea = function (x, y) {
 }
 
 const onGridSizeChange = function (e) {
-  let valX = Number($('#input-grid-width').val());
-  let valY = Number($('#input-grid-height').val());
+  let valX = Number($('#input-grid-width').val() * CURRENT_SCENE.canvas.width);
+  let valY = Number($('#input-grid-height').val() * CURRENT_SCENE.canvas.height);
 
   if ($(this)[0] == $('#btn-grid-left')[0]) {
     valX -= 1;
@@ -140,8 +141,8 @@ const onGridSizeChange = function (e) {
     valY -= 1;
   }
 
-  $('#input-grid-width').val(valX);
-  $('#input-grid-height').val(valY);
+  $('#input-grid-width').val(valX / CURRENT_SCENE.canvas.width);
+  $('#input-grid-height').val(valY / CURRENT_SCENE.canvas.height);
   $('#grid-width-display').html(parseInt(valX) + 'px');
   $('#grid-height-display').html(parseInt(valY) + 'px');
 
@@ -1249,17 +1250,32 @@ const initDom = function () {
     if (_spellRuler instanceof Area) {
       _spellRuler.draw();
     }
-    CURRENT_SCENE?.draw();
 
     if (CURRENT_SCENE != null) {
-      const currGridWidth = $('#input-grid-width').val();
-      const currGridHeight = $('#input-grid-height').val();
-      if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
-        // redraw
+      CURRENT_SCENE.drawBackground();
+      CURRENT_SCENE.drawPieces();
+      if (_gridArea != null) {
+        const currGridWidth = $('#input-grid-width').val();
+        const currGridHeight = $('#input-grid-height').val();
+
+        const valX = currGridWidth * CURRENT_SCENE.canvas.width;
+        const valY = currGridHeight * CURRENT_SCENE.canvas.height;
+        _gridArea.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
+  
+        if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
+
+          $('#grid-width-display').html(parseInt(valX) + 'px');
+          $('#grid-height-display').html(parseInt(valY) + 'px');
+        
+          $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${valX / 2}px)`);
+          $('.grid-indicator').css('width', valX + 'px');
+          $('.grid-indicator').css('height', valY + 'px');
+        }
+      }
+      else {
+        CURRENT_SCENE.drawGridSetting();
       }
     }
-
-
   }).observe(document.body);
 
   // init cropper
@@ -1513,8 +1529,8 @@ const initDom = function () {
       const height = Math.abs(_gridArea.height);
       $('.grid-indicator').css('width', width + 'px');
       $('.grid-indicator').css('height', height + 'px');
-      $('#input-grid-width').val(width);
-      $('#input-grid-height').val(height);
+      $('#input-grid-width').val(width / CURRENT_SCENE.canvas.width);
+      $('#input-grid-height').val(height / CURRENT_SCENE.canvas.height);
       onGridSizeChange();
       // _gridArea = null;
       // CURRENT_SCENE.drawPieces();

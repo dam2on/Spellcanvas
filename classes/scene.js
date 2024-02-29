@@ -186,14 +186,14 @@ class Scene {
         const valX = parseInt(this.gridRatio.x * this.canvas.width);
         const valY = parseInt(this.gridRatio.y * this.canvas.height);
         
-        $('#input-grid-width').val(valX);
-        $('#input-grid-height').val(valY);
+        $('#input-grid-width').val(this.gridRatio.x);
+        $('#input-grid-height').val(this.gridRatio.y);
         $('#grid-width-display').html(parseInt(valX) + 'px');
         $('#grid-height-display').html(parseInt(valY) + 'px');
       
-        $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${$('#input-grid-width').val() / 2}px)`);
-        $('.grid-indicator').css('width', $('#input-grid-width').val() + 'px');
-        $('.grid-indicator').css('height', $('#input-grid-height').val() + 'px');
+        $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${valX / 2}px)`);
+        $('.grid-indicator').css('width', valX + 'px');
+        $('.grid-indicator').css('height', valY + 'px');
 
         $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX} x ${valY}`);
     }
