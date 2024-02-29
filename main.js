@@ -35,7 +35,12 @@ const onCropperRotate = function (e) {
     _cropper?.rotate(90);
   }
 
-  _cropper?.zoom(-1);
+  // _cropper?.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height);
+
+  // _cropper?.zoomTo(0);
+  // _cropper.setCanvasData({width: 1000, height: 2000});
+  // _cropper?.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height);
+
 }
 
 const onBackgroundTypeChange = function () {
@@ -73,7 +78,7 @@ const onChangeBackgroundSubmit = function () {
   switch (bgType) {
     case BackgroundType.Image:
       const bgImgFile = document.getElementById('input-bg-image').files[0];
-      const croppedImg = _cropper.getCroppedCanvas().toDataURL(bgImgFile.type);
+      const croppedImg = _cropper.getCroppedCanvas().toDataURL(bgImgFile?.type);
       CURRENT_SCENE.setBackground(new Background(BackgroundType.Image, croppedImg));
       break;
     case BackgroundType.Video:
@@ -232,7 +237,10 @@ const onChangeBackgroundModal = function () {
       _cropper?.destroy();
       _cropper = new Cropper(document.getElementById('img-bg-preview'));
     });
-    $('#img-bg-preview').attr('src', CURRENT_SCENE.background.url);;
+    $('#img-bg-preview').on('crop zoom', function () {
+      document.getElementById("input-bg-image").removeAttribute("required");
+    });
+    $('#img-bg-preview').attr('src', CURRENT_SCENE.background.url);
   }
 }
 
@@ -1586,7 +1594,7 @@ const initDom = function () {
           _cropper?.destroy();
           _cropper = new Cropper(document.getElementById('piece-menu-image'));
         });
-        $('#piece-menu-image').on('cropstart', function () {
+        $('#piece-menu-image').on('crop zoom', function () {
           _pieceInMenu.imageCropped = true;
           $('#btn-update-piece').addClass('shake');
         });
