@@ -1,8 +1,13 @@
+body {
+  overflow: hidden;
+}
+
 html,
 body,
 .offcanvas,
 .modal-content,
-.card {
+.card,
+.dropdown-menu {
   background-color: #36454F !important;
   color: #f7f7f7 !important;
   -webkit-box-sizing: border-box;
@@ -11,6 +16,11 @@ body,
   /* Firefox, other Gecko */
   box-sizing: border-box;
   /* Opera/IE 8+ */
+}
+
+.dropdown-menu > li > a {
+  background-color: #36454F;
+  color: #f7f7f7;
 }
 
 .subtle-text {

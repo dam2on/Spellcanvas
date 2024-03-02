@@ -21,10 +21,11 @@ class Piece {
         this.updateImage(img);
     }
 
-    static async fromObj(obj) {
+    static fromObj(obj) {
         let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         piece.dead = obj.dead;
         piece.hideShadow = obj.hideShadow;
+        piece.isDuplicate = obj.isDuplicate;
         piece.origin = obj.origin;
         piece.lock = obj.lock;
         if (obj.conditions != null) {
@@ -123,7 +124,7 @@ class Piece {
     }
 
     getFontSizeByPiece(pieceSize) {
-        const fontSizes = { name: "18px", statuses: "12px" };
+        const fontSizes = { name: "20px", statuses: "14px" };
         switch (pieceSize) {
             case PieceSizes.Tiny:
                 fontSizes.name = "9px";
@@ -146,6 +147,12 @@ class Piece {
                 fontSizes.statuses = "12px";
                 break;
             case PieceSizes.Gargantuan:
+                fontSizes.name = "18px";
+                fontSizes.statuses = "12px";
+                break;
+            case PieceSizes.Colossal:
+                fontSizes.name = "18px";
+                fontSizes.statuses = "12px";
                 break;
             default:
                 console.warn("piece size: " + pieceSize + " not recognized");
@@ -221,7 +228,7 @@ class Piece {
                 conditions: [],
                 width: 0
             }
-            
+
             // prepare a list of objects to display multiple status's per row, centered
             for (var i = 0; i < conditionWidths.length; i++) {
                 if (currentRow.conditions.length > 1 && currentRow.width + conditionWidths[i].width + textMargin > this.width) {

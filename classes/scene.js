@@ -4,8 +4,8 @@ class Scene {
         this.name = "My Scene";
         this.owner = ownerId;
         this.gridRatio = {
-            x: 0.025,
-            y: 0.04,
+            x: 0.022,
+            y: 0.041,
             feetPerGrid: 5
         };
         this.pieces = [];
@@ -24,15 +24,11 @@ class Scene {
         const scene = new Scene(partial.id, partial.owner);
         scene.name = partial.name;
         scene.thumbnail = partial.thumbnail;
-        const piecePromises = [];
         const pieces = await localforage.getItem(`${StorageKeys.Pieces}-${scene.id}`)
         if (pieces != null) {
             for (var piece of pieces) {
-                piecePromises.push(piece.objectType == "Area" ? Area.fromObj(piece) : Piece.fromObj(piece));
+                scene.pieces.push(piece.objectType == "Area" ? Area.fromObj(piece) : Piece.fromObj(piece));
             }
-            await Promise.all(piecePromises).then((pieces) => {
-                scene.pieces = pieces;
-            });
         }
 
         const backgroundVal = await localforage.getItem(`${StorageKeys.Background}-${scene.id}`);
@@ -165,6 +161,23 @@ class Scene {
         Scene.updateOrCreateDom(this);
         await this.saveScene(); // update thumbnail in storage
         await localforage.setItem(`${StorageKeys.Pieces}-${this.id}`, this.pieces);
+
+        // store session pieces for recently added menu
+        let sessionPieces = await localforage.getItem(StorageKeys.SessionPieces);
+        if (sessionPieces == null) {
+            sessionPieces = [];
+        }
+        for (var piece of this.pieces) {
+            if (piece.isDuplicate) continue;
+            const sessionPiece = sessionPieces.find(p => p.id == piece.id);
+            if (sessionPiece != null) {
+                sessionPiece.image = piece.image
+            }
+            else {
+                sessionPieces.push(piece);
+            }
+        }
+        await localforage.setItem(StorageKeys.SessionPieces, sessionPieces);
     }
 
     bringPieceToFront(piece) {
@@ -226,7 +239,7 @@ class Scene {
         }
     }
 
-    async addPiece(piece) {
+    addPiece(piece) {
         let unloadedIndex = this.unloadedPieces.indexOf(piece.id);
         if (unloadedIndex >= 0) {
             this.unloadedPieces.splice(unloadedIndex, 1);
@@ -244,7 +257,7 @@ class Scene {
                 newPiece = Area.fromObj(piece);
             }
             else {
-                newPiece = await Piece.fromObj(piece);
+                newPiece = Piece.fromObj(piece);
             }
             this.pieces.push(newPiece);
             return newPiece;
@@ -254,17 +267,17 @@ class Scene {
         return null;
     }
 
-    async updatePiece(piece) {
+    updatePiece(piece) {
         let localPiece = this.getPieceById(piece.id);
         if (localPiece instanceof Area) {
-            localPiece = await Area.fromObj(piece);
+            localPiece = Area.fromObj(piece);
         }
         else {
             if (!piece.imageUpdated) {
                 // use same image
                 piece.image = localPiece.image;
             }
-            localPiece = await Piece.fromObj(piece);
+            localPiece = Piece.fromObj(piece);
         }
 
         const index = this.pieces.findIndex(p => p.id == localPiece.id);

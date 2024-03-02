@@ -8,6 +8,7 @@ const EventTypes = {
   GridChange: 'grid change',
   ConnectedToHost: 'connected to host',
   PlayerJoin: 'player join',
+  InformPlayerRemoved: 'inform player removed',
   PermissionsUpdate: 'permissions update',
   LoadScene: 'load scene',
   LoadSceneSuccess: 'load scene success'
@@ -27,7 +28,8 @@ const StorageKeys = {
   Tutorial: 'tutorial',
   GridRatio: 'grid ratio',
   Permissions: 'permissions',
-  Scenes: 'scenes'
+  Scenes: 'scenes',
+  SessionPieces: 'session pieces'
 }
 
 const PieceSizes = {

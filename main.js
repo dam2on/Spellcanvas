@@ -95,18 +95,22 @@ const onChangeBackgroundSubmit = function () {
   onGridMode();
 }
 
-const onGridSubmit = function (e) {
+const onGridSubmit = async function (e) {
   e.preventDefault();
 
   $('.grid-mode-overlay').hide();
   _gridSettingMode = GridSettingMode.Off;
   _gridArea = null;
-  onGridChangeEvent({
+  await onGridChangeEvent({
     x: $('#input-grid-width').val(),
     y: $('#input-grid-height').val(),
     feetPerGrid: $('#input-feet-per-grid').val()
   });
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
+
+  for (var player of PARTY.players) {
+    emitGridSizeChangeEvent(player.id);
+  }
 }
 
 const onGridReset = function (e) {
@@ -202,7 +206,7 @@ const onSpellSizeChange = function (args) {
   _spellRuler.updateSize(Number($(this).val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
 }
 
-const onQuickAdd = function (args) {
+const onQuickAdd2 = function (args) {
   const piece = new Piece(newGuid(), _peer.id, "orc", $(this).find('img')[0].src, PieceSizes.Medium);
   CURRENT_SCENE.addPiece(piece);
 
@@ -224,7 +228,39 @@ const onQuickAdd = function (args) {
   }
 }
 
+const onQuickAdd = async function (pieceId) {
+  const pieceToAdd = (await localforage.getItem(StorageKeys.SessionPieces)).find(p => p.id == pieceId);
+  pieceToAdd.id = newGuid();
+  pieceToAdd.isDuplicate = true;
+
+  const piece = CURRENT_SCENE.addPiece(pieceToAdd);
+  const initPos = {
+    x: Number($('#input-piece-init-pos-x').val() == '' ? 0.3 : $('#input-piece-init-pos-x').val()),
+    y: Number($('#input-piece-init-pos-y').val() == '' ? 0.3 : $('#input-piece-init-pos-y').val())
+  }
+  piece.x = initPos.x;
+  piece.y = initPos.y;
+  
+  await piece.updateImage(piece.image);
+
+  piece.imageEl.addEventListener('load', async () => {
+    piece.draw();
+    await CURRENT_SCENE.savePieces();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
+  });
+
+  if (isHost()) {
+    for (var player of PARTY.players) {
+      emitAddPieceEvent(player.id, piece);
+    }
+  }
+  else {
+    emitAddPieceEvent(_host, piece);
+  }
+}
+
 const onChangeBackgroundModal = function () {
+  $("#canvas-submenu").css({ 'display': 'none' });
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).show();
 
@@ -233,16 +269,34 @@ const onChangeBackgroundModal = function () {
   }
 }
 
-const onAddPieceModal = function (initPos = null) {
+const onAddPieceModal = async function () {
   if (CURRENT_SCENE == null) return // player mode disable during load up
 
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).show();
 
-  if (initPos != null && !(initPos instanceof Event)) {
-    $('#input-piece-init-pos-x').val(initPos.x);
-    $('#input-piece-init-pos-y').val(initPos.y);
+  if ($("#canvas-submenu").css('display') == 'block') {
+    $("#canvas-submenu").css({ 'display': 'none' });
+    $('#input-piece-init-pos-x').val($("#canvas-submenu").css('left').replace('px', '') / CURRENT_SCENE.canvas.width);
+    $('#input-piece-init-pos-y').val($("#canvas-submenu").css('top').replace('px', '') / CURRENT_SCENE.canvas.height);
   }
+
+  // populate recently added pieces carousel
+  const sessionPieces = await localforage.getItem(StorageKeys.SessionPieces);
+  if (sessionPieces != null) {
+    $('#session-pieces-carousel').slick('unslick');
+    $('#session-pieces-carousel').empty();
+    for (var piece of sessionPieces) {
+      $('#session-pieces-carousel').append(`<div onclick="onQuickAdd('${piece.id}')"><img style="width: 5em" alt="${piece.name}" data-lazy=${piece.image}></img></div>`);
+    }
+    $('#session-pieces-carousel').slick({
+      slidesToShow: 3,
+      slidesToScroll: 3,
+      infinite: true,
+      lazyLoad: 'ondemand'
+    });
+  }
+
 }
 
 const resetModalPieceForm = function () {
@@ -285,7 +339,6 @@ const onAddPieceSubmit = async function (e) {
     piece.draw();
     await CURRENT_SCENE.savePieces();
     initGamePieceTour(piece);
-    resetModalPieceForm();
 
     if (isHost()) {
       for (var player of PARTY.players) {
@@ -433,6 +486,21 @@ const onLoadSceneSuccessEvent = function (peerId) {
   const player = PARTY.getPlayer(peerId);
   player.status = PlayerStatus.Connected;
   player.updateOrCreateDom(CURRENT_SCENE.pieces);
+}
+
+const onInformPlayerRemovedEvent = function () {
+  alert('You have been removed from the party...loading new session');
+
+  onClearSession();
+}
+
+const emitInformPlayerRemovedEvent = function (peerId) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function () {
+    conn.send({
+      event: EventTypes.InformPlayerRemoved
+    });
+  });
 }
 
 const emitLoadSceneEvent = function (peerId) {
@@ -612,22 +680,23 @@ const onAddPieceEvent = async function (peerId, piece) {
     return;
   }
 
-  const newPiece = await CURRENT_SCENE.addPiece(piece);
-  CURRENT_SCENE.drawPieces();
-  if (!CURRENT_SCENE.unloadedPieces.length) {
-    loading(false);
-    emitLoadSceneSuccessEvent();
-  }
-
-  if (isHost()) {
-    PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
-
-    for (var player of PARTY.players) {
-      if (player.id == peerId) continue;
-      emitAddPieceEvent(player.id, newPiece);
+  const newPiece = CURRENT_SCENE.addPiece(piece);
+  newPiece.imageEl.addEventListener('load', async function() {
+    CURRENT_SCENE.drawPieces();
+    if (isHost()) {
+      PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
+  
+      for (var player of PARTY.players) {
+        if (player.id == peerId) continue;
+        emitAddPieceEvent(player.id, newPiece);
+      }
+      await CURRENT_SCENE.savePieces();
     }
-    await CURRENT_SCENE.savePieces();
-  }
+    else if (!CURRENT_SCENE.unloadedPieces.length) {
+      loading(false);
+      emitLoadSceneSuccessEvent();
+    }
+  });
 }
 
 const onMovePieceEvent = async function (peerId, movedPiece) {
@@ -685,20 +754,21 @@ const onRequestPiecesEvent = function (peerId, ids) {
 
 const onUpdatePieceEvent = async function (peerId, piece) {
   if (CURRENT_SCENE?.getPieceById(piece.id) == null) return;
-  const updatedPiece = await CURRENT_SCENE.updatePiece(piece);
+  const updatedPiece = CURRENT_SCENE.updatePiece(piece);
+  updatedPiece.imageEl.addEventListener('load', async function() {
+    CURRENT_SCENE.drawPieces();
 
-  CURRENT_SCENE.drawPieces();
-
-  if (isHost()) {
-    $("#list-connected-party-members").append(PARTY.getPlayer(peerId).updateOrCreateDom(CURRENT_SCENE.pieces));
-
-    for (var player of PARTY.players) {
-      if (player.id == peerId) continue;
-      emitUpdatePieceEvent(player.id, updatedPiece);
+    if (isHost()) {
+      $("#list-connected-party-members").append(PARTY.getPlayer(peerId).updateOrCreateDom(CURRENT_SCENE.pieces));
+  
+      for (var player of PARTY.players) {
+        if (player.id == peerId) continue;
+        emitUpdatePieceEvent(player.id, updatedPiece);
+      }
+  
+      await CURRENT_SCENE.savePieces();
     }
-
-    await CURRENT_SCENE.savePieces();
-  }
+  });
 }
 
 const onGridChangeEvent = async function (gridSize) {
@@ -810,6 +880,7 @@ const initPeerEvents = function () {
     conn.on('data', function (data) {
       if (isHost() && PARTY.deletedPlayerIds.indexOf(conn.peer) >= 0) {
         // refuse connection from deleted player
+        emitInformPlayerRemovedEvent(conn.peer);
         conn.close();
         return;
       }
@@ -869,6 +940,9 @@ const initPeerEvents = function () {
           break;
         case EventTypes.LoadSceneSuccess:
           onLoadSceneSuccessEvent(conn.peer);
+          break;
+        case EventTypes.InformPlayerRemoved:
+          onInformPlayerRemovedEvent();
           break;
         default:
           console.log("unrecognized event type: " + data.event);
@@ -1349,6 +1423,13 @@ const initDom = function () {
     });
   });
 
+  // init carousel
+  $('#session-pieces-carousel').slick({
+    // infinite: true,
+    // slidesToShow: 3,
+    // slidesToScroll: 3
+  });
+
   document.getElementById('input-piece-img').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
     const data = await resizeImage(e.target.files[0], new Image(), 1000);
@@ -1388,7 +1469,9 @@ const initDom = function () {
   $('.btn-grid-size').on('click', onGridSizeChange);
   $('.rotate-btn').on('click', onCropperRotate);
   // $('.quick-add').on('click', onQuickAdd);
+  document.getElementById('canvas-submenu-change-bg').addEventListener('click', onChangeBackgroundModal);
   document.getElementById('btn-change-bg').addEventListener('click', onChangeBackgroundModal);
+  document.getElementById('canvas-submenu-add-piece').addEventListener('click', onAddPieceModal);
   document.getElementById('btn-add-piece').addEventListener('click', onAddPieceModal);
   document.getElementById('btn-add-scene').addEventListener('click', onAddScene);
   document.getElementById('btn-grid-mode').addEventListener('click', onGridMode);
@@ -1399,7 +1482,6 @@ const initDom = function () {
   document.getElementById('form-modal-grid').addEventListener('reset', onGridReset);
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
   document.getElementById('checkbox-piece-menu-aura').addEventListener('change', onPieceAuraToggle);
-
   document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
   document.getElementById('checkbox-route-toggle').addEventListener('change', onRouteToggle);
   document.getElementById('btn-export-session').addEventListener('click', onExportSession);
@@ -1460,7 +1542,7 @@ const initDom = function () {
     });
   });
 
-  document.getElementById('modal-piece').addEventListener("show.bs.modal", () => resetModalPieceForm());
+  document.getElementById('modal-piece').addEventListener("hidden.bs.modal", () => resetModalPieceForm());
   document.getElementById('modal-bg').addEventListener("show.bs.modal", () => resetModalBgForm());
 
   document.getElementById("modal-grid").addEventListener("hide.bs.modal", () => {
@@ -1484,7 +1566,7 @@ const initDom = function () {
         return;
       }
       if (_spellRuler instanceof Area) {
-        await CURRENT_SCENE.addPiece(_spellRuler);
+        CURRENT_SCENE.addPiece(_spellRuler);
         const newPiece = { ..._spellRuler };
         $('#spell-ruler').find('input.btn-check:checked').click();
         CURRENT_SCENE.drawPieces();
@@ -1657,8 +1739,17 @@ const initDom = function () {
       }
     }
     else {
-      // open add piece dialog
-      onAddPieceModal({ x: e.x / document.getElementById('canvas').width, y: e.y / document.getElementById('canvas').height });
+
+      var bodyOffsets = document.body.getBoundingClientRect();
+      tempX = e.pageX - bodyOffsets.left;
+      tempY = e.pageY;
+
+      $("#canvas-submenu").css({ 'display': 'block', 'top': tempY, 'left': tempX });
+      $(document.body).one('click focusin', function (e) {
+        if (!$('#canvas-submenu').has(e.target).length) {
+          $("#canvas-submenu").css({ 'display': 'none' });
+        }
+      });
     }
   });
 }
