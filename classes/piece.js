@@ -171,6 +171,9 @@ class Piece {
             this.aura.draw();
         }
 
+        // global shadow size (color is set individually)
+        this.ctx.shadowOffsetX = 3;
+        this.ctx.shadowOffsetY = 3;
         this.ctx.shadowColor = this.hideShadow ? "transparent" : "#000000a0";
         this.ctx.drawImage(this.imageEl, this.getX(), this.getY(), this.width, this.height);
         this.ctx.shadowColor = "transparent";

@@ -99,7 +99,7 @@
                     Size: 50</label>
                 <div class="row">
                     <div class="col">
-                        <button id="btn-grid-mode" class="btn btn-sm btn-primary">Set Grid Size</button>
+                        <button id="btn-grid-mode" class="btn btn-sm btn-secondary"><i class="fa-solid fa-border-none me-2"></i>Grid Settings</button>
                     </div>
                 </div>
             </div>
@@ -422,9 +422,12 @@
                         <input id="input-grid-width" hidden type="text" class="form-control form-control-sm">
                         <input id="input-grid-height" hidden type="text" class="form-control form-control-sm">
                         <div class="row">
-                            <!-- <div class="col">
-                                <label style="font-size: 1em; float: inline-end;">1x1 Grid Size: </label>
-                            </div> -->
+                            <label class="form-label offset-1 col-3" for="input-feet-per-grid">Grid Side (ft)</label>
+                            <div class="col-3">
+                                <input id="input-feet-per-grid" type="number" class="form-control form-control-sm" value="5"/>
+                            </div>
+                        </div>
+                        <div class="row">
                             <!-- grid box -->
                             <div class="grid-indicator ms-auto mb-2">
                             </div>
@@ -455,6 +458,7 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- tooltip w/ .gif -->
                         <div class="row text-center" style="font-size: 0.9em;">
                             <a tabindex="0" class="" role="button" data-bs-toggle="popover" data-bs-trigger="focus"
                                 data-bs-html="true"

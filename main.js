@@ -11,7 +11,7 @@ _gridArea = null;
 _draggedPiece = null;
 _forceHideRoutes = false;
 _cropper = null;
-_gridSettingMode = false;
+_gridSettingMode = GridSettingMode.Off;
 
 const shapeIntersects = function (x, y, respectLock = false) {
   for (var piece of CURRENT_SCENE?.pieces) {
@@ -34,13 +34,7 @@ const onCropperRotate = function (e) {
   else {
     _cropper?.rotate(90);
   }
-
-  // _cropper?.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height);
-
-  // _cropper?.zoomTo(0);
-  // _cropper.setCanvasData({width: 1000, height: 2000});
-  // _cropper?.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height);
-
+  _cropper?.zoomTo(-1);
 }
 
 const onBackgroundTypeChange = function () {
@@ -105,7 +99,7 @@ const onGridSubmit = function (e) {
   e.preventDefault();
 
   $('.grid-mode-overlay').hide();
-  _gridSettingMode = false;
+  _gridSettingMode = GridSettingMode.Off;
   _gridArea = null;
   onGridChangeEvent({
     x: $('#input-grid-width').val(),
@@ -116,17 +110,15 @@ const onGridSubmit = function (e) {
 
 const onGridReset = function (e) {
   $('.grid-mode-overlay').hide();
-  _gridSettingMode = false;
+  _gridSettingMode = GridSettingMode.Off;
   _gridArea = null;
 }
 
 const initGridArea = function (x, y) {
-  if (_gridArea == null) {
-    _gridArea = new Area(newGuid(), _host, AreaType.Square, 1, x, y);
-    _gridArea.color = '#eaf0f0';
-    _gridArea.opacity = 100;
-    _gridArea.updateSize();
-  }
+  _gridArea = new Area(newGuid(), _host, AreaType.Square, 1, x, y);
+  _gridArea.color = '#eaf0f0';
+  _gridArea.opacity = 100;
+  _gridArea.updateSize();
 }
 
 const onGridSizeChange = function (e) {
@@ -156,7 +148,9 @@ const onGridSizeChange = function (e) {
   $('.grid-indicator').css('height', valY + 'px');
 
   CURRENT_SCENE.drawPieces();
-  initGridArea(0.5, 0.5);
+  if (_gridArea == null) {
+    initGridArea(0.5, 0.5);
+  }
   _gridArea.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
 }
 
@@ -233,13 +227,6 @@ const onChangeBackgroundModal = function () {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).show();
 
   if (CURRENT_SCENE.background.type == BackgroundType.Image) {
-    $('#img-bg-preview').one('load', function () {
-      _cropper?.destroy();
-      _cropper = new Cropper(document.getElementById('img-bg-preview'));
-    });
-    $('#img-bg-preview').on('crop zoom', function () {
-      document.getElementById("input-bg-image").removeAttribute("required");
-    });
     $('#img-bg-preview').attr('src', CURRENT_SCENE.background.url);
   }
 }
@@ -920,13 +907,13 @@ const onGridMode = function () {
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).show();
 
-  _gridSettingMode = true;
+  _gridSettingMode = GridSettingMode.AwaitingInput;
   $('#spell-ruler').find('input.btn-check').prop("checked", false);
   _spellRuler = null;
 
   CURRENT_SCENE.drawPieces();
-  // CURRENT_SCENE.ctx.fillStyle = "#000000cc";
-  // CURRENT_SCENE.ctx.fillRect(0, 0, CURRENT_SCENE.canvas.width, CURRENT_SCENE.canvas.height);
+  CURRENT_SCENE.ctx.fillStyle = "#000000a0";
+  CURRENT_SCENE.ctx.fillRect(0, 0, CURRENT_SCENE.canvas.width, CURRENT_SCENE.canvas.height);
 }
 
 const onPlayerMenu = function (e, id) {
@@ -1248,11 +1235,12 @@ const initDom = function () {
     document.getElementById('background-image').height = window.innerHeight;
 
     if (_cropper instanceof Cropper) {
-      _cropper.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height)
-    }
-
-    if (_cropper instanceof Cropper) {
-      _cropper.setAspectRatio(CURRENT_SCENE.getGridAspectRatio())
+      if (_cropper.element == document.getElementById('img-bg-preview')) {
+        _cropper.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height)
+      }
+      else {
+        _cropper.setAspectRatio(CURRENT_SCENE.getGridAspectRatio())
+      }
     }
 
     if (_spellRuler instanceof Area) {
@@ -1269,12 +1257,12 @@ const initDom = function () {
         const valX = currGridWidth * CURRENT_SCENE.canvas.width;
         const valY = currGridHeight * CURRENT_SCENE.canvas.height;
         _gridArea.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
-  
+
         if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
 
           $('#grid-width-display').html(parseInt(valX) + 'px');
           $('#grid-height-display').html(parseInt(valY) + 'px');
-        
+
           $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${valX / 2}px)`);
           $('.grid-indicator').css('width', valX + 'px');
           $('.grid-indicator').css('height', valY + 'px');
@@ -1293,6 +1281,19 @@ const initDom = function () {
     ready() {
       $('.img-preview-loader').hide();
       $('.rotate-btn').parent().show();
+
+      // attach crop zoom events for loading a previous image
+      if (_cropper.element == document.getElementById('img-bg-preview')) {
+        $('#img-bg-preview').one('crop zoom', function () {
+          document.getElementById('input-bg-image').removeAttribute('required');
+        });
+      }
+      else if (_cropper.element == document.getElementById('piece-menu-image')) {
+        $('#piece-menu-image').one('crop zoom', function () {
+          _pieceInMenu.imageCropped = true;
+          $('#btn-update-piece').addClass('shake');
+        });
+      }
     }
   });
 
@@ -1305,51 +1306,58 @@ const initDom = function () {
     $(this).trigger('focus');
   });
 
+  // init croppers
+  $('#img-piece-preview').on('load', function () {
+    _cropper?.destroy();
+    _cropper = new Cropper(document.getElementById('img-piece-preview'), {
+      initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
+    });
+  });
+  $('#img-bg-preview').on('load', function () {
+    console.log('initing bg cropper');
+    _cropper?.destroy();
+    _cropper = new Cropper(document.getElementById('img-bg-preview'), {
+      initialAspectRatio: CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height
+    });
+  });
+  $('#piece-menu-image').on('load', function () {
+    _cropper?.destroy();
+    _cropper = new Cropper(document.getElementById('piece-menu-image'), {
+      initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
+    });
+  });
+
   document.getElementById('input-piece-img').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
     const data = await resizeImage(e.target.files[0], new Image(), 1000);
-
-    $('#img-piece-preview').on('load', function () {
-      _cropper?.destroy();
-      _cropper = new Cropper(document.getElementById('img-piece-preview'), {
-        initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
-      });
-    }).attr('src', data);
-
+    $('#img-piece-preview').attr('src', data);
   });
 
   document.getElementById('input-bg-image').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
     const data = await resizeImage(e.target.files[0], new Image(), CURRENT_SCENE.canvas.width);
-
-    $('#img-bg-preview').on('load', function () {
-      _cropper?.destroy();
-      _cropper = new Cropper(document.getElementById('img-bg-preview'), {
-        initialAspectRatio: CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height
-      });
-    }).attr('src', data);
+    $('#img-bg-preview').attr('src', data);
   });
 
   document.getElementById('piece-menu-image-input').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
     const data = await resizeImage(e.target.files[0], new Image(), 1000);
-
-    $('#piece-menu-image').on('load', function () {
-      _cropper?.destroy();
-      _cropper = new Cropper(document.getElementById('piece-menu-image'), {
-        initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
-      });
-    }).attr('src', data);
+    $('#piece-menu-image').attr('src', data);
   });
 
   let menuToggleTimeout;
   $('.menu-toggle').on('mouseover', function () {
-    if (_draggedPiece == null)
+    if (_draggedPiece == null) {
+      $('.menu-toggle').addClass('opacity-100');
+
       menuToggleTimeout = setTimeout(() => {
+        $('.menu-toggle').removeClass('opacity-100');
         bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
       }, 450);
+    }
   });
   $('.menu-toggle').on('mouseout', function () {
+    $('.menu-toggle').removeClass('opacity-100');
     clearTimeout(menuToggleTimeout);
   });
 
@@ -1406,6 +1414,10 @@ const initDom = function () {
     $('.menu-btn').prop('disabled', false);
   });
 
+  document.getElementById('modal-bg').addEventListener('hidden.bs.modal', function () {
+    $('#img-bg-preview').unbind('crop zoom');
+  });
+
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
     _pieceInMenu = null;
@@ -1415,7 +1427,7 @@ const initDom = function () {
     imgInput.type = "text";
     imgInput.type = "file";
     CURRENT_SCENE.drawPieces();
-    $('.rotate-btn').parent().hide();
+    $('#piece-menu-image').unbind('crop zoom');
     $('#btn-update-piece').removeClass('shake');
   });
 
@@ -1439,16 +1451,16 @@ const initDom = function () {
   // canvas
   can.addEventListener('mousedown', async function (args) {
     if (args.button == 0) {
+      // left click
       if (_gridSettingMode) {
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
         let pos = {
           x: args.x / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
           y: args.y / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
         }
         initGridArea(pos.x, pos.y);
+        _gridSettingMode = GridSettingMode.Drawing;
         return;
       }
-      // left click
       if (_spellRuler instanceof Area) {
         await CURRENT_SCENE.addPiece(_spellRuler);
         const newPiece = { ..._spellRuler };
@@ -1479,7 +1491,7 @@ const initDom = function () {
     }
   });
   can.addEventListener('mousemove', function (args) {
-    if (_gridSettingMode && _gridArea != null && !$('#modal-grid').hasClass('show')) {
+    if (_gridSettingMode == GridSettingMode.Drawing && _gridArea != null) {
       CURRENT_SCENE.drawPieces();
       const origin = {
         x: _gridArea.getX() - _gridArea.width / 2,
@@ -1531,8 +1543,7 @@ const initDom = function () {
   });
   can.addEventListener('mouseup', async function () {
     if (_gridSettingMode && _gridArea != null) {
-      bootstrap.Modal.getOrCreateInstance($('#modal-grid')).show();
-
+      _gridSettingMode = GridSettingMode.AwaitingInput;
       const width = Math.abs(_gridArea.width);
       const height = Math.abs(_gridArea.height);
       $('.grid-indicator').css('width', width + 'px');
@@ -1590,17 +1601,14 @@ const initDom = function () {
       }
       else {
         $('.piece-only').show();
-        $('#piece-menu-image').one('load', function () {
-          _cropper?.destroy();
-          _cropper = new Cropper(document.getElementById('piece-menu-image'));
-        });
-        $('#piece-menu-image').on('crop zoom', function () {
-          _pieceInMenu.imageCropped = true;
-          $('#btn-update-piece').addClass('shake');
-        });
 
         // open piece submenu
         document.getElementById("piece-menu-name").value = _pieceInMenu.name;
+        $('#piece-menu-image').one('load', function () {
+          // work around to re-init cropper for loading current piece image 
+          _cropper?.destroy();
+          _cropper = new Cropper(document.getElementById('piece-menu-image'));
+        });
         document.getElementById("piece-menu-image").src = _pieceInMenu.image;
         document.getElementById("piece-menu-dead").checked = _pieceInMenu.dead;
         document.getElementById("piece-menu-shadow").checked = _pieceInMenu.hideShadow;

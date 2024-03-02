@@ -3,7 +3,6 @@ body,
 .offcanvas,
 .modal-content,
 .card {
-  font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   background-color: #36454F !important;
   color: #f7f7f7 !important;
   -webkit-box-sizing: border-box;
@@ -228,6 +227,9 @@ input[type=number] {
 .menu-toggle {
   width: 2.4em;
   position: absolute;
+  opacity: 0;
+  background-image: linear-gradient(to right,#000000cc, transparent);
+  transition: opacity 0.45s linear;
   height: 100vh;
 }
 
@@ -238,6 +240,10 @@ input[type=number] {
   animation: shake 1.64s cubic-bezier(.36, .07, .19, .97) infinite;
   transform: translate3d(0, 0, 0);
   perspective: 1000px;
+}
+
+.opacity-100 {
+  opacity: 1;
 }
 
 @keyframes shake {

@@ -39,6 +39,12 @@ const PieceSizes = {
   Gargantuan: 4,
 }
 
+const GridSettingMode = {
+  Off: 0,
+  AwaitingInput: 1,
+  Drawing: 2
+}
+
 const AreaType = {
   Line: 'line',
   Circle: 'circle',
