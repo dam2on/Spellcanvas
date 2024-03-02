@@ -68,6 +68,7 @@
     <div id="video" class="video-background">
     </div>
     <img id="background-image" style="position: absolute;" src="img/bg.png"></img>
+
     <canvas id="canvas" style="
         margin: 0;
         padding: 0;
@@ -80,6 +81,9 @@
         background-repeat: no-repeat;
         background-size: cover;">
     </canvas>
+
+
+
     <!-- Side Menus -->
     <div class="menu-toggle">
         <!-- Invisible area that opens menu on hover -->
@@ -87,21 +91,18 @@
     <div class="offcanvas offcanvas-start" tabindex="-1" id="main-menu">
         <div class="offcanvas-body">
             <h4><i class="fa-solid fa-chess my-3 me-2"></i>Game Board</h4>
-            <div class="form-group mb-3">
-                <button id="btn-change-bg" class="btn btn-secondary me-2 host-only" type="button"><i
-                        class="fa-regular fa-image"></i>
-                    Set Background</button>
-                <button id="btn-add-piece" class="btn btn-secondary"><i class="fa-solid fa-chess-knight"></i> New Game
-                    Piece</button>
+            <div class="mb-3 host-only">
+                <button id="btn-change-bg" class="btn btn-secondary btn-sm me-2" type="button">
+                    <i class="fa-regular fa-image"></i> Set Background
+                </button>
+                <button id="btn-grid-mode" class="btn btn-sm btn-secondary">
+                    <i class="fa-solid fa-border-none me-2"></i>Grid Settings
+                </button>
             </div>
-            <div class="form-group mb-3 host-only">
-                <label for="range-grid-size-x" class="form-label d-none"><i class="fa-solid fa-border-none me-2"></i>Grid
-                    Size: 50</label>
-                <div class="row">
-                    <div class="col">
-                        <button id="btn-grid-mode" class="btn btn-sm btn-secondary"><i class="fa-solid fa-border-none me-2"></i>Grid Settings</button>
-                    </div>
-                </div>
+            <div class="mb-3">
+                <button id="btn-add-piece" class="btn btn-secondary btn-sm">
+                    <i class="fa-solid fa-chess-knight"></i> New Game Piece
+                </button>
             </div>
             <div id="spell-ruler" class="form-group mb-3">
                 <span><i class="fa-solid fa-ruler me-2"></i>Spell Ruler</span>
@@ -165,14 +166,15 @@
                 </div>
             </div>
             <div class="form-group my-4 host-only">
-                <button id="btn-export-session" type="button" class="btn btn-secondary"><i
+                <button id="btn-export-session" type="button" class="btn btn-secondary btn-sm"><i
                         class="fa-solid fa-download"></i> Export Session</button>
-                <button id="btn-import-session" type="button" class="btn btn-secondary"><i
+                <button id="btn-import-session" type="button" class="btn btn-secondary btn-sm"><i
                         class="fa-solid fa-upload"></i> Import Session</button>
                 <input id="input-session-import" type="file" accept="text/json" hidden />
             </div>
             <div class="form-group">
-                <button id="btn-clear-session" type="button" class="btn btn-danger"><i class="fa-solid fa-trash"></i>
+                <button id="btn-clear-session" type="button" class="btn btn-danger btn-sm"><i
+                        class="fa-solid fa-trash"></i>
                     Clear Session</button>
             </div>
             <div class="debug-info" style="display: none;">
@@ -186,7 +188,7 @@
             </a>
             <input class="btn-check" type="checkbox" id="checkbox-route-toggle">
             <label for="checkbox-route-toggle" style="position: relative; left: 399px; top: 1px;"
-                class="btn btn-outline-warning me-1 bottom-btn">
+                class="btn btn-outline-secondary me-1 bottom-btn">
                 <i class="fa-solid fa-route"></i>
             </label>
         </div>
@@ -224,44 +226,51 @@
                     <div class="col-sm-10">
                         <div class="form-check">
                             <input id="radio-piece-menu-size-ty" class="form-check-input" type="radio"
-                                name="radio-piece-menu-size" value="0.5">
+                                name="radio-piece-menu-size" value="2.5">
                             <label for="radio-piece-menu-size-ty" class="form-check-label">
-                                Tiny (&half; by &half;)
+                                Tiny (2.5 x 2.5ft)
                             </label>
                         </div>
                         <div class="form-check">
                             <input id="radio-piece-menu-size-sm" class="form-check-input" type="radio"
-                                name="radio-piece-menu-size" value="0.9">
+                                name="radio-piece-menu-size" value="4">
                             <label for="radio-piece-menu-size-sm" class="form-check-label">
-                                Small (¾ by ¾)
+                                Small (4 x 4ft)
                             </label>
                         </div>
                         <div class="form-check">
                             <input id="radio-piece-menu-size-md" class="form-check-input" type="radio"
-                                name="radio-piece-menu-size" value="1">
+                                name="radio-piece-menu-size" value="5">
                             <label for="radio-piece-menu-size-md" class="form-check-label">
-                                Medium (1 by 1)
+                                Medium (5 x 5ft)
                             </label>
                         </div>
                         <div class="form-check">
                             <input id="radio-piece-menu-size-lg" class="form-check-input" type="radio"
-                                name="radio-piece-menu-size" value="2">
+                                name="radio-piece-menu-size" value="10">
                             <label for="radio-piece-menu-size-lg" class="form-check-label">
-                                Large (2 by 2)
+                                Large (10 x 10ft)
                             </label>
                         </div>
                         <div class="form-check">
                             <input id="radio-piece-menu-size-hu" class="form-check-input" type="radio"
-                                name="radio-piece-menu-size" value="3">
+                                name="radio-piece-menu-size" value="15">
                             <label for="radio-piece-menu-size-hu" class="form-check-label">
-                                Huge (3 by 3)
+                                Huge (15 x 15ft)
                             </label>
                         </div>
                         <div class="form-check">
                             <input id="radio-piece-menu-size-ga" class="form-check-input" type="radio"
-                                name="radio-piece-menu-size" value="4">
+                                name="radio-piece-menu-size" value="20">
                             <label for="radio-piece-menu-size-ga" class="form-check-label">
-                                Gargantuan (4 by 4)
+                                Gargantuan (20 x 20ft)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input id="radio-piece-menu-size-cl" class="form-check-input" type="radio"
+                                name="radio-piece-menu-size" value="30">
+                            <label for="radio-piece-menu-size-cl" class="form-check-label">
+                                Colossal (30 x 30ft)
                             </label>
                         </div>
                     </div>
@@ -418,18 +427,24 @@
                     <div class="modal-header text-center">
                         <h5 class="w-100">1x1 Grid Size</h5>
                     </div>
-                    <div class="modal-body pb-0">
+                    <div class="modal-body py-0">
                         <input id="input-grid-width" hidden type="text" class="form-control form-control-sm">
                         <input id="input-grid-height" hidden type="text" class="form-control form-control-sm">
-                        <div class="row">
-                            <label class="form-label offset-1 col-3" for="input-feet-per-grid">Grid Side (ft)</label>
-                            <div class="col-3">
-                                <input id="input-feet-per-grid" type="number" class="form-control form-control-sm" value="5"/>
-                            </div>
+                        <!-- tooltip w/ .gif -->
+                        <div class="row text-center mb-3" style="font-size: 0.9em;">
+                            <a tabindex="0" class="" role="button" data-bs-toggle="popover" data-bs-trigger="focus"
+                                data-bs-html="true"
+                                data-bs-content="<b>Click & drag</b> to set a 1 x 1 grid.
+                                                        <br/>
+                                                        <br/>
+                                                        <img src='img/grid-gif.gif' width='250' />
+                                                        <br/>
+                                                        <em>This will adjust the size of your game pieces (e.g. a 'Large' piece will occupy a 2x2 grid, if grid length is set to 5ft).</em> ">
+                                How to use<i class="ms-1 fa-solid fa-circle-question"></i></a>
                         </div>
-                        <div class="row">
+                        <div class="row align-items-center">
                             <!-- grid box -->
-                            <div class="grid-indicator ms-auto mb-2">
+                            <div class="grid-indicator ms-auto">
                             </div>
                             <!-- up & down -->
                             <div id="grid-indicator-end-buffer" style="width: 3.5rem;"
@@ -458,17 +473,15 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- tooltip w/ .gif -->
-                        <div class="row text-center" style="font-size: 0.9em;">
-                            <a tabindex="0" class="" role="button" data-bs-toggle="popover" data-bs-trigger="focus"
-                                data-bs-html="true"
-                                data-bs-content="<b>Click & drag</b> to set a 1 x 1 grid.
-                                <br/>
-                                <br/>
-                                <img src='img/grid-gif.gif' width='250' />
-                                <br/>
-                                <em>This will adjust the size of your game pieces (e.g. a 'Large' piece will occupy a 2x2 grid). In tabletop games, a single grid represents a 5 x 5 ft square.</em> ">
-                                How to use<i class="ms-1 fa-solid fa-circle-question"></i></a>
+                        <div class="w-50 mx-auto text-center mt-3">
+                            <div class="row">
+                                <label class="form-label col-4" for="input-feet-per-grid">Grid (ft)</label>
+                                <div class="col-6">
+                                    <input id="input-feet-per-grid" type="number" class="form-control form-control-sm"
+                                        value="5" />
+                                </div>
+                                <div class="offset-2"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -526,44 +539,51 @@
                             <div class="col-sm-10">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="radio-piece-size"
-                                        id="radio-piece-size-ty" value="0.5">
+                                        id="radio-piece-size-ty" value="2.5">
                                     <label class="form-check-label" for="radio-piece-size-ty">
-                                        Tiny (&half; by &half;)
+                                        Tiny (2.5 x 2.5ft)
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="radio-piece-size"
-                                        id="radio-piece-size-sm" value="0.9">
+                                        id="radio-piece-size-sm" value="4">
                                     <label class="form-check-label" for="radio-piece-size-sm">
-                                        Small (¾ by ¾)
+                                        Small (4 x 4ft)
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="radio-piece-size"
-                                        id="radio-piece-size-md" value="1" checked>
+                                        id="radio-piece-size-md" value="5" checked>
                                     <label class="form-check-label" for="radio-piece-size-md">
-                                        Medium (1 by 1)
+                                        Medium (5 x 5ft)
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="radio-piece-size"
-                                        id="radio-piece-size-lg" value="2">
+                                        id="radio-piece-size-lg" value="10">
                                     <label class="form-check-label" for="radio-piece-size-lg">
-                                        Large (2 by 2)
+                                        Large (10 x 10ft)
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="radio-piece-size"
-                                        id="radio-piece-size-hg" value="3">
+                                        id="radio-piece-size-hg" value="15">
                                     <label class="form-check-label" for="radio-piece-size-hg">
-                                        Huge (3 by 3)
+                                        Huge (15 x 15ft)
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="radio-piece-size"
-                                        id="radio-piece-size-ga" value="4">
+                                        id="radio-piece-size-ga" value="20">
                                     <label class="form-check-label" for="radio-piece-size-ga">
-                                        Gargantuan (4 by 4)
+                                        Gargantuan (20 x 20ft)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="radio-piece-size"
+                                        id="radio-piece-size-cl" value="30">
+                                    <label class="form-check-label" for="radio-piece-size-cl">
+                                        Colossal (30 x 30ft)
                                     </label>
                                 </div>
                             </div>

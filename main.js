@@ -103,7 +103,8 @@ const onGridSubmit = function (e) {
   _gridArea = null;
   onGridChangeEvent({
     x: $('#input-grid-width').val(),
-    y: $('#input-grid-height').val()
+    y: $('#input-grid-height').val(),
+    feetPerGrid: $('#input-feet-per-grid').val()
   });
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
 }
@@ -115,7 +116,7 @@ const onGridReset = function (e) {
 }
 
 const initGridArea = function (x, y) {
-  _gridArea = new Area(newGuid(), _host, AreaType.Square, 1, x, y);
+  _gridArea = new Area(newGuid(), _host, AreaType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
   _gridArea.color = '#eaf0f0';
   _gridArea.opacity = 100;
   _gridArea.updateSize();
@@ -155,6 +156,8 @@ const onGridSizeChange = function (e) {
 }
 
 const onSpellRulerToggle = async function (args) {
+  if (CURRENT_SCENE == null) return // player mode disable during load up
+
   const type = $(this).val();
   const sizeInput = $('#input-spell-size');
   const sizeLabel = $('label[for="input-spell-size"]');
@@ -170,7 +173,7 @@ const onSpellRulerToggle = async function (args) {
     CURRENT_SCENE.drawPieces();
   }
   else {
-    _spellRuler = new Area(newGuid(), _player?.id ?? _host, type, $('#input-spell-size').val() / 5);
+    _spellRuler = new Area(newGuid(), _player?.id ?? _host, type, $('#input-spell-size').val());
     _spellRuler.color = await CURRENT_SCENE.background.getContrastColor();
     sizeInput.show();
     sizeLabel.show();
@@ -196,8 +199,7 @@ const onSpellRulerToggle = async function (args) {
 const onSpellSizeChange = function (args) {
   if (_spellRuler == null) return;
 
-  // a typical tabletop grid is 5 ft
-  _spellRuler.updateSize(Number($(this).val()) / 5);
+  _spellRuler.updateSize(Number($(this).val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
 }
 
 const onQuickAdd = function (args) {
@@ -232,6 +234,8 @@ const onChangeBackgroundModal = function () {
 }
 
 const onAddPieceModal = function (initPos = null) {
+  if (CURRENT_SCENE == null) return // player mode disable during load up
+
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).show();
 
@@ -307,7 +311,7 @@ const onUpdatePieceSubmit = async function () {
     const color = document.getElementById("input-area-menu-color").value;
     const opacity = document.getElementById("input-area-menu-opacity").value;
     _pieceInMenu.type = type;
-    _pieceInMenu.size = Number(size) / 5;
+    _pieceInMenu.size = Number(size) / CURRENT_SCENE.gridRatio.feetPerGrid;
     _pieceInMenu.color = color;
     _pieceInMenu.contrastColor = invertColor(_pieceInMenu.color);
     _pieceInMenu.opacity = opacity;
@@ -326,7 +330,7 @@ const onUpdatePieceSubmit = async function () {
     _pieceInMenu.updateSize(size);
     _pieceInMenu.updateConditions(statusConds);
     if (auraEnabled) {
-      _pieceInMenu.aura = new Area(_pieceInMenu.id, _pieceInMenu.owner, $('#checkbox-piece-menu-aura').val(), $('#input-aura-menu-size').val() / 2.5, _pieceInMenu.x, _pieceInMenu.y);
+      _pieceInMenu.aura = new Area(_pieceInMenu.id, _pieceInMenu.owner, $('#checkbox-piece-menu-aura').val(), $('#input-aura-menu-size').val(), _pieceInMenu.x, _pieceInMenu.y);
       _pieceInMenu.aura.color = $('#input-aura-menu-color').val();
       _pieceInMenu.aura.contrastColor = invertColor(_pieceInMenu.aura.color);
       _pieceInMenu.aura.opacity = $('#input-aura-menu-opacity').val();
@@ -394,9 +398,6 @@ const onConnectedToHostEvent = function (host) {
   }
 
   console.log("successfully connected to host: " + _host);
-
-  // alert(`Successfully connected to ${host}'s party!`);
-  // initMainMenuTour(false);
 }
 
 const onPermissionsUpdateEvent = function (permissions) {
@@ -455,6 +456,8 @@ const emitLoadSceneSuccessEvent = function () {
     console.warn('host cannot emit load scene success event');
     return;
   }
+
+  togglePlayerControls(true);
 
   var conn = _peer.connect(_host);
   conn.on('open', function () {
@@ -702,6 +705,7 @@ const onGridChangeEvent = async function (gridSize) {
   CURRENT_SCENE.gridRatio = gridSize;
 
   if (_spellRuler instanceof Area) {
+    _spellRuler.updateSize(Number($('#input-spell-size').val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
     _spellRuler.draw();
   }
 
@@ -778,10 +782,21 @@ const initPeerEvents = function () {
       console.warn('could not connect to peer ' + a.message);
       const idMatch = a.message.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
       if (!!idMatch.length) {
-        const player = PARTY.getPlayer(idMatch[0]);
-        if (player != null) {
-          player.status = PlayerStatus.Disconnected;
-          player.updateOrCreateDom(CURRENT_SCENE.pieces);
+        if (isHost()) {
+          const player = PARTY.getPlayer(idMatch[0]);
+          if (player != null) {
+            player.status = PlayerStatus.Disconnected;
+            player.updateOrCreateDom(CURRENT_SCENE.pieces);
+          }
+        }
+        else if (_host == idMatch[0]) {
+          loading(false);
+          togglePlayerControls(true);
+          alert('Unable to connect to host. If you know your host is online, try refreshing the page or clearing session.');
+        }
+        else {
+          // if some player tries to connect directly to another player
+          debugger;
         }
       }
     }
@@ -1148,6 +1163,7 @@ const initPeer = function () {
       _host = hostQueryParam;
       PARTY = new Party(_host);
       initInviteLink();
+      togglePlayerControls(false);
 
       const existingPlayer = await localforage.getItem(StorageKeys.Player);
       if (existingHostId != null && existingHostId == _host && existingPlayer != null) {
@@ -1200,6 +1216,12 @@ const initPeer = function () {
       });
     }
   });
+}
+
+const togglePlayerControls = function (enabled) {
+  $('#btn-add-piece').prop('disabled', !enabled);
+  $('#btn-clear-session').prop('disabled', !enabled);
+  $('#spell-ruler').find('input').prop('disabled', !enabled);
 }
 
 const onRouteToggle = function () {
@@ -1581,6 +1603,8 @@ const initDom = function () {
 
   can.addEventListener('contextmenu', (e) => {
     e.preventDefault();
+    if (CURRENT_SCENE == null) return; // player mode disable during load up
+
     _pieceInMenu = shapeIntersects(e.clientX, e.clientY);
     if (_pieceInMenu != null) {
       $('.area-only').hide();
@@ -1594,7 +1618,7 @@ const initDom = function () {
         $('.area-only').show();
         $('input[name="radio-area-menu-type"]').prop('checked', false);
         $(`input[name='radio-area-menu-type'][value='${_pieceInMenu.type}']`).prop("checked", true);
-        $('#input-area-menu-size').val(_pieceInMenu.size * 5);
+        $('#input-area-menu-size').val(_pieceInMenu.size);
         $('#input-area-menu-color').val(_pieceInMenu.color);
         $('#input-area-menu-opacity').val(_pieceInMenu.opacity);
         $('#value-area-menu-opacity').html(parseInt(100 * _pieceInMenu.opacity / 255) + '%');
@@ -1621,7 +1645,7 @@ const initDom = function () {
         if (_pieceInMenu.aura != null) {
           $('.aura-only').show();
           document.getElementById("checkbox-piece-menu-aura").checked = true;
-          document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size * 2.5;
+          document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size;
           document.getElementById("input-aura-menu-color").value = _pieceInMenu.aura.color;
           document.getElementById('input-aura-menu-opacity').value = _pieceInMenu.aura.opacity;
           $('#value-aura-menu-opacity').html(parseInt(100 * (_pieceInMenu.aura?.opacity ?? 0) / 255) + '%');

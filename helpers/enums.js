@@ -31,12 +31,13 @@ const StorageKeys = {
 }
 
 const PieceSizes = {
-  Tiny: 0.5,
-  Small: 0.9,
-  Medium: 1,
-  Large: 2,
-  Huge: 3,
-  Gargantuan: 4,
+  Tiny: 2.5,
+  Small: 4,
+  Medium: 5,
+  Large: 10,
+  Huge: 15,
+  Gargantuan: 20,
+  Colossal: 30
 }
 
 const GridSettingMode = {

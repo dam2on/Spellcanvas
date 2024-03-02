@@ -5,7 +5,8 @@ class Scene {
         this.owner = ownerId;
         this.gridRatio = {
             x: 0.025,
-            y: 0.04
+            y: 0.04,
+            feetPerGrid: 5
         };
         this.pieces = [];
         this.unloadedPieces = [];
@@ -182,6 +183,7 @@ class Scene {
         const valX = parseInt(this.gridRatio.x * this.canvas.width);
         const valY = parseInt(this.gridRatio.y * this.canvas.height);
         
+        $('#input-feet-per-grid').val(this.gridRatio.feetPerGrid);
         $('#input-grid-width').val(this.gridRatio.x);
         $('#input-grid-height').val(this.gridRatio.y);
         $('#grid-width-display').html(parseInt(valX) + 'px');

@@ -120,27 +120,27 @@ class Area extends Piece {
         const widthHeightDiff = (baseWidth - CURRENT_SCENE.gridRatio.y * this.canvas.height) / 2;
         switch (this.type) {
             case AreaType.Line:
-                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
                 this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height;
                 if (widthHeightDiff != 0) {
-                    this.width = this.size * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
+                    this.width = (this.size / CURRENT_SCENE.gridRatio.feetPerGrid) * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
                     this.height = (baseWidth - widthHeightDiff) - widthHeightDiff * Math.cos(2 * this.rotation);
                 }
                 break;
             case AreaType.Circle:
-                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / 2;
-                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * this.size / 2;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / (2 * CURRENT_SCENE.gridRatio.feetPerGrid);
+                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * this.size / (2 * CURRENT_SCENE.gridRatio.feetPerGrid);
                 break;
             case AreaType.Cone:
-                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
                 if (widthHeightDiff != 0) {
-                    this.width = this.size * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
+                    this.width = (this.size / CURRENT_SCENE.gridRatio.feetPerGrid) * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
                 }
                 this.height = this.width; // only for intersection logic
                 break;
             case AreaType.Square:
-                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size;
-                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * this.size;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
+                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
                 break;
             default:
                 console.warn("area type not recognized: " + type);

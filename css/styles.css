@@ -230,7 +230,7 @@ input[type=number] {
   opacity: 0;
   background-image: linear-gradient(to right,#000000cc, transparent);
   transition: opacity 0.45s linear;
-  height: 100vh;
+  height: 100%;
 }
 
 .shake {
