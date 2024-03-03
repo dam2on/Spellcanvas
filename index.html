@@ -23,6 +23,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"
         integrity="sha512-+BMamP0e7wn39JGL8nKAZ3yAQT2dL5oaXWr4ZYlTGkKOaoXM/Yj7c4oy50Ngz5yoUutAG17flueD4F6QpTlPng=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"
+        integrity="sha512-MgYeYFj8R3S6rvZHiJ1xA9cM/VDGcT4eRRFQwGA7qDP7NHbnWKNmAm28z0LVjOuUqjD0T9JxpDMdVqsZOSHaSA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"
         integrity="sha512-9KkIqdfN7ipEW6B6k+Aq20PV31bjODg4AA52W+tYtAE0jE0kMx49bjJ3FgvS56wzmyfMUHbQ4Km2b7l9+Y/+Eg=="
@@ -41,6 +44,7 @@
     <script type="text/javascript" src="helpers/enums.js"></script>
     <script type="text/javascript" src="helpers/peerjs-options.js"></script>
     <script type="text/javascript" src="main.js"></script>
+
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
         integrity="sha512-hvNR0F/e2J7zPPfLC9auFe3/SE0yG4aJCOd/qxew74NN7eyiSKjr7xJJMu1Jy2wf7FXITpWS1E/RY8yzuXN7VA=="
@@ -71,7 +75,7 @@
     </div>
     <div id="video" class="video-background">
     </div>
-    <img id="background-image" style="position: absolute;" src="img/bg.png"></img>
+    <img id="background-image" style="position: absolute;" src="img/bg.jpg"></img>
 
     <canvas id="canvas" style="
         margin: 0;
@@ -86,8 +90,11 @@
         background-size: cover;">
     </canvas>
     <ul id="canvas-submenu" class="dropdown-menu" style="position: absolute" aria-labelledby="dropdownMenuButton1">
-        <li><a id="canvas-submenu-add-piece" class="dropdown-item" href="javascript:void(0)">Add Game Piece Here</a></li>
-        <li><a id="canvas-submenu-change-bg" class="host-only dropdown-item" href="javascript:void(0)">Change Background</a></li>
+        <li><a id="canvas-submenu-add-piece" class="dropdown-item" href="javascript:void(0)">Add Game Piece Here</a>
+        </li>
+        <li><a id="canvas-submenu-change-bg" class="host-only dropdown-item" href="javascript:void(0)">Change
+                Background</a></li>
+        <li><a id="canvas-submenu-adjust-grid" class="host-only dropdown-item" href="javascript:void(0)">Adjust Grid</a></li>
     </ul>
 
     <!-- Side Menus -->
@@ -594,18 +601,6 @@
                                 </div>
                             </div>
                         </fieldset>
-                        <div id="modal-piece-quick-add" class="form-group row d-none">
-                            <span>Quick Add: </span>
-                            <div class="col quick-add">
-                                <img src="img/orc.png" style="width: 100%"></img>
-                            </div>
-                            <div class="col quick-add">
-                                <img src="img/moonbeam.png" style="width: 100%"></img>
-                            </div>
-                            <div class="col quick-add">
-                                <img src="img/firewall.png" style="width: 100%"></img>
-                            </div>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -616,7 +611,7 @@
                     <span>
                         Recently Added Pieces
                     </span>
-                    <hr/>
+                    <hr />
                     <div id="session-pieces-carousel">
 
                     </div>

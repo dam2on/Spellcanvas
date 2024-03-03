@@ -257,12 +257,15 @@ const onAddPieceModal = async function () {
   }
 
   // populate recently added pieces carousel
+  $('#session-pieces').parent().hide();
+
   const sessionPieces = await localforage.getItem(StorageKeys.SessionPieces);
   if (sessionPieces != null) {
+    $('#session-pieces').parent().show();
     $('#session-pieces-carousel').slick('unslick');
     $('#session-pieces-carousel').empty();
     for (var piece of sessionPieces) {
-      $('#session-pieces-carousel').append(`<div onclick="onQuickAdd('${piece.id}')"><img style="width: 5em" alt="${piece.name}" data-lazy=${piece.image}></img></div>`);
+      $('#session-pieces-carousel').append(`<div onclick="onQuickAdd('${piece.id}')"><img class="mx-auto" style="width: 5em" alt="${piece.name}" data-lazy=${piece.image}></img></div>`);
     }
     $('#session-pieces-carousel').slick({
       slidesToShow: 3,
@@ -271,7 +274,6 @@ const onAddPieceModal = async function () {
       lazyLoad: 'ondemand'
     });
   }
-
 }
 
 const resetModalPieceForm = function () {
@@ -959,6 +961,7 @@ const onAddScene = async function () {
 }
 
 const onGridMode = function () {
+  $("#canvas-submenu").css({ 'display': 'none' });
   $('.grid-mode-overlay').show();
 
   if (!($('#modal-grid.modal.show').length)) {
@@ -1399,27 +1402,23 @@ const initDom = function () {
   });
 
   // init carousel
-  $('#session-pieces-carousel').slick({
-    // infinite: true,
-    // slidesToShow: 3,
-    // slidesToScroll: 3
-  });
+  $('#session-pieces-carousel').slick();
 
   document.getElementById('input-piece-img').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
-    const data = await resizeImage(e.target.files[0], new Image(), 1000);
+    const data = await resizeImage(e.target.files[0], 1000);
     $('#img-piece-preview').attr('src', data);
   });
 
   document.getElementById('input-bg-image').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
-    const data = await resizeImage(e.target.files[0], new Image(), CURRENT_SCENE.canvas.width);
+    const data = await resizeImage(e.target.files[0], CURRENT_SCENE.canvas.width);
     $('#img-bg-preview').attr('src', data);
   });
 
   document.getElementById('piece-menu-image-input').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
-    const data = await resizeImage(e.target.files[0], new Image(), 1000);
+    const data = await resizeImage(e.target.files[0], 1000);
     $('#piece-menu-image').attr('src', data);
   });
 
@@ -1449,6 +1448,7 @@ const initDom = function () {
   document.getElementById('canvas-submenu-add-piece').addEventListener('click', onAddPieceModal);
   document.getElementById('btn-add-piece').addEventListener('click', onAddPieceModal);
   document.getElementById('btn-add-scene').addEventListener('click', onAddScene);
+  document.getElementById('canvas-submenu-adjust-grid').addEventListener('click', onGridMode);
   document.getElementById('btn-grid-mode').addEventListener('click', onGridMode);
   document.getElementById('permissions-own-pieces').addEventListener('change', onPermissionsChange);
   document.getElementById('form-modal-piece').addEventListener('submit', onAddPieceSubmit);

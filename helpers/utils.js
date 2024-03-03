@@ -20,9 +20,24 @@ const downloadObjectAsJson = function (exportObj, exportName) {
     downloadAnchorNode.remove();
 }
 
-const resizeImage = async function (file, imgEl, targetWidth) {
+const resizeImage2 = async function(file, targetWidth) {
+    // not as efficient?
+    return new Promise(function(resolve, reject) {
+        new Compressor(file, {
+            quality: 0.6,
+            width: targetWidth,
+            success(result) {
+                resolve(URL.createObjectURL(result));
+            },
+            error: reject
+        });
+    })
+}
+
+const resizeImage = async function (file, targetWidth) {
     return new Promise(function (resolve, reject) {
-        let reader = new FileReader();
+        const imgEl = new Image();
+        const reader = new FileReader();
         reader.onload = (event) => {
             imgEl.onload = function () {
                 if (imgEl.width < targetWidth) {

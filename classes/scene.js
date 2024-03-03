@@ -4,8 +4,8 @@ class Scene {
         this.name = "My Scene";
         this.owner = ownerId;
         this.gridRatio = {
-            x: 0.022,
-            y: 0.041,
+            x: 1/23,
+            y: 1/13,
             feetPerGrid: 5
         };
         this.pieces = [];
