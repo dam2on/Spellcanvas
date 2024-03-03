@@ -10,7 +10,7 @@ class Scene {
         };
         this.pieces = [];
         this.unloadedPieces = [];
-        this.background = new Background(BackgroundType.Image, 'img/bg.png');
+        this.background = new Background(BackgroundType.Image, 'img/bg.jpg');
 
         Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
         Object.defineProperty(this, 'ctx', { value: this.canvas.getContext('2d'), enumerable: false, writable: true });

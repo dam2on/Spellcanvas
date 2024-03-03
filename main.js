@@ -322,7 +322,7 @@ const onAddPieceSubmit = async function (e) {
   }
 
   await piece.updateImage();
-  // piece.draw();
+  piece.draw();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
 }
 
@@ -369,6 +369,7 @@ const onUpdatePieceSubmit = async function () {
       _pieceInMenu.imageUpdated = true;
       const croppedImg = _cropper.getCroppedCanvas().toDataURL(file?.type);
       await _pieceInMenu.updateImage(croppedImg);
+      CURRENT_SCENE.drawPieces();
     }
   }
 
@@ -670,7 +671,7 @@ const onAddPieceEvent = async function (peerId, piece) {
   }
 
   await newPiece.updateImage();
-  // CURRENT_SCENE.drawPieces();
+  newPiece.draw();
 }
 
 const onMovePieceEvent = async function (peerId, movedPiece) {
@@ -742,6 +743,7 @@ const onUpdatePieceEvent = async function (peerId, piece) {
   }
 
   await updatedPiece.updateImage();
+  CURRENT_SCENE.drawPieces();
 }
 
 const onGridChangeEvent = async function (gridSize) {
