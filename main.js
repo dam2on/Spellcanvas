@@ -849,7 +849,7 @@ const initPeerEvents = function () {
 
   _peer.on('error', function (a) {
     if (a.type == 'peer-unavailable') {
-      console.warn('could not connect to peer ' + a.message);
+      console.warn(a.message);
       const idMatch = a.message.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
       if (!!idMatch.length) {
         if (isHost()) {
@@ -862,7 +862,7 @@ const initPeerEvents = function () {
         else if (_host == idMatch[0]) {
           loading(false);
           togglePlayerControls(true);
-          alert('Unable to connect to host. If you know your host is online, try refreshing the page or clearing session.');
+          alert('Unable to connect to host. If you know your host is online, try refreshing the page.');
         }
         else {
           // if some player tries to connect directly to another player
