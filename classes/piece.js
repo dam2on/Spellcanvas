@@ -3,6 +3,7 @@ class Piece {
         this.id = guid;
         this.owner = ownerId;
         this.name = name;
+        this.image = img;
         this.size = Number(size);
         this.width = this.size;
         this.height = this.size;
@@ -17,8 +18,7 @@ class Piece {
         this.lock = false;
         Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
         Object.defineProperty(this, 'ctx', { value: this.canvas.getContext('2d'), enumerable: false, writable: true });
-        Object.defineProperty(this, 'imageEl', { value: null, enumerable: false, writable: true });
-        this.updateImage(img);
+        Object.defineProperty(this, 'imageEl', { value: new Image(), enumerable: false, writable: true });
     }
 
     static fromObj(obj) {
@@ -56,21 +56,19 @@ class Piece {
     }
 
     updateImage(img) {
-        if (img == null) return;
+        if (typeof(img) == 'string'){
+            this.image = img;
+        }
+        else if (img != null) {
+            throw new Exception('invalid img type prop: ' + typeof(img));
+        }
 
-        return new Promise(async (resolve, reject) => {
-            this.imageEl = new Image();
-            if (img instanceof File) {
-                this.image = await resizeImage(img, this.imageEl, 1000);
-            }
-            else if (typeof (img) == 'string') {
-                this.image = img;
-                this.imageEl.src = img;
-                resolve(img);
-            }
-            else {
-                reject();
-            }
+        const currentPiece = this;
+        return new Promise(function(resolve, reject) {
+            currentPiece.imageEl.addEventListener('load', function() {
+                resolve();
+            });
+            currentPiece.imageEl.src = currentPiece.image;
         });
     }
 
@@ -163,7 +161,7 @@ class Piece {
     }
 
 
-    draw(options = {}) {
+    async draw(options = {}) {
         this.updateSize();
         const textMargin = 3;
         const deadImage = document.getElementById("image-dead");

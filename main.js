@@ -206,28 +206,6 @@ const onSpellSizeChange = function (args) {
   _spellRuler.updateSize(Number($(this).val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
 }
 
-const onQuickAdd2 = function (args) {
-  const piece = new Piece(newGuid(), _peer.id, "orc", $(this).find('img')[0].src, PieceSizes.Medium);
-  CURRENT_SCENE.addPiece(piece);
-
-  piece.imageEl.addEventListener('load', async () => {
-    piece.draw();
-    await CURRENT_SCENE.savePieces();
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
-    initGamePieceTour(piece);
-  });
-
-
-  if (isHost()) {
-    for (var player of PARTY.players) {
-      emitAddPieceEvent(player.id, piece);
-    }
-  }
-  else {
-    emitAddPieceEvent(_host, piece);
-  }
-}
-
 const onQuickAdd = async function (pieceId) {
   const pieceToAdd = (await localforage.getItem(StorageKeys.SessionPieces)).find(p => p.id == pieceId);
   pieceToAdd.id = newGuid();
@@ -240,14 +218,6 @@ const onQuickAdd = async function (pieceId) {
   }
   piece.x = initPos.x;
   piece.y = initPos.y;
-  
-  await piece.updateImage(piece.image);
-
-  piece.imageEl.addEventListener('load', async () => {
-    piece.draw();
-    await CURRENT_SCENE.savePieces();
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
-  });
 
   if (isHost()) {
     for (var player of PARTY.players) {
@@ -257,6 +227,11 @@ const onQuickAdd = async function (pieceId) {
   else {
     emitAddPieceEvent(_host, piece);
   }
+
+  await CURRENT_SCENE.savePieces();
+  await piece.updateImage();
+  piece.draw();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
 }
 
 const onChangeBackgroundModal = function () {
@@ -334,22 +309,21 @@ const onAddPieceSubmit = async function (e) {
 
   const piece = new Piece(newGuid(), _peer.id, name, croppedImg, size, initPos.x, initPos.y);
   CURRENT_SCENE.addPiece(piece);
+  await CURRENT_SCENE.savePieces();
+  initGamePieceTour(piece);
 
-  piece.imageEl.addEventListener('load', async () => {
-    piece.draw();
-    await CURRENT_SCENE.savePieces();
-    initGamePieceTour(piece);
+  if (isHost()) {
+    for (var player of PARTY.players) {
+      emitAddPieceEvent(player.id, piece);
+    }
+  }
+  else {
+    emitAddPieceEvent(_host, piece);
+  }
 
-    if (isHost()) {
-      for (var player of PARTY.players) {
-        emitAddPieceEvent(player.id, piece);
-      }
-    }
-    else {
-      emitAddPieceEvent(_host, piece);
-    }
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
-  });
+  await piece.updateImage();
+  // piece.draw();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
 }
 
 const onUpdatePieceSubmit = async function () {
@@ -392,9 +366,9 @@ const onUpdatePieceSubmit = async function () {
       _pieceInMenu.aura = undefined;
     }
     if (file != null || _pieceInMenu.imageCropped) {
+      _pieceInMenu.imageUpdated = true;
       const croppedImg = _cropper.getCroppedCanvas().toDataURL(file?.type);
       await _pieceInMenu.updateImage(croppedImg);
-      _pieceInMenu.imageUpdated = true;
     }
   }
 
@@ -681,22 +655,22 @@ const onAddPieceEvent = async function (peerId, piece) {
   }
 
   const newPiece = CURRENT_SCENE.addPiece(piece);
-  newPiece.imageEl.addEventListener('load', async function() {
-    CURRENT_SCENE.drawPieces();
-    if (isHost()) {
-      PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
-  
-      for (var player of PARTY.players) {
-        if (player.id == peerId) continue;
-        emitAddPieceEvent(player.id, newPiece);
-      }
-      await CURRENT_SCENE.savePieces();
+  if (isHost()) {
+    PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
+
+    for (var player of PARTY.players) {
+      if (player.id == peerId) continue;
+      emitAddPieceEvent(player.id, newPiece);
     }
-    else if (!CURRENT_SCENE.unloadedPieces.length) {
-      loading(false);
-      emitLoadSceneSuccessEvent();
-    }
-  });
+    await CURRENT_SCENE.savePieces();
+  }
+  else if (!CURRENT_SCENE.unloadedPieces.length) {
+    loading(false);
+    emitLoadSceneSuccessEvent();
+  }
+
+  await newPiece.updateImage();
+  // CURRENT_SCENE.drawPieces();
 }
 
 const onMovePieceEvent = async function (peerId, movedPiece) {
@@ -755,20 +729,19 @@ const onRequestPiecesEvent = function (peerId, ids) {
 const onUpdatePieceEvent = async function (peerId, piece) {
   if (CURRENT_SCENE?.getPieceById(piece.id) == null) return;
   const updatedPiece = CURRENT_SCENE.updatePiece(piece);
-  updatedPiece.imageEl.addEventListener('load', async function() {
-    CURRENT_SCENE.drawPieces();
+  
+  if (isHost()) {
+    $("#list-connected-party-members").append(PARTY.getPlayer(peerId).updateOrCreateDom(CURRENT_SCENE.pieces));
 
-    if (isHost()) {
-      $("#list-connected-party-members").append(PARTY.getPlayer(peerId).updateOrCreateDom(CURRENT_SCENE.pieces));
-  
-      for (var player of PARTY.players) {
-        if (player.id == peerId) continue;
-        emitUpdatePieceEvent(player.id, updatedPiece);
-      }
-  
-      await CURRENT_SCENE.savePieces();
+    for (var player of PARTY.players) {
+      if (player.id == peerId) continue;
+      emitUpdatePieceEvent(player.id, updatedPiece);
     }
-  });
+
+    await CURRENT_SCENE.savePieces();
+  }
+
+  await updatedPiece.updateImage();
 }
 
 const onGridChangeEvent = async function (gridSize) {

@@ -25,11 +25,21 @@ class Scene {
         scene.name = partial.name;
         scene.thumbnail = partial.thumbnail;
         const pieces = await localforage.getItem(`${StorageKeys.Pieces}-${scene.id}`)
+        const pieceImgPromises = [];
         if (pieces != null) {
             for (var piece of pieces) {
-                scene.pieces.push(piece.objectType == "Area" ? Area.fromObj(piece) : Piece.fromObj(piece));
+                if (piece.objectType == 'Area') {
+                    scene.pieces.push(Area.fromObj(piece))
+                }
+                else {
+                    const constructedPiece = Piece.fromObj(piece);
+                    pieceImgPromises.push(constructedPiece.updateImage());
+                    scene.pieces.push(constructedPiece);
+                }
             }
         }
+
+        await Promise.all(pieceImgPromises);
 
         const backgroundVal = await localforage.getItem(`${StorageKeys.Background}-${scene.id}`);
         if (backgroundVal != null) {
@@ -49,15 +59,20 @@ class Scene {
         scene.gridRatio = obj.gridRatio;
         scene.thumbnail = obj.thumbnail;
 
-        const piecePromises = [];
+        const pieceImgPromises = [];
         for (var piece of obj.pieces) {
             if (typeof(piece) == 'string') {
                 // guids detected, let's bail and wait for pieces
                 scene.unloadedPieces = obj.pieces;
                 break;
             }
+            else if (piece.objectType == 'Area') {
+                scene.pieces.push(Area.fromObj(piece));
+            }
             else {
-                piecePromises.push(piece.objectType == "Area" ? Area.fromObj(piece) : Piece.fromObj(piece));
+                const constructedPiece = Piece.fromObj(piece);
+                pieceImgPromises.push(constructedPiece.updateImage());
+                scene.pieces.push(constructedPiece);
             }
         }
         await Promise.all(piecePromises).then((pieces) => {
