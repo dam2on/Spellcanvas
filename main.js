@@ -1528,10 +1528,17 @@ const initDom = function () {
   });
 
   // canvas
+  let touchRightClickTimeout;
   $(can).on('mousedown touchstart', async function (args) {
     if (args.type == 'touchstart') {
       args.clientX = args.touches[0].clientX;
       args.clientY = args.touches[0].clientY;
+      touchRightClickTimeout = setTimeout(function () {
+        e = $.Event('contextmenu');
+        e.clientX = args.clientX;
+        e.clientY = args.clientY;
+        $(can).trigger(e);
+      }, 1200);
     }
     else if (args.button != 0) {
       // button: 0 is left click
@@ -1577,6 +1584,7 @@ const initDom = function () {
   });
   $(can).on('mousemove touchmove', function (args) {
     if (args.type == 'touchmove') {
+      clearTimeout(touchRightClickTimeout);
       args.clientX = args.touches[0].clientX;
       args.clientY = args.touches[0].clientY;
     }
@@ -1630,7 +1638,10 @@ const initDom = function () {
       CURRENT_SCENE.drawPieces();
     }
   });
-  $(can).on('mouseup touchend', async function () {
+  $(can).on('mouseup touchend', async function (args) {
+    if (args.type == 'touchend') {
+      clearTimeout(touchRightClickTimeout);
+    }
     if (_gridSettingMode && _gridArea != null) {
       _gridSettingMode = GridSettingMode.AwaitingInput;
       const width = Math.abs(_gridArea.width);
