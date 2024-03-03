@@ -732,7 +732,7 @@ const onRequestPiecesEvent = function (peerId, ids) {
 const onUpdatePieceEvent = async function (peerId, piece) {
   if (CURRENT_SCENE?.getPieceById(piece.id) == null) return;
   const updatedPiece = CURRENT_SCENE.updatePiece(piece);
-  
+
   if (isHost()) {
     $("#list-connected-party-members").append(PARTY.getPlayer(peerId).updateOrCreateDom(CURRENT_SCENE.pieces));
 
@@ -1528,56 +1528,66 @@ const initDom = function () {
   });
 
   // canvas
-  can.addEventListener('mousedown', async function (args) {
-    if (args.button == 0) {
-      // left click
-      if (_gridSettingMode) {
-        let pos = {
-          x: args.x / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
-          y: args.y / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
-        }
-        initGridArea(pos.x, pos.y);
-        _gridSettingMode = GridSettingMode.Drawing;
-        return;
+  $(can).on('mousedown touchstart', async function (args) {
+    if (args.type == 'touchstart') {
+      args.clientX = args.touches[0].clientX;
+      args.clientY = args.touches[0].clientY;
+    }
+    else if (args.button != 0) {
+      // button: 0 is left click
+      return;
+    }
+
+    if (_gridSettingMode) {
+      let pos = {
+        x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
+        y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
       }
-      if (_spellRuler instanceof Area) {
-        CURRENT_SCENE.addPiece(_spellRuler);
-        const newPiece = { ..._spellRuler };
-        $('#spell-ruler').find('input.btn-check:checked').click();
-        CURRENT_SCENE.drawPieces();
+      initGridArea(pos.x, pos.y);
+      _gridSettingMode = GridSettingMode.Drawing;
+      return;
+    }
+    if (_spellRuler instanceof Area) {
+      CURRENT_SCENE.addPiece(_spellRuler);
+      const newPiece = { ..._spellRuler };
+      $('#spell-ruler').find('input.btn-check:checked').click();
+      CURRENT_SCENE.drawPieces();
 
-        if (isHost()) {
-          for (var player of PARTY.players) {
-            emitAddPieceEvent(player.id, newPiece);
-          }
+      if (isHost()) {
+        for (var player of PARTY.players) {
+          emitAddPieceEvent(player.id, newPiece);
+        }
 
-          await CURRENT_SCENE.savePieces();
-        }
-        else {
-          emitAddPieceEvent(_host, newPiece);
-        }
+        await CURRENT_SCENE.savePieces();
       }
       else {
-        _draggedPiece = shapeIntersects(args.x, args.y, true);
-        if (_draggedPiece != null) {
-          _draggedPiece.origin = {
-            x: _draggedPiece.x,
-            y: _draggedPiece.y
-          };
-          CURRENT_SCENE.bringPieceToFront(_draggedPiece);
-        }
+        emitAddPieceEvent(_host, newPiece);
+      }
+    }
+    else {
+      _draggedPiece = shapeIntersects(args.clientX, args.clientY, true);
+      if (_draggedPiece != null) {
+        _draggedPiece.origin = {
+          x: _draggedPiece.x,
+          y: _draggedPiece.y
+        };
+        CURRENT_SCENE.bringPieceToFront(_draggedPiece);
       }
     }
   });
-  can.addEventListener('mousemove', function (args) {
+  $(can).on('mousemove touchmove', function (args) {
+    if (args.type == 'touchmove') {
+      args.clientX = args.touches[0].clientX;
+      args.clientY = args.touches[0].clientY;
+    }
     if (_gridSettingMode == GridSettingMode.Drawing && _gridArea != null) {
       CURRENT_SCENE.drawPieces();
       const origin = {
         x: _gridArea.getX() - _gridArea.width / 2,
         y: _gridArea.getY() - _gridArea.height / 2
       }
-      const dW = (args.x - origin.x);
-      const dH = (args.y - origin.y);
+      const dW = (args.clientX - origin.x);
+      const dH = (args.clientY - origin.y);
       _gridArea.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
       _gridArea.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
 
@@ -1587,26 +1597,26 @@ const initDom = function () {
     if (_draggedPiece != null) {
       $('.menu-toggle').hide(); // disable invisible menu toggle
       if (_draggedPiece instanceof Area) {
-        _draggedPiece.x = args.x / document.getElementById("canvas").width;
-        _draggedPiece.y = args.y / document.getElementById("canvas").height;
+        _draggedPiece.x = args.clientX / document.getElementById("canvas").width;
+        _draggedPiece.y = args.clientY / document.getElementById("canvas").height;
       }
       else {
-        _draggedPiece.x = (args.x - parseInt(_draggedPiece.width / 2)) / document.getElementById("canvas").width;
-        _draggedPiece.y = (args.y - parseInt(_draggedPiece.height / 2)) / document.getElementById("canvas").height;
+        _draggedPiece.x = (args.clientX - parseInt(_draggedPiece.width / 2)) / document.getElementById("canvas").width;
+        _draggedPiece.y = (args.clientY - parseInt(_draggedPiece.height / 2)) / document.getElementById("canvas").height;
       }
 
       CURRENT_SCENE.drawPieces();
     }
     else if (_spellRuler != null) {
       CURRENT_SCENE.drawPieces();
-      _spellRuler.x = args.x / document.getElementById("canvas").width;
-      _spellRuler.y = args.y / document.getElementById("canvas").height;
+      _spellRuler.x = args.clientX / document.getElementById("canvas").width;
+      _spellRuler.y = args.clientY / document.getElementById("canvas").height;
       if (_spellRuler instanceof Area) {
         _spellRuler.draw();
       }
     }
   });
-  can.addEventListener('wheel', function (args) {
+  $(can).on('wheel', function (args) {
     if (_spellRuler != null) {
       CURRENT_SCENE.drawPieces();
       _spellRuler.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
@@ -1620,7 +1630,7 @@ const initDom = function () {
       CURRENT_SCENE.drawPieces();
     }
   });
-  can.addEventListener('mouseup', async function () {
+  $(can).on('mouseup touchend', async function () {
     if (_gridSettingMode && _gridArea != null) {
       _gridSettingMode = GridSettingMode.AwaitingInput;
       const width = Math.abs(_gridArea.width);
