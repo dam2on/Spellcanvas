@@ -32,7 +32,7 @@ class Player {
         else {
             return $(`
             <div class="dropdown">
-                <li class="list-group-item player-label" id="player-${this.id}" oncontextmenu="onPlayerMenu(event, '${this.id}')">
+                <li class="list-group-item player-label" id="player-${this.id}" ontouchstart="onPlayerMenu(event, '${this.id}')" oncontextmenu="onPlayerMenu(event, '${this.id}')">
                     <span class="col-1"><i id="player-status-${this.id}" class="${this.statusIconClassList()}"></i></span>
                     <span class="col-4">${this.name}</span>
                     <span id="player-pieces-${this.id}" class="col-7">${pieceHtml}</span>

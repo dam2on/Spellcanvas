@@ -170,13 +170,14 @@ class Piece {
         const prevFill = this.ctx.fillStyle;
         const prevWidth = this.ctx.lineWidth;
 
+        // aura
         if (this.aura instanceof Area) {
             this.aura.x = this.x + (this.width / (2 * this.canvas.width));
             this.aura.y = this.y + (this.height / (2 * this.canvas.height));
             this.aura.draw();
         }
 
-        // global shadow size (color is set individually)
+        // draw piece
         this.ctx.shadowOffsetX = 3;
         this.ctx.shadowOffsetY = 3;
         this.ctx.shadowColor = this.hideShadow ? "transparent" : "#000000a0";

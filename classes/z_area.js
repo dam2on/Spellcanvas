@@ -8,6 +8,7 @@ class Area extends Piece {
         this.y = y;
         this.rotation = 0;
         this.color = "#ffeeaa";
+        this.isDuplicate = true; // work around for making areas not show up in recently added pieces
         this.contrastColor = invertColor(this.color);
         this.opacity = 180;
         Object.defineProperty(this, 'path', { value: null, enumerable: false, writable: true });

@@ -257,11 +257,11 @@ const onAddPieceModal = async function () {
   }
 
   // populate recently added pieces carousel
-  $('#session-pieces').parent().hide();
+  $('#session-pieces-carousel').parent().hide();
 
   const sessionPieces = await localforage.getItem(StorageKeys.SessionPieces);
-  if (sessionPieces != null) {
-    $('#session-pieces').parent().show();
+  if (sessionPieces?.length > 0) {
+    $('#session-pieces-carousel').parent().show();
     $('#session-pieces-carousel').slick('unslick');
     $('#session-pieces-carousel').empty();
     for (var piece of sessionPieces) {
@@ -312,7 +312,7 @@ const onAddPieceSubmit = async function (e) {
   const piece = new Piece(newGuid(), _peer.id, name, croppedImg, size, initPos.x, initPos.y);
   CURRENT_SCENE.addPiece(piece);
   await CURRENT_SCENE.savePieces();
-  initGamePieceTour(piece);
+  // initGamePieceTour(piece);
 
   if (isHost()) {
     for (var player of PARTY.players) {
@@ -340,7 +340,7 @@ const onUpdatePieceSubmit = async function () {
     const color = document.getElementById("input-area-menu-color").value;
     const opacity = document.getElementById("input-area-menu-opacity").value;
     _pieceInMenu.type = type;
-    _pieceInMenu.size = Number(size) / CURRENT_SCENE.gridRatio.feetPerGrid;
+    _pieceInMenu.size = Number(size);
     _pieceInMenu.color = color;
     _pieceInMenu.contrastColor = invertColor(_pieceInMenu.color);
     _pieceInMenu.opacity = opacity;
@@ -657,6 +657,7 @@ const onAddPieceEvent = async function (peerId, piece) {
     return;
   }
 
+  const stillLoading = !!CURRENT_SCENE.unloadedPieces.length;
   const newPiece = CURRENT_SCENE.addPiece(piece);
   if (isHost()) {
     PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
@@ -667,12 +668,13 @@ const onAddPieceEvent = async function (peerId, piece) {
     }
     await CURRENT_SCENE.savePieces();
   }
-  else if (!CURRENT_SCENE.unloadedPieces.length) {
+  else if (stillLoading && !CURRENT_SCENE.unloadedPieces.length) {
     loading(false);
     emitLoadSceneSuccessEvent();
   }
 
-  await newPiece.updateImage();
+  if (newPiece.objectType == 'Piece')
+    await newPiece.updateImage();
   newPiece.draw();
 }
 
@@ -744,7 +746,8 @@ const onUpdatePieceEvent = async function (peerId, piece) {
     await CURRENT_SCENE.savePieces();
   }
 
-  await updatedPiece.updateImage();
+  if (updatedPiece.objectType == 'Piece')
+    await updatedPiece.updateImage();
   CURRENT_SCENE.drawPieces();
 }
 
@@ -1013,6 +1016,23 @@ const onSceneMenu = function (e, id) {
   });
 
   bootstrap.Dropdown.getOrCreateInstance($(`label[for="option-${id}"]`)[0]).show();
+}
+
+const onSceneTouch = function (e, id) {
+  e.preventDefault();
+
+  let menuOpened = false;
+  $(this).one('touchend touchcancel', function () {
+    clearTimeout(sceneMenuRightClickTimeout);
+    if (!menuOpened) {
+      onChangeScene(id);
+    }
+  });
+
+  const sceneMenuRightClickTimeout = setTimeout(function () {
+    menuOpened = true;
+    onSceneMenu(e, id);
+  }, 1200);
 }
 
 const onChangeScene = async function (id) {
@@ -1627,14 +1647,14 @@ const initDom = function () {
   $(can).on('wheel', function (args) {
     if (_spellRuler != null) {
       CURRENT_SCENE.drawPieces();
-      _spellRuler.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
+      _spellRuler.rotation += (Math.PI / 32 * (args.originalEvent.deltaY < 0 ? -1 : 1));
       if (_spellRuler instanceof Area) {
         _spellRuler.draw();
       }
 
     }
     else if (_draggedPiece != null) {
-      _draggedPiece.rotation += (Math.PI / 32 * (args.deltaY < 0 ? -1 : 1));
+      _draggedPiece.rotation += (Math.PI / 32 * (args.originalEvent.deltaY < 0 ? -1 : 1));
       CURRENT_SCENE.drawPieces();
     }
   });

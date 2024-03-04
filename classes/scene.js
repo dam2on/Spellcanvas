@@ -75,9 +75,7 @@ class Scene {
                 scene.pieces.push(constructedPiece);
             }
         }
-        await Promise.all(piecePromises).then((pieces) => {
-            scene.pieces = pieces;
-        });
+        await Promise.all(pieceImgPromises);
 
         scene.background = Background.fromObj(obj.background);
         return scene;
@@ -92,7 +90,7 @@ class Scene {
         else {
             return $(`
             <div class="dropdown">
-                <label class="col scene-label dropdown-toggle" onclick="onChangeScene('${scene.id}')" oncontextmenu="onSceneMenu(event, '${scene.id}')" for="option-${scene.id}">
+                <label class="col scene-label dropdown-toggle" onclick="onChangeScene('${scene.id}')" ontouchstart="onSceneTouch(event, '${scene.id}')" oncontextmenu="onSceneMenu(event, '${scene.id}')" for="option-${scene.id}">
                     <input type="radio" class="btn-check" name="radio-scenes" id="option-${scene.id}">
                     <div class="bg-img-cover" style="background-image: url(${scene.thumbnail?.bg ?? scene.background.getPosterImgUrl()})">
                         <img style="aspect-ratio: 1.75; height: 100%; width: 100%; position: relative; top: 0; left: 0;" src="${scene.thumbnail?.fg ?? scene.canvas.toDataURL()}">

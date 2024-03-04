@@ -8,6 +8,7 @@ const markTutorialComplete = async function (tutorialId) {
 }
 
 const isTutorialComplete = async function (tutorialId) {
+    return false;
     const tutorial = await localforage.getItem(StorageKeys.Tutorial);
     return !!(tutorial ?? {})[tutorialId];
 }
@@ -15,24 +16,54 @@ const isTutorialComplete = async function (tutorialId) {
 const initGamePieceTour = async function (piece) {
     let menuState = 'close'
     const tourId = 'gamePieceTour';
+    if (piece == null) {
+        // demo piece
+        piece = new Piece(newGuid(), newGuid(), "Big Bad Evil Guy", "img/orc.png", 20, 0.1, 0.3); 
+        piece.updateConditions('Stunned, Prone, Enraged');
+        piece.duplicate = true;
+        piece.aura = new Area(piece.id, piece.owner, AreaType.Circle, 45, piece.x, piece.y);
+        piece.aura.contrastColor = invertColor(piece.aura.color);
+        piece.aura.opacity = 127;
+        await piece.updateImage();
+        piece.draw();
+        await CURRENT_SCENE.addPiece(piece);
+    }
 
     const newGamePieceTour = new Shepherd.Tour({
         defaultStepOptions: {
             cancelIcon: {
                 enabled: true
             },
-            // classes: 'shepherd-enabled shepherd-target',
             scrollTo: { behavior: 'smooth', block: 'center' }
         }
     });
+
+    const cleanupTour = async function() {
+        CURRENT_SCENE.deletePiece(piece);
+        CURRENT_SCENE.drawPieces();
+        await markTutorialComplete(tourId);
+    }
+
+    newGamePieceTour.on('cancel', cleanupTour);
+    newGamePieceTour.on('complete', cleanupTour);
 
     newGamePieceTour.addStep({
         title: 'Game Piece',
         text: 'Click & drag to move pieces. Right-click to view details!',
         buttons: [
             {
+                async action() {
+                    menuState = 'close';
+                    CURRENT_SCENE.deletePiece(piece);
+                    CURRENT_SCENE.drawPieces();
+                    await markTutorialComplete(tourId);
+                    return this.cancel();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Skip Tutorial'
+            },
+            {
                 action() {
-                    menuState = 'open';
                     piece.click();
                     return this.next();
                 },
@@ -49,6 +80,13 @@ const initGamePieceTour = async function (piece) {
             on: 'left'
         },
         buttons: [
+            {
+                action() {
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
             {
                 action() {
                     return this.next();
@@ -108,7 +146,7 @@ const initGamePieceTour = async function (piece) {
 
     newGamePieceTour.addStep({
         title: 'Aura',
-        text: 'Include an aura around your piece (i.e. Spirit Guardians).',
+        text: 'Include an aura around your piece (i.e. Spirit Guardians) and adjust the color and size.',
         attachTo: {
             element: document.getElementById('checkbox-piece-menu-aura').parentElement.parentElement,
             on: 'left'
@@ -132,7 +170,7 @@ const initGamePieceTour = async function (piece) {
 
     newGamePieceTour.addStep({
         title: 'Other settings',
-        text: 'Mark your piece as dead, prevent it from being re-positioned, or hide the shadow border.',
+        text: 'Mark your piece as dead, hide the shadow border, or prevent it from being re-positioned.',
         attachTo: {
             element: document.getElementById('piece-menu-dead').parentElement.parentElement,
             on: 'left'
@@ -173,30 +211,12 @@ const initGamePieceTour = async function (piece) {
             },
             {
                 action() {
-                    menuState = 'close';
                     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
-                    Promise.resolve(markTutorialComplete(tourId));
-                    return this.next();
+                    return this.complete();
                 },
-                text: 'Done'
+                text: 'OK'
             }
         ]
-    });
-
-    $('#piece-menu').on('show.bs.offcanvas', async function () {
-        if (menuState == 'close') {
-            // cancel tour if menu gets opened
-            newGamePieceTour.cancel();
-            await markTutorialComplete(tourId);
-        }
-    });
-
-    $('#piece-menu').on('hide.bs.offcanvas', async function () {
-        if (menuState == 'open') {
-            // cancel tour if menu gets opened
-            newGamePieceTour.cancel();
-            await markTutorialComplete(tourId);
-        }
     });
 
     if (!await isTutorialComplete(tourId)) {
@@ -218,10 +238,26 @@ const initMainMenuTour = async function (isHost = true) {
         }
     });
 
+    const cleanupTour = async function() {
+        $('.menu-toggle').removeClass('blinking');
+        await markTutorialComplete(tourId);
+    }
+
+    tour.on('cancel', cleanupTour);
+    tour.on('complete', cleanupTour);
+
     tour.addStep({
         title: 'Welcome to Spellcanvas!',
-        text: 'Spellcanvas is a minimalistic virtual tabletop intended to facilitate online play.',
+        text: 'Spellcanvas is a minimalistic, virtual tabletop designed for online play!',
         buttons: [
+            {
+                async action() {
+
+                    return this.cancel();
+                },
+                classes: 'shepherd-button-secondary',
+                text: "Skip Tutorial"
+            },
             {
                 action() {
                     menuState = 'open';
@@ -233,29 +269,37 @@ const initMainMenuTour = async function (isHost = true) {
         ]
     });
 
-    tour.addStep({
-        title: 'Manage Content',
-        text: isHost ? 'Set your background and add interactive game pieces!' : 'Add interactive game pieces!',
-        attachTo: {
-            element: document.getElementById("btn-add-piece").parentElement,
-            on: 'right'
-        },
-        buttons: [
-            {
-                action() {
-                    return this.next();
-                },
-                text: 'Next'
-            }
-        ]
-    });
 
     if (isHost) {
         tour.addStep({
-            title: "Grid Size",
-            text: "Dial in the size of your background's grid to ensure game pieces and spell areas are drawn to scale.",
+            title: 'Set Background',
+            text: 'Upload an image to use as the background.',
             attachTo: {
-                element: document.getElementById('btn-grid-mode').parentElement,
+                element: document.getElementById("btn-change-bg"),
+                on: 'right'
+            },
+            buttons: [
+                {
+                    action() {
+                        return this.back();
+                    },
+                    classes: 'shepherd-button-secondary',
+                    text: 'Back'
+                },
+                {
+                    action() {
+                        return this.next();
+                    },
+                    text: 'Next'
+                }
+            ]
+        });
+    
+        tour.addStep({
+            title: "Grid Settings",
+            text: "Dial in the size of your background's grid to ensure game pieces and spell areas are to scale.",
+            attachTo: {
+                element: document.getElementById('btn-grid-mode'),
                 on: 'right'
             },
             buttons: [
@@ -276,10 +320,34 @@ const initMainMenuTour = async function (isHost = true) {
         });
     }
 
+    tour.addStep({
+        title: 'Add Game Piece',
+        text: 'Upload your own images and turn them into interactive game pieces.',
+        attachTo: {
+            element: document.getElementById("btn-add-piece"),
+            on: 'right'
+        },
+        buttons: [
+            {
+                action() {
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
+                    return this.next();
+                },
+                text: 'Next'
+            }
+        ]
+    });
+
 
     tour.addStep({
         title: 'Spell Ruler',
-        text: 'Measure spell coverage and range. Left click to create a permanent & interactive spell area. Scroll to rotate lines & cones!',
+        text: 'Measure spell coverage and range. Click to make a spell area permanent. Scroll to rotate lines & cones.',
         attachTo: {
             element: document.getElementById('spell-ruler'),
             on: 'right'
@@ -303,8 +371,8 @@ const initMainMenuTour = async function (isHost = true) {
 
     if (isHost) {
         tour.addStep({
-            title: 'Manage Scenes',
-            text: "Create, select, or delete scenes.",
+            title: 'Scenes',
+            text: "Change or create new scenes. Right-click for more options.",
             attachTo: {
                 element: document.getElementById("scene-list"),
                 on: 'right'
@@ -352,7 +420,7 @@ const initMainMenuTour = async function (isHost = true) {
 
         tour.addStep({
             title: 'Manage Sessions',
-            text: 'Import/export session files to transfer progress between computers!',
+            text: 'Import/export session files to transfer progress between devices!',
             attachTo: {
                 element: document.getElementById("btn-import-session"),
                 on: 'right'
@@ -448,30 +516,12 @@ const initMainMenuTour = async function (isHost = true) {
             {
                 action() {
                     Promise.resolve(markTutorialComplete(tourId));
-                    return this.next();
+                    initGamePieceTour();
+                    return this.complete();
                 },
                 text: 'OK'
             }
         ]
-    });
-
-
-    $('#main-menu').on('hide.bs.offcanvas', async function () {
-        // cancel tour if menu is closed and not on the last step two steps
-        if (menuState != 'close') {
-            $('.menu-toggle').removeClass('blinking');
-            tour.cancel();
-            await markTutorialComplete(tourId);
-        }
-    });
-
-    $('#main-menu').on('show.bs.offcanvas', async function () {
-        // cancel tour if menu gets opened on last step
-        if (menuState != 'open') {
-            $('.menu-toggle').removeClass('blinking');
-            tour.cancel();
-            await markTutorialComplete(tourId);
-        }
     });
 
     if (!await isTutorialComplete(tourId)) {
