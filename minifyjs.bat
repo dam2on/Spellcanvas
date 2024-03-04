@@ -7,6 +7,7 @@ terser -c ecma=2016 -m --manglge-props --source-map -o output/main.min.js helper
 uglifycss --debug --output output/css/styles.min.css css/*
 cp favicon.ico output
 cp index.html output
+cp error.html output
 cp img/bg.jpg output/img
 cp img/dead.png output/img
 cp img/grid-help.gif output/img

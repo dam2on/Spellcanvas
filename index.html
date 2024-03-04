@@ -104,7 +104,7 @@
         <!-- Invisible area that opens menu on hover -->
     </div>
     <div class="offcanvas offcanvas-start" tabindex="-1" id="main-menu">
-        <div class="offcanvas-body">
+        <div class="offcanvas-body d-flex flex-column">
             <h4><i class="fa-solid fa-chess my-3 me-2"></i>Game Board</h4>
             <div class="mb-3 host-only">
                 <button id="btn-change-bg" class="btn btn-secondary btn-sm me-2" type="button">
@@ -180,7 +180,7 @@
                     </div>
                 </div>
             </div>
-            <div class="form-group my-4 host-only">
+            <div class="form-group mb-4 host-only">
                 <button id="btn-export-session" type="button" class="btn btn-secondary btn-sm"><i
                         class="fa-solid fa-download"></i> Export Session</button>
                 <button id="btn-import-session" type="button" class="btn btn-secondary btn-sm"><i
@@ -191,6 +191,9 @@
                 <button id="btn-clear-session" type="button" class="btn btn-danger btn-sm"><i
                         class="fa-solid fa-trash"></i>
                     Clear Session</button>
+            </div>
+            <div class="mt-auto">
+                <a href="https://spellcanvas.canny.io/bug-reports" target="blank">Leave Feedback</a>
             </div>
             <div class="debug-info" style="display: none;">
 
