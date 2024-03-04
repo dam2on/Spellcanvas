@@ -1,10 +1,11 @@
-mkdir output
+mkdir -p output
 cd output
-mkdir img
-mkdir css
+mkdir -p img
+mkdir -p css
 cd ..
 terser -c ecma=2016 -m --manglge-props --source-map -o output/main.min.js helpers/* classes/* main.js
 uglifycss --debug --output output/css/styles.min.css css/*
+cp favicon.ico output
 cp index.html output
 cp img/bg.jpg output/img
 cp img/dead.png output/img

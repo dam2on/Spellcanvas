@@ -8,19 +8,17 @@ const markTutorialComplete = async function (tutorialId) {
 }
 
 const isTutorialComplete = async function (tutorialId) {
-    return false;
     const tutorial = await localforage.getItem(StorageKeys.Tutorial);
     return !!(tutorial ?? {})[tutorialId];
 }
 
 const initGamePieceTour = async function (piece) {
-    let menuState = 'close'
     const tourId = 'gamePieceTour';
     if (piece == null) {
         // demo piece
         piece = new Piece(newGuid(), newGuid(), "Big Bad Evil Guy", "img/orc.png", 20, 0.1, 0.3); 
         piece.updateConditions('Stunned, Prone, Enraged');
-        piece.duplicate = true;
+        piece.isDuplicate = true;
         piece.aura = new Area(piece.id, piece.owner, AreaType.Circle, 45, piece.x, piece.y);
         piece.aura.contrastColor = invertColor(piece.aura.color);
         piece.aura.opacity = 127;
@@ -53,7 +51,6 @@ const initGamePieceTour = async function (piece) {
         buttons: [
             {
                 async action() {
-                    menuState = 'close';
                     CURRENT_SCENE.deletePiece(piece);
                     CURRENT_SCENE.drawPieces();
                     await markTutorialComplete(tourId);
@@ -226,7 +223,6 @@ const initGamePieceTour = async function (piece) {
 
 
 const initMainMenuTour = async function (isHost = true) {
-    let menuState = 'close';
     const tourId = 'mainMenu';
 
     const tour = new Shepherd.Tour({
@@ -260,7 +256,6 @@ const initMainMenuTour = async function (isHost = true) {
             },
             {
                 action() {
-                    menuState = 'open';
                     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
                     return this.next();
                 },
@@ -362,6 +357,10 @@ const initMainMenuTour = async function (isHost = true) {
             },
             {
                 action() {
+                    if (!isHost) {
+                        $('.menu-toggle').addClass('blinking');
+                        bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
+                    }
                     return this.next();
                 },
                 text: 'Next'
@@ -436,7 +435,6 @@ const initMainMenuTour = async function (isHost = true) {
                 {
                     action() {
                         $('.menu-toggle').addClass('blinking');
-                        menuState = 'close';
                         bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).hide();
                         return this.next();
                     },
@@ -456,7 +454,6 @@ const initMainMenuTour = async function (isHost = true) {
         buttons: [
             {
                 action() {
-                    menuState = 'open';
                     bootstrap.Offcanvas.getInstance(document.getElementById('main-menu')).show();
                     return this.back();
                 },

@@ -1787,5 +1787,8 @@ window.onload = async function () {
     await restoreHostSession();
     CURRENT_SCENE.draw();
   }
+  else {
+    initMainMenuTour(false);
+  }
   loading(false);
 }
