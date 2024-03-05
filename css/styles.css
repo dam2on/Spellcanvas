@@ -283,14 +283,10 @@ input[type=number] {
 
 .blinking {
   opacity: 1;
-  -webkit-animation: blinkingAnimation 1.8s infinite;
-  /* Safari 4+ */
+  /* -webkit-animation: blinkingAnimation 1.8s infinite;
   -moz-animation: blinkingAnimation 1.8s infinite;
-  /* Fx 5+ */
   -o-animation: blinkingAnimation 1.8s infinite;
-  /* Opera 12+ */
-  animation: blinkingAnimation 1.8s infinite;
-  /* IE 10+, Fx 29+ */
+  animation: blinkingAnimation 1.8s infinite; */
 }
 
 @keyframes blinkingAnimation {

@@ -13,7 +13,7 @@ const isTutorialComplete = async function (tutorialId) {
 }
 
 const initGamePieceTour = async function (piece) {
-    const tourId = 'gamePieceTour';
+    const tourId = Tutorials.GamePiece;
     if (piece == null) {
         // demo piece
         piece = new Piece(newGuid(), newGuid(), "Big Bad Evil Guy", "img/orc.png", 20, 0.1, 0.3); 
@@ -95,7 +95,7 @@ const initGamePieceTour = async function (piece) {
 
     newGamePieceTour.addStep({
         title: 'Piece Details',
-        text: "Modify the name, size and other properties.",
+        text: "Modify the name, size and other properties",
         attachTo: {
             element: document.getElementById('piece-menu-name').parentElement.parentElement,
             on: 'left'
@@ -119,7 +119,7 @@ const initGamePieceTour = async function (piece) {
 
     newGamePieceTour.addStep({
         title: 'Status',
-        text: 'Add buffs/debuffs to display on your game piece.',
+        text: 'Add buffs/debuffs to display on your game piece',
         attachTo: {
             element: document.getElementById('piece-menu-status-conditions').parentElement.parentElement,
             on: 'left'
@@ -143,7 +143,7 @@ const initGamePieceTour = async function (piece) {
 
     newGamePieceTour.addStep({
         title: 'Aura',
-        text: 'Include an aura around your piece (i.e. Spirit Guardians) and adjust the color and size.',
+        text: 'Include an aura around your piece (i.e. Spirit Guardians) and adjust the color and size',
         attachTo: {
             element: document.getElementById('checkbox-piece-menu-aura').parentElement.parentElement,
             on: 'left'
@@ -167,7 +167,7 @@ const initGamePieceTour = async function (piece) {
 
     newGamePieceTour.addStep({
         title: 'Other settings',
-        text: 'Mark your piece as dead, hide the shadow border, or prevent it from being re-positioned.',
+        text: 'Mark your piece as dead, hide the shadow border, or prevent it from being re-positioned',
         attachTo: {
             element: document.getElementById('piece-menu-dead').parentElement.parentElement,
             on: 'left'
@@ -208,7 +208,33 @@ const initGamePieceTour = async function (piece) {
             },
             {
                 action() {
+                    $('label[for="checkbox-route-toggle"]').trigger('hover');
                     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
+                    return this.next();
+                },
+                text: 'Next'
+            }
+        ]
+    });
+
+    newGamePieceTour.addStep({
+        title: 'Toggle Routes',
+        text: 'Hover or click me to show most recent piece positions',
+        attachTo: {
+            element: document.querySelector('label[for="checkbox-route-toggle"]'),
+            on: 'top'
+        },
+        buttons: [
+            {
+                action() {
+                    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).show();
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
                     return this.complete();
                 },
                 text: 'OK'
@@ -223,7 +249,7 @@ const initGamePieceTour = async function (piece) {
 
 
 const initMainMenuTour = async function (isHost = true) {
-    const tourId = 'mainMenu';
+    const tourId = Tutorials.Main;
 
     const tour = new Shepherd.Tour({
         defaultStepOptions: {
@@ -240,7 +266,10 @@ const initMainMenuTour = async function (isHost = true) {
     }
 
     tour.on('cancel', cleanupTour);
-    tour.on('complete', cleanupTour);
+    tour.on('complete', async function() {
+        await cleanupTour();
+        initGamePieceTour();
+    });
 
     tour.addStep({
         title: 'Welcome to Spellcanvas!',
@@ -268,7 +297,7 @@ const initMainMenuTour = async function (isHost = true) {
     if (isHost) {
         tour.addStep({
             title: 'Set Background',
-            text: 'Upload an image to use as the background.',
+            text: 'Upload an image to use as the background',
             attachTo: {
                 element: document.getElementById("btn-change-bg"),
                 on: 'right'
@@ -292,7 +321,7 @@ const initMainMenuTour = async function (isHost = true) {
     
         tour.addStep({
             title: "Grid Settings",
-            text: "Dial in the size of your background's grid to ensure game pieces and spell areas are to scale.",
+            text: "Dial in the size of your background's grid to ensure game pieces and spell areas are to scale",
             attachTo: {
                 element: document.getElementById('btn-grid-mode'),
                 on: 'right'
@@ -317,7 +346,7 @@ const initMainMenuTour = async function (isHost = true) {
 
     tour.addStep({
         title: 'Add Game Piece',
-        text: 'Upload your own images and turn them into interactive game pieces.',
+        text: 'Upload your own images and turn them into interactive game pieces',
         attachTo: {
             element: document.getElementById("btn-add-piece"),
             on: 'right'
@@ -342,7 +371,7 @@ const initMainMenuTour = async function (isHost = true) {
 
     tour.addStep({
         title: 'Spell Ruler',
-        text: 'Measure spell coverage and range. Click to make a spell area permanent. Scroll to rotate lines & cones.',
+        text: 'Measure spell coverage and range. Click to make a spell area permanent. Scroll to rotate lines & cones',
         attachTo: {
             element: document.getElementById('spell-ruler'),
             on: 'right'
@@ -371,7 +400,7 @@ const initMainMenuTour = async function (isHost = true) {
     if (isHost) {
         tour.addStep({
             title: 'Scenes',
-            text: "Change or create new scenes. Right-click for more options.",
+            text: "Change or create new scenes. Right-click for more options",
             attachTo: {
                 element: document.getElementById("scene-list"),
                 on: 'right'
@@ -488,35 +517,9 @@ const initMainMenuTour = async function (isHost = true) {
             },
             {
                 action() {
-                    return this.next();
-                },
-                text: 'OK'
-            }
-        ]
-    });
-
-    tour.addStep({
-        title: 'Toggle Routes',
-        text: 'Hover or click me to show most recent piece positions',
-        attachTo: {
-            element: document.querySelector('label[for="checkbox-route-toggle"]'),
-            on: 'top'
-        },
-        buttons: [
-            {
-                action() {
-                    return this.back();
-                },
-                classes: 'shepherd-button-secondary',
-                text: 'Back'
-            },
-            {
-                action() {
-                    Promise.resolve(markTutorialComplete(tourId));
-                    initGamePieceTour();
                     return this.complete();
                 },
-                text: 'OK'
+                text: 'Next'
             }
         ]
     });

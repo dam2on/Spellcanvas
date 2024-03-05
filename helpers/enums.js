@@ -65,3 +65,8 @@ const PlayerStatus = {
 const PermissionType = {
   OnlyMoveOwnedPieces: 'only moved owned pieces'
 }
+
+const Tutorials = {
+  Main: 'main',
+  GamePiece: 'game piece'
+}

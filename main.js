@@ -27,6 +27,12 @@ const shapeIntersects = function (x, y, respectLock = false) {
   return null;
 }
 
+const onTutorial = async function() {
+  bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
+  await localforage.removeItem(StorageKeys.Tutorial);
+  initMainMenuTour(isHost());
+}
+
 const onCropperRotate = function (e) {
   if ($(this).hasClass('rotate-left')) {
     _cropper?.rotate(-90);
@@ -312,7 +318,6 @@ const onAddPieceSubmit = async function (e) {
   const piece = new Piece(newGuid(), _peer.id, name, croppedImg, size, initPos.x, initPos.y);
   CURRENT_SCENE.addPiece(piece);
   await CURRENT_SCENE.savePieces();
-  // initGamePieceTour(piece);
 
   if (isHost()) {
     for (var player of PARTY.players) {
@@ -325,7 +330,9 @@ const onAddPieceSubmit = async function (e) {
 
   await piece.updateImage();
   piece.draw();
+
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
+  initGamePieceTour(piece);
 }
 
 const onUpdatePieceSubmit = async function () {
@@ -807,7 +814,7 @@ const onDeletePlayer = async function (id) {
 }
 
 const initInviteLink = function () {
-  $('#input-invite-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + `?host=${encodeURI(_host)}`);
+  $('#input-invite-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + (isLocal() ? '' : '/index.html') + `?host=${encodeURI(_host)}`);
   $("#btn-copy-invite-link").click(async function () {
     var popover = bootstrap.Popover.getOrCreateInstance(this);
     await navigator.clipboard.writeText($('#input-invite-link').val());
@@ -1463,6 +1470,7 @@ const initDom = function () {
   $('.btn-grid-size').on('click', onGridSizeChange);
   $('.rotate-btn').on('click', onCropperRotate);
   // $('.quick-add').on('click', onQuickAdd);
+  document.getElementById('btn-tutorial').addEventListener('click', onTutorial);
   document.getElementById('canvas-submenu-change-bg').addEventListener('click', onChangeBackgroundModal);
   document.getElementById('btn-change-bg').addEventListener('click', onChangeBackgroundModal);
   document.getElementById('canvas-submenu-add-piece').addEventListener('click', onAddPieceModal);
