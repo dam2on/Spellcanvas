@@ -43,6 +43,7 @@ const initGamePieceTour = async function (piece) {
             CURRENT_SCENE.deletePiece(piece);
             CURRENT_SCENE.drawPieces();
         }
+        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
         await markTutorialComplete(tourId);
     }
 
