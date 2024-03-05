@@ -14,7 +14,9 @@ const isTutorialComplete = async function (tutorialId) {
 
 const initGamePieceTour = async function (piece) {
     const tourId = Tutorials.GamePiece;
+    let isDemoPiece = false;
     if (piece == null) {
+        isDemoPiece = true;
         // demo piece
         piece = new Piece(newGuid(), newGuid(), "Big Bad Evil Guy", "img/orc.png", 20, 0.1, 0.3); 
         piece.updateConditions('Stunned, Prone, Enraged');
@@ -37,8 +39,10 @@ const initGamePieceTour = async function (piece) {
     });
 
     const cleanupTour = async function() {
-        CURRENT_SCENE.deletePiece(piece);
-        CURRENT_SCENE.drawPieces();
+        if (isDemoPiece) {
+            CURRENT_SCENE.deletePiece(piece);
+            CURRENT_SCENE.drawPieces();
+        }
         await markTutorialComplete(tourId);
     }
 
