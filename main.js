@@ -143,10 +143,10 @@ const onGridSizeChange = function (e) {
     valX += 1;
   }
   if ($(this)[0] == $('#btn-grid-down')[0]) {
-    valY += 1;
+    valY -= 1;
   }
   if ($(this)[0] == $('#btn-grid-up')[0]) {
-    valY -= 1;
+    valY += 1;
   }
 
   $('#input-grid-width').val(valX / CURRENT_SCENE.canvas.width);
