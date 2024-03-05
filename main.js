@@ -215,7 +215,7 @@ const onSpellSizeChange = function (args) {
 const onQuickAdd = async function (pieceId) {
   const pieceToAdd = (await localforage.getItem(StorageKeys.SessionPieces)).find(p => p.id == pieceId);
   pieceToAdd.id = newGuid();
-  pieceToAdd.duplicate = pieceId;
+  pieceToAdd.duplicate = true;
 
   const piece = CURRENT_SCENE.addPiece(pieceToAdd);
   const initPos = {
@@ -272,7 +272,7 @@ const onAddPieceModal = async function () {
     $('#session-pieces-carousel').slick('unslick');
     $('#session-pieces-carousel').empty();
     for (var piece of sessionPieces) {
-      $('#session-pieces-carousel').append(`<div onclick="onQuickAdd('${piece.id}')"><img class="mx-auto" style="width: 5em" alt="${piece.name}" data-lazy=${piece.image}></img></div>`);
+      $('#session-pieces-carousel').append(`<div onclick="onQuickAdd('${piece.id}')"><img class="mx-auto clickable" style="width: 5em" alt="${piece.name}" data-lazy=${piece.image}></img></div>`);
     }
     $('#session-pieces-carousel').slick({
       slidesToShow: 3,

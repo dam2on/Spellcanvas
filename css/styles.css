@@ -148,6 +148,10 @@ input[type=number] {
   font-size: .875rem;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 #input-party-link {
   background-color: #fff;
   font-size: 0.8em;

@@ -181,7 +181,7 @@ class Scene {
             sessionPieces = [];
         }
         for (var piece of this.pieces) {
-            if (piece.objectType == 'Shape') continue;
+            if (piece.duplicate || piece.objectType == 'Shape') continue;
             const sessionPiece = sessionPieces.find(p => p.id == piece.id);
             if (sessionPiece != null) {
                 sessionPiece.image = piece.image
