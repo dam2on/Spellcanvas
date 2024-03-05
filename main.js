@@ -7,7 +7,7 @@ _host = null;
 
 _pieceInMenu = null;
 _spellRuler = null;
-_gridArea = null;
+_gridShape = null;
 _draggedPiece = null;
 _forceHideRoutes = false;
 _cropper = null;
@@ -106,7 +106,7 @@ const onGridSubmit = async function (e) {
 
   $('.grid-mode-overlay').hide();
   _gridSettingMode = GridSettingMode.Off;
-  _gridArea = null;
+  _gridShape = null;
   await onGridChangeEvent({
     x: $('#input-grid-width').val(),
     y: $('#input-grid-height').val(),
@@ -122,14 +122,14 @@ const onGridSubmit = async function (e) {
 const onGridReset = function (e) {
   $('.grid-mode-overlay').hide();
   _gridSettingMode = GridSettingMode.Off;
-  _gridArea = null;
+  _gridShape = null;
 }
 
-const initGridArea = function (x, y) {
-  _gridArea = new Area(newGuid(), _host, AreaType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
-  _gridArea.color = '#eaf0f0';
-  _gridArea.opacity = 100;
-  _gridArea.updateSize();
+const initGridShape = function (x, y) {
+  _gridShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
+  _gridShape.color = '#eaf0f0';
+  _gridShape.opacity = 100;
+  _gridShape.updateSize();
 }
 
 const onGridSizeChange = function (e) {
@@ -159,10 +159,10 @@ const onGridSizeChange = function (e) {
   $('.grid-indicator').css('height', valY + 'px');
 
   CURRENT_SCENE.drawPieces();
-  if (_gridArea == null) {
-    initGridArea(0.5, 0.5);
+  if (_gridShape == null) {
+    initGridShape(0.5, 0.5);
   }
-  _gridArea.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
+  _gridShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
 }
 
 const onSpellRulerToggle = async function (args) {
@@ -183,12 +183,12 @@ const onSpellRulerToggle = async function (args) {
     CURRENT_SCENE.drawPieces();
   }
   else {
-    _spellRuler = new Area(newGuid(), _player?.id ?? _host, type, $('#input-spell-size').val());
+    _spellRuler = new Shape(newGuid(), _player?.id ?? _host, type, $('#input-spell-size').val());
     _spellRuler.color = await CURRENT_SCENE.background.getContrastColor();
     sizeInput.show();
     sizeLabel.show();
     switch (type) {
-      case AreaType.Circle:
+      case ShapeType.Circle:
         sizeLabel.html("ft (diameter)");
         break;
       default:
@@ -215,7 +215,7 @@ const onSpellSizeChange = function (args) {
 const onQuickAdd = async function (pieceId) {
   const pieceToAdd = (await localforage.getItem(StorageKeys.SessionPieces)).find(p => p.id == pieceId);
   pieceToAdd.id = newGuid();
-  pieceToAdd.isDuplicate = true;
+  pieceToAdd.duplicate = pieceId;
 
   const piece = CURRENT_SCENE.addPiece(pieceToAdd);
   const initPos = {
@@ -253,6 +253,7 @@ const onChangeBackgroundModal = function () {
 const onAddPieceModal = async function () {
   if (CURRENT_SCENE == null) return // player mode disable during load up
 
+  $('.rotate-btn').parent().hide();
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).show();
 
@@ -341,11 +342,11 @@ const onUpdatePieceSubmit = async function () {
   const lock = document.getElementById('piece-menu-lock').checked;
   _pieceInMenu.lock = lock;
 
-  if (_pieceInMenu instanceof Area) {
-    const type = document.querySelector('input[name="radio-area-menu-type"]:checked').value;
-    const size = document.getElementById("input-area-menu-size").value;
-    const color = document.getElementById("input-area-menu-color").value;
-    const opacity = document.getElementById("input-area-menu-opacity").value;
+  if (_pieceInMenu instanceof Shape) {
+    const type = document.querySelector('input[name="radio-shape-menu-type"]:checked').value;
+    const size = document.getElementById("input-shape-menu-size").value;
+    const color = document.getElementById("input-shape-menu-color").value;
+    const opacity = document.getElementById("input-shape-menu-opacity").value;
     _pieceInMenu.type = type;
     _pieceInMenu.size = Number(size);
     _pieceInMenu.color = color;
@@ -366,7 +367,7 @@ const onUpdatePieceSubmit = async function () {
     _pieceInMenu.updateSize(size);
     _pieceInMenu.updateConditions(statusConds);
     if (auraEnabled) {
-      _pieceInMenu.aura = new Area(_pieceInMenu.id, _pieceInMenu.owner, $('#checkbox-piece-menu-aura').val(), $('#input-aura-menu-size').val(), _pieceInMenu.x, _pieceInMenu.y);
+      _pieceInMenu.aura = new Shape(_pieceInMenu.id, _pieceInMenu.owner, $('#checkbox-piece-menu-aura').val(), $('#input-aura-menu-size').val(), _pieceInMenu.x, _pieceInMenu.y);
       _pieceInMenu.aura.color = $('#input-aura-menu-color').val();
       _pieceInMenu.aura.contrastColor = invertColor(_pieceInMenu.aura.color);
       _pieceInMenu.aura.opacity = $('#input-aura-menu-opacity').val();
@@ -761,7 +762,7 @@ const onUpdatePieceEvent = async function (peerId, piece) {
 const onGridChangeEvent = async function (gridSize) {
   CURRENT_SCENE.gridRatio = gridSize;
 
-  if (_spellRuler instanceof Area) {
+  if (_spellRuler instanceof Shape) {
     _spellRuler.updateSize(Number($('#input-spell-size').val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
     _spellRuler.draw();
   }
@@ -1344,20 +1345,20 @@ const initDom = function () {
       }
     }
 
-    if (_spellRuler instanceof Area) {
+    if (_spellRuler instanceof Shape) {
       _spellRuler.draw();
     }
 
     if (CURRENT_SCENE != null) {
       CURRENT_SCENE.drawBackground();
       CURRENT_SCENE.drawPieces();
-      if (_gridArea != null) {
+      if (_gridShape != null) {
         const currGridWidth = $('#input-grid-width').val();
         const currGridHeight = $('#input-grid-height').val();
 
         const valX = currGridWidth * CURRENT_SCENE.canvas.width;
         const valY = currGridHeight * CURRENT_SCENE.canvas.height;
-        _gridArea.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
+        _gridShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
 
         if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
 
@@ -1496,8 +1497,8 @@ const initDom = function () {
   document.getElementById('input-aura-menu-opacity').addEventListener('input', (e) => {
     $('#value-aura-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
   });
-  document.getElementById('input-area-menu-opacity').addEventListener('input', (e) => {
-    $('#value-area-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
+  document.getElementById('input-shape-menu-opacity').addEventListener('input', (e) => {
+    $('#value-shape-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
   });
 
   document.getElementById("main-menu").addEventListener("hidden.bs.offcanvas", () => {
@@ -1550,7 +1551,7 @@ const initDom = function () {
 
   document.getElementById("modal-grid").addEventListener("hide.bs.modal", () => {
     if (_gridSettingMode) {
-      _gridArea = null;
+      _gridShape = null;
       CURRENT_SCENE.drawPieces();
     }
   });
@@ -1578,11 +1579,11 @@ const initDom = function () {
         x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
         y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
       }
-      initGridArea(pos.x, pos.y);
+      initGridShape(pos.x, pos.y);
       _gridSettingMode = GridSettingMode.Drawing;
       return;
     }
-    if (_spellRuler instanceof Area) {
+    if (_spellRuler instanceof Shape) {
       CURRENT_SCENE.addPiece(_spellRuler);
       const newPiece = { ..._spellRuler };
       $('#spell-ruler').find('input.btn-check:checked').click();
@@ -1616,23 +1617,23 @@ const initDom = function () {
       args.clientX = args.touches[0].clientX;
       args.clientY = args.touches[0].clientY;
     }
-    if (_gridSettingMode == GridSettingMode.Drawing && _gridArea != null) {
+    if (_gridSettingMode == GridSettingMode.Drawing && _gridShape != null) {
       CURRENT_SCENE.drawPieces();
       const origin = {
-        x: _gridArea.getX() - _gridArea.width / 2,
-        y: _gridArea.getY() - _gridArea.height / 2
+        x: _gridShape.getX() - _gridShape.width / 2,
+        y: _gridShape.getY() - _gridShape.height / 2
       }
       const dW = (args.clientX - origin.x);
       const dH = (args.clientY - origin.y);
-      _gridArea.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
-      _gridArea.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
+      _gridShape.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
+      _gridShape.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
 
-      _gridArea.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2 });
+      _gridShape.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2 });
       return;
     }
     if (_draggedPiece != null) {
       $('.menu-toggle').hide(); // disable invisible menu toggle
-      if (_draggedPiece instanceof Area) {
+      if (_draggedPiece instanceof Shape) {
         _draggedPiece.x = args.clientX / document.getElementById("canvas").width;
         _draggedPiece.y = args.clientY / document.getElementById("canvas").height;
       }
@@ -1647,7 +1648,7 @@ const initDom = function () {
       CURRENT_SCENE.drawPieces();
       _spellRuler.x = args.clientX / document.getElementById("canvas").width;
       _spellRuler.y = args.clientY / document.getElementById("canvas").height;
-      if (_spellRuler instanceof Area) {
+      if (_spellRuler instanceof Shape) {
         _spellRuler.draw();
       }
     }
@@ -1656,7 +1657,7 @@ const initDom = function () {
     if (_spellRuler != null) {
       CURRENT_SCENE.drawPieces();
       _spellRuler.rotation += (Math.PI / 32 * (args.originalEvent.deltaY < 0 ? -1 : 1));
-      if (_spellRuler instanceof Area) {
+      if (_spellRuler instanceof Shape) {
         _spellRuler.draw();
       }
 
@@ -1670,16 +1671,16 @@ const initDom = function () {
     if (args.type == 'touchend') {
       clearTimeout(touchRightClickTimeout);
     }
-    if (_gridSettingMode && _gridArea != null) {
+    if (_gridSettingMode && _gridShape != null) {
       _gridSettingMode = GridSettingMode.AwaitingInput;
-      const width = Math.abs(_gridArea.width);
-      const height = Math.abs(_gridArea.height);
+      const width = Math.abs(_gridShape.width);
+      const height = Math.abs(_gridShape.height);
       $('.grid-indicator').css('width', width + 'px');
       $('.grid-indicator').css('height', height + 'px');
       $('#input-grid-width').val(width / CURRENT_SCENE.canvas.width);
       $('#input-grid-height').val(height / CURRENT_SCENE.canvas.height);
       onGridSizeChange();
-      // _gridArea = null;
+      // _gridShape = null;
       // CURRENT_SCENE.drawPieces();
     }
 
@@ -1713,21 +1714,21 @@ const initDom = function () {
 
     _pieceInMenu = shapeIntersects(e.clientX, e.clientY);
     if (_pieceInMenu != null) {
-      $('.area-only').hide();
+      $('.shape-only').hide();
       $('.piece-only').hide();
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
       _pieceInMenu.draw({ border: "#FFEA00" });
 
       document.getElementById("piece-menu-lock").checked = _pieceInMenu.lock;
 
-      if (_pieceInMenu instanceof Area) {
-        $('.area-only').show();
-        $('input[name="radio-area-menu-type"]').prop('checked', false);
-        $(`input[name='radio-area-menu-type'][value='${_pieceInMenu.type}']`).prop("checked", true);
-        $('#input-area-menu-size').val(_pieceInMenu.size);
-        $('#input-area-menu-color').val(_pieceInMenu.color);
-        $('#input-area-menu-opacity').val(_pieceInMenu.opacity);
-        $('#value-area-menu-opacity').html(parseInt(100 * _pieceInMenu.opacity / 255) + '%');
+      if (_pieceInMenu instanceof Shape) {
+        $('.shape-only').show();
+        $('input[name="radio-shape-menu-type"]').prop('checked', false);
+        $(`input[name='radio-shape-menu-type'][value='${_pieceInMenu.type}']`).prop("checked", true);
+        $('#input-shape-menu-size').val(_pieceInMenu.size);
+        $('#input-shape-menu-color').val(_pieceInMenu.color);
+        $('#input-shape-menu-opacity').val(_pieceInMenu.opacity);
+        $('#value-shape-menu-opacity').html(parseInt(100 * _pieceInMenu.opacity / 255) + '%');
       }
       else {
         $('.piece-only').show();

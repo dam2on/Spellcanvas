@@ -1,4 +1,4 @@
-class Area extends Piece {
+class Shape extends Piece {
     constructor(id, owner, type, size, x = 0, y = 0) {
         super(id, owner, "", null, size, x, y);
         this.id = id;
@@ -8,20 +8,19 @@ class Area extends Piece {
         this.y = y;
         this.rotation = 0;
         this.color = "#ffeeaa";
-        this.isDuplicate = true; // work around for making areas not show up in recently added pieces
         this.contrastColor = invertColor(this.color);
         this.opacity = 180;
         Object.defineProperty(this, 'path', { value: null, enumerable: false, writable: true });
     }
 
     static fromObj(obj) {
-        const area = new Area(obj.id, obj.owner, obj.type, obj.size, obj.x, obj.y);
-        area.rotation = obj.rotation;
-        area.color = obj.color;
-        area.contrastColor = obj.contrastColor;
-        area.opacity = obj.opacity;
-        area.origin = obj.origin;
-        return area;
+        const shape = new Shape(obj.id, obj.owner, obj.type, obj.size, obj.x, obj.y);
+        shape.rotation = obj.rotation;
+        shape.color = obj.color;
+        shape.contrastColor = obj.contrastColor;
+        shape.opacity = obj.opacity;
+        shape.origin = obj.origin;
+        return shape;
     }
 
     intersects(x, y) {
@@ -54,7 +53,7 @@ class Area extends Piece {
         }
 
         switch (this.type) {
-            case AreaType.Line:
+            case ShapeType.Line:
                 // is actually a rectangle with a thickness of 1 grid, center is middle of short side
                 this.path.moveTo(coords.x, coords.y);
                 this.path.lineTo(coords.x + this.height * -Math.sin(this.rotation) / 2, coords.y + this.height * Math.cos(this.rotation) / 2);
@@ -63,11 +62,11 @@ class Area extends Piece {
                 this.path.lineTo(coords.x - this.height * -Math.sin(this.rotation) / 2, coords.y - this.height * Math.cos(this.rotation) / 2);
                 this.path.lineTo(coords.x, coords.y);
                 break;
-            case AreaType.Circle:
+            case ShapeType.Circle:
                 // you can rotate this by adding this.rotation, but i dont think it actually makes sense to do that
                 this.path.ellipse(coords.x, coords.y, this.width, this.height, 0, 0, 2 * Math.PI);
                 break;
-            case AreaType.Cone:
+            case ShapeType.Cone:
                 const ratio = (CURRENT_SCENE.gridRatio.x * this.canvas.width) / (CURRENT_SCENE.gridRatio.y * this.canvas.height);
                 const horizontalAngle = (.9236) / ratio // weighted 53 degree angle
                 const verticalAngle = (.9236) * ratio;
@@ -77,11 +76,11 @@ class Area extends Piece {
                 this.path.arc(coords.x, coords.y, this.width, this.rotation - coneAngle / 2, this.rotation + coneAngle / 2);
                 this.path.lineTo(coords.x, coords.y);
                 break;
-            case AreaType.Square:
+            case ShapeType.Square:
                 this.path.rect(coords.x - (this.width / 2), coords.y - (this.height / 2), this.width, this.height);
                 break;
             default:
-                console.warn("area type not recognized: " + type);
+                console.warn("shape type not recognized: " + type);
                 break;
         }
         this.ctx.fill(this.path);
@@ -120,7 +119,7 @@ class Area extends Piece {
         const baseWidth = CURRENT_SCENE.gridRatio.x * this.canvas.width;
         const widthHeightDiff = (baseWidth - CURRENT_SCENE.gridRatio.y * this.canvas.height) / 2;
         switch (this.type) {
-            case AreaType.Line:
+            case ShapeType.Line:
                 this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
                 this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height;
                 if (widthHeightDiff != 0) {
@@ -128,23 +127,23 @@ class Area extends Piece {
                     this.height = (baseWidth - widthHeightDiff) - widthHeightDiff * Math.cos(2 * this.rotation);
                 }
                 break;
-            case AreaType.Circle:
+            case ShapeType.Circle:
                 this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / (2 * CURRENT_SCENE.gridRatio.feetPerGrid);
                 this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * this.size / (2 * CURRENT_SCENE.gridRatio.feetPerGrid);
                 break;
-            case AreaType.Cone:
+            case ShapeType.Cone:
                 this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
                 if (widthHeightDiff != 0) {
                     this.width = (this.size / CURRENT_SCENE.gridRatio.feetPerGrid) * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
                 }
                 this.height = this.width; // only for intersection logic
                 break;
-            case AreaType.Square:
+            case ShapeType.Square:
                 this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
                 this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
                 break;
             default:
-                console.warn("area type not recognized: " + type);
+                console.warn("shape type not recognized: " + type);
                 break;
         }
     }

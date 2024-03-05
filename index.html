@@ -40,7 +40,7 @@
     <script type="text/javascript" src="classes/player.js"></script>
     <script type="text/javascript" src="classes/permission.js"></script>
     <script type="text/javascript" src="classes/background.js"></script>
-    <script type="text/javascript" src="classes/z_area.js"></script>
+    <script type="text/javascript" src="classes/shape.js"></script>
     <script type="text/javascript" src="classes/party.js"></script>
     <script type="text/javascript" src="classes/scene.js"></script>
     <script type="text/javascript" src="helpers/tour.js"></script>
@@ -101,7 +101,7 @@
 
     <!-- Side Menus -->
     <div class="menu-toggle">
-        <!-- Invisible area that opens menu on hover -->
+        <!-- Invisible shape that opens menu on hover -->
     </div>
     <div class="offcanvas offcanvas-start" tabindex="-1" id="main-menu">
         <div class="offcanvas-body d-flex flex-column">
@@ -359,64 +359,64 @@
                     </div>
                 </div>
             </div>
-            <div class="area-only">
+            <div class="shape-only">
                 <h5 class="text-center">Edit Shape</h5>
                 <fieldset class="row mb-3">
                     <legend class="col-form-label col-sm-2 pt-0">Shape</legend>
                     <div class="col-sm-10">
                         <div class="form-check">
-                            <input id="radio-area-menu-type-li" class="form-check-input" type="radio"
-                                name="radio-area-menu-type" value="line">
-                            <label for="radio-area-menu-type-li" class="form-check-label">
+                            <input id="radio-shape-menu-type-li" class="form-check-input" type="radio"
+                                name="radio-shape-menu-type" value="line">
+                            <label for="radio-shape-menu-type-li" class="form-check-label">
                                 Line
                             </label>
                         </div>
                         <div class="form-check">
-                            <input id="radio-area-menu-type-ci" class="form-check-input" type="radio"
-                                name="radio-area-menu-type" value="circle">
-                            <label for="radio-area-menu-type-ci" class="form-check-label">
+                            <input id="radio-shape-menu-type-ci" class="form-check-input" type="radio"
+                                name="radio-shape-menu-type" value="circle">
+                            <label for="radio-shape-menu-type-ci" class="form-check-label">
                                 Circle
                             </label>
                         </div>
                         <div class="form-check">
-                            <input id="radio-area-menu-type-sq" class="form-check-input" type="radio"
-                                name="radio-area-menu-type" value="square">
-                            <label for="radio-area-menu-type-sq" class="form-check-label">
+                            <input id="radio-shape-menu-type-sq" class="form-check-input" type="radio"
+                                name="radio-shape-menu-type" value="square">
+                            <label for="radio-shape-menu-type-sq" class="form-check-label">
                                 Square
                             </label>
                         </div>
                         <div class="form-check">
-                            <input id="radio-area-menu-type-co" class="form-check-input" type="radio"
-                                name="radio-area-menu-type" value="cone">
-                            <label for="radio-area-menu-type-co" class="form-check-label">
+                            <input id="radio-shape-menu-type-co" class="form-check-input" type="radio"
+                                name="radio-shape-menu-type" value="cone">
+                            <label for="radio-shape-menu-type-co" class="form-check-label">
                                 Cone
                             </label>
                         </div>
                     </div>
                 </fieldset>
                 <div class="row mb-3">
-                    <label for="input-area-menu-size" class="col-sm-2">Size</label>
+                    <label for="input-shape-menu-size" class="col-sm-2">Size</label>
                     <div class="col-sm-4">
                         <div class="input-group input-group-sm">
-                            <input class="form-control form-control-sm" type="number" id="input-area-menu-size" />
+                            <input class="form-control form-control-sm" type="number" id="input-shape-menu-size" />
                             <span class="input-group-text">ft</span>
                         </div>
                     </div>
                     <div class="offset-sm-6"></div>
                 </div>
                 <div class="row mb-2">
-                    <label for="input-area-menu-color" class="form-label col-sm-2">Color</label>
+                    <label for="input-shape-menu-color" class="form-label col-sm-2">Color</label>
                     <div class="col-sm-10">
-                        <input id="input-area-menu-color" type="color" class="form-control form-control-color" />
+                        <input id="input-shape-menu-color" type="color" class="form-control form-control-color" />
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label for="input-area-menu-opacity" class="col-sm-2">Opacity</label>
+                    <label for="input-shape-menu-opacity" class="col-sm-2">Opacity</label>
                     <div class="col-sm-4 mt-2">
-                        <input class="mt-1" id="input-area-menu-opacity" type="range" min="0" max="255" step="1"
+                        <input class="mt-1" id="input-shape-menu-opacity" type="range" min="0" max="255" step="1"
                             value="127" />
                     </div>
-                    <div id="value-area-menu-opacity" class="col ms-2">50%</div>
+                    <div id="value-shape-menu-opacity" class="col ms-2">50%</div>
                 </div>
             </div>
             <div class="row">

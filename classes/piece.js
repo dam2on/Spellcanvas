@@ -25,14 +25,14 @@ class Piece {
         let piece = new Piece(obj.id, obj.owner, obj.name, obj.image, obj.size, obj.x, obj.y);
         piece.dead = obj.dead;
         piece.hideShadow = obj.hideShadow;
-        piece.isDuplicate = obj.isDuplicate;
+        piece.duplicate = obj.duplicate;
         piece.origin = obj.origin;
         piece.lock = obj.lock;
         if (obj.conditions != null) {
             piece.conditions = obj.conditions;
         }
         if (obj.aura != null) {
-            piece.aura = Area.fromObj(obj.aura);
+            piece.aura = Shape.fromObj(obj.aura);
         }
 
         return piece;
@@ -171,7 +171,7 @@ class Piece {
         const prevWidth = this.ctx.lineWidth;
 
         // aura
-        if (this.aura instanceof Area) {
+        if (this.aura instanceof Shape) {
             this.aura.x = this.x + (this.width / (2 * this.canvas.width));
             this.aura.y = this.y + (this.height / (2 * this.canvas.height));
             this.aura.draw();

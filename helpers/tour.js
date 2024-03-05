@@ -18,8 +18,8 @@ const initGamePieceTour = async function (piece) {
         // demo piece
         piece = new Piece(newGuid(), newGuid(), "Big Bad Evil Guy", "img/orc.png", 20, 0.1, 0.3); 
         piece.updateConditions('Stunned, Prone, Enraged');
-        piece.isDuplicate = true;
-        piece.aura = new Area(piece.id, piece.owner, AreaType.Circle, 45, piece.x, piece.y);
+        piece.duplicate = true;
+        piece.aura = new Shape(piece.id, piece.owner, ShapeType.Circle, 45, piece.x, piece.y);
         piece.aura.contrastColor = invertColor(piece.aura.color);
         piece.aura.opacity = 127;
         await piece.updateImage();
@@ -321,7 +321,7 @@ const initMainMenuTour = async function (isHost = true) {
     
         tour.addStep({
             title: "Grid Settings",
-            text: "Dial in the size of your background's grid to ensure game pieces and spell areas are to scale",
+            text: "Dial in the size of your background's grid to ensure game pieces and spell shapes are to scale",
             attachTo: {
                 element: document.getElementById('btn-grid-mode'),
                 on: 'right'
@@ -371,7 +371,7 @@ const initMainMenuTour = async function (isHost = true) {
 
     tour.addStep({
         title: 'Spell Ruler',
-        text: 'Measure spell coverage and range. Click to make a spell area permanent. Scroll to rotate lines & cones',
+        text: 'Measure spell coverage and range. Click to make a spell shape permanent. Scroll to rotate lines & cones',
         attachTo: {
             element: document.getElementById('spell-ruler'),
             on: 'right'

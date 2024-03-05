@@ -28,8 +28,8 @@ class Scene {
         const pieceImgPromises = [];
         if (pieces != null) {
             for (var piece of pieces) {
-                if (piece.objectType == 'Area') {
-                    scene.pieces.push(Area.fromObj(piece))
+                if (piece.objectType == 'Shape') {
+                    scene.pieces.push(Shape.fromObj(piece))
                 }
                 else {
                     const constructedPiece = Piece.fromObj(piece);
@@ -66,8 +66,8 @@ class Scene {
                 scene.unloadedPieces = obj.pieces;
                 break;
             }
-            else if (piece.objectType == 'Area') {
-                scene.pieces.push(Area.fromObj(piece));
+            else if (piece.objectType == 'Shape') {
+                scene.pieces.push(Shape.fromObj(piece));
             }
             else {
                 const constructedPiece = Piece.fromObj(piece);
@@ -181,7 +181,7 @@ class Scene {
             sessionPieces = [];
         }
         for (var piece of this.pieces) {
-            if (piece.isDuplicate) continue;
+            if (piece.objectType == 'Shape') continue;
             const sessionPiece = sessionPieces.find(p => p.id == piece.id);
             if (sessionPiece != null) {
                 sessionPiece.image = piece.image
@@ -266,8 +266,8 @@ class Scene {
         if (piece instanceof Object) {
             let newPiece = null;
 
-            if (piece.objectType == "Area") {
-                newPiece = Area.fromObj(piece);
+            if (piece.objectType == "Shape") {
+                newPiece = Shape.fromObj(piece);
             }
             else {
                 newPiece = Piece.fromObj(piece);
@@ -282,8 +282,8 @@ class Scene {
 
     updatePiece(piece) {
         let localPiece = this.getPieceById(piece.id);
-        if (localPiece instanceof Area) {
-            localPiece = Area.fromObj(piece);
+        if (localPiece instanceof Shape) {
+            localPiece = Shape.fromObj(piece);
         }
         else {
             if (!piece.imageUpdated) {

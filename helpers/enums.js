@@ -48,7 +48,7 @@ const GridSettingMode = {
   Drawing: 2
 }
 
-const AreaType = {
+const ShapeType = {
   Line: 'line',
   Circle: 'circle',
   Cone: 'cone',
