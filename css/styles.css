@@ -131,6 +131,10 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
+a[role="button"] {
+  color: unset;
+}
+
 .bootstrap-tagsinput {
   /* "form-control form-control-sm" */
   display: block;
@@ -185,8 +189,14 @@ input[type=number] {
   display: none;
 }
 
-.menu-btn {
+.left-menu-btn {
   border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.right-menu-btn {
+  border-top-right-radius: 0;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
@@ -237,6 +247,10 @@ input[type=number] {
   font-size: 20px;
   width: 100%;
   position: absolute;
+}
+
+.font-sm {
+  font-size: 0.8rem;
 }
 
 .menu-toggle {

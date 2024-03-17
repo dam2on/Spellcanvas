@@ -508,7 +508,32 @@ const initMainMenuTour = async function (isHost = true) {
         title: 'Or Click Me!',
         text: 'Open settings',
         attachTo: {
-            element: document.querySelector("a.menu-btn"),
+            element: document.querySelector("button.left-menu-btn"),
+            on: 'top'
+        },
+        buttons: [
+            {
+                action() {
+                    $('.menu-toggle').addClass('blinking');
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
+                    return this.next();
+                },
+                text: 'Next'
+            }
+        ]
+    });
+
+    tour.addStep({
+        title: 'Click me!',
+        text: 'Toggle Fullscreen Mode',
+        attachTo: {
+            element: document.getElementById("btn-fullscreen"),
             on: 'top'
         },
         buttons: [

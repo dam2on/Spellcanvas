@@ -199,16 +199,17 @@ class Scene {
         this.pieces.push(this.pieces.splice(currentIndex, 1)[0]);
     }
 
-    draw() {
+    async draw(options) {
         this.drawGridSetting();
         this.drawBackground();
-        this.drawPieces();
+        await this.drawPieces();
     }
 
     drawGridSetting() {
         const valX = parseInt(this.gridRatio.x * this.canvas.width);
         const valY = parseInt(this.gridRatio.y * this.canvas.height);
         
+        $('#input-display-grid').prop('checked', this.gridRatio.display);
         $('#input-feet-per-grid').val(this.gridRatio.feetPerGrid);
         $('#input-grid-width').val(this.gridRatio.x);
         $('#input-grid-height').val(this.gridRatio.y);
@@ -222,15 +223,59 @@ class Scene {
         $('label[for="range-grid-size-x"]').html(`<i class="fa-solid fa-border-none me-2"></i>Grid Size: ${valX} x ${valY}`);
     }
 
+    async drawGrid(options = {}) {
+        const gridHeightPx = options.gridHeight ?? this.gridRatio.y * this.canvas.height;
+        const gridWidthPx = options.gridWidth ?? this.gridRatio.x * this.canvas.width;
+
+        const prevStrokeColor = this.ctx.strokeStyle;
+        this.ctx.strokeStyle = await this.background.getContrastColor();
+        let colIndexPx = 0;
+        do {
+            colIndexPx += gridWidthPx;
+            this.ctx.beginPath();
+            this.ctx.moveTo(colIndexPx, 0);
+            this.ctx.lineTo(colIndexPx, this.canvas.height);
+            this.ctx.stroke();
+        }
+        while(colIndexPx < this.canvas.width);
+
+        let rowIndexPx = 0;
+        do {
+            rowIndexPx += gridHeightPx;
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, rowIndexPx);
+            this.ctx.lineTo(this.canvas.width, rowIndexPx);
+            this.ctx.stroke();
+        }
+        while(rowIndexPx < this.canvas.height);
+
+        this.ctx.strokeStyle = prevStrokeColor;
+    }
+
+    drawBackdrop() {
+        const prevFillStyle = this.ctx.fillStyle;
+        this.ctx.fillStyle = "#000000a0";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = prevFillStyle;
+    }
+
     drawBackground() {
         return this.background.apply();
     }
 
-    async drawPieces(addTrail = false) {
+    clearCanvas() {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    }
+
+    async drawPieces(options = {}) {
+        this.clearCanvas();
+
+        if (this.gridRatio.display) {
+            await this.drawGrid(options);
+        }
 
         let trailColor = null;
-        if (addTrail || document.getElementById('checkbox-route-toggle').checked) {
+        if (options.addTrail || document.getElementById('checkbox-route-toggle').checked) {
             trailColor = await this.background.getContrastColor();
         }
 

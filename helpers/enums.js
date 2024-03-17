@@ -29,7 +29,8 @@ const StorageKeys = {
   GridRatio: 'grid ratio',
   Permissions: 'permissions',
   Scenes: 'scenes',
-  SessionPieces: 'session pieces'
+  SessionPieces: 'session pieces',
+  CurrentSceneId: 'current scene id'
 }
 
 const PieceSizes = {
@@ -42,7 +43,7 @@ const PieceSizes = {
   Colossal: 30
 }
 
-const GridSettingMode = {
+const DrawMode = {
   Off: 0,
   AwaitingInput: 1,
   Drawing: 2

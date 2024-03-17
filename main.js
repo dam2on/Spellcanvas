@@ -11,7 +11,7 @@ _gridShape = null;
 _draggedPiece = null;
 _forceHideRoutes = false;
 _cropper = null;
-_gridSettingMode = GridSettingMode.Off;
+_drawMode = DrawMode.Off;
 
 const shapeIntersects = function (x, y, respectLock = false) {
   for (var piece of CURRENT_SCENE?.pieces) {
@@ -27,7 +27,7 @@ const shapeIntersects = function (x, y, respectLock = false) {
   return null;
 }
 
-const onTutorial = async function() {
+const onTutorial = async function () {
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   await localforage.removeItem(StorageKeys.Tutorial);
   initMainMenuTour(isHost());
@@ -105,12 +105,13 @@ const onGridSubmit = async function (e) {
   e.preventDefault();
 
   $('.grid-mode-overlay').hide();
-  _gridSettingMode = GridSettingMode.Off;
+  _drawMode = DrawMode.Off;
   _gridShape = null;
   await onGridChangeEvent({
     x: $('#input-grid-width').val(),
     y: $('#input-grid-height').val(),
-    feetPerGrid: $('#input-feet-per-grid').val()
+    feetPerGrid: $('#input-feet-per-grid').val(),
+    display: $('#input-display-grid').prop('checked')
   });
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
 
@@ -121,7 +122,7 @@ const onGridSubmit = async function (e) {
 
 const onGridReset = function (e) {
   $('.grid-mode-overlay').hide();
-  _gridSettingMode = GridSettingMode.Off;
+  _drawMode = DrawMode.Off;
   _gridShape = null;
 }
 
@@ -130,6 +131,17 @@ const initGridShape = function (x, y) {
   _gridShape.color = '#eaf0f0';
   _gridShape.opacity = 100;
   _gridShape.updateSize();
+}
+
+const onGridDisplayToggle = async function () {
+  CURRENT_SCENE.gridRatio.display = $('#input-display-grid').prop('checked');
+
+  await CURRENT_SCENE.drawPieces({
+    gridHeight: Number($('#input-grid-height').val() * CURRENT_SCENE.canvas.height),
+    gridWidth: Number($('#input-grid-width').val() * CURRENT_SCENE.canvas.width)
+  });
+  CURRENT_SCENE.drawBackdrop();
+  _gridShape?.draw({ width: _gridShape.width, height: _gridShape.height, border: "#5f8585", borderWidth: 2 });
 }
 
 const onGridSizeChange = function (e) {
@@ -158,11 +170,15 @@ const onGridSizeChange = function (e) {
   $('.grid-indicator').css('width', valX + 'px');
   $('.grid-indicator').css('height', valY + 'px');
 
-  CURRENT_SCENE.drawPieces();
+  CURRENT_SCENE.drawPieces({
+    gridWidth: valX,
+    gridHeight: valY
+  });
   if (_gridShape == null) {
     initGridShape(0.5, 0.5);
   }
-  _gridShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
+  CURRENT_SCENE.drawBackdrop();
+  _gridShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
 }
 
 const onSpellRulerToggle = async function (args) {
@@ -759,8 +775,8 @@ const onUpdatePieceEvent = async function (peerId, piece) {
   CURRENT_SCENE.drawPieces();
 }
 
-const onGridChangeEvent = async function (gridSize) {
-  CURRENT_SCENE.gridRatio = gridSize;
+const onGridChangeEvent = async function (grid) {
+  CURRENT_SCENE.gridRatio = grid;
 
   if (_spellRuler instanceof Shape) {
     _spellRuler.updateSize(Number($('#input-spell-size').val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
@@ -960,6 +976,7 @@ const onAddScene = async function () {
 
   CURRENT_SCENE = new Scene(newGuid(), _host);
   CURRENT_SCENE.draw();
+  await localforage.setItem(StorageKeys.CurrentSceneId, CURRENT_SCENE.id);
   await CURRENT_SCENE.saveScene();
 
   // $('#scene-list').prepend(Scene.updateOrCreateDom(CURRENT_SCENE));
@@ -985,7 +1002,7 @@ const onGridMode = function () {
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).show();
 
-  _gridSettingMode = GridSettingMode.AwaitingInput;
+  _drawMode = DrawMode.AwaitingInput;
   $('#spell-ruler').find('input.btn-check').prop("checked", false);
   _spellRuler = null;
 
@@ -1058,6 +1075,7 @@ const onChangeScene = async function (id) {
   }
 
   CURRENT_SCENE = await Scene.load(sceneToLoad);
+  await localforage.setItem(StorageKeys.CurrentSceneId, CURRENT_SCENE.id);
   CURRENT_SCENE.draw();
 
   for (var player of PARTY.players) {
@@ -1186,9 +1204,10 @@ const onDeleteScene = async function (id) {
 
 const restoreHostSession = async function () {
   const scenePartials = await localforage.getItem(StorageKeys.Scenes);
+
   if (!!scenePartials?.length && !!scenePartials.find(s => s.owner == _host)) {
-    // load any scene
-    const partialToLoad = scenePartials.find(s => s.owner == _host);
+    const currentSceneId = await localforage.getItem(StorageKeys.CurrentSceneId);
+    const partialToLoad = scenePartials.find(s => s.id == currentSceneId) ?? scenePartials[0];
     CURRENT_SCENE = await Scene.load(partialToLoad);
     displaySceneList(scenePartials);
   }
@@ -1317,7 +1336,7 @@ const onRouteToggle = function () {
 
 const onRouteShow = function () {
   if (!_forceHideRoutes)
-    CURRENT_SCENE?.drawPieces(true);
+    CURRENT_SCENE?.drawPieces({ addTrail: true });
 }
 
 const onRouteHide = function () {
@@ -1325,56 +1344,77 @@ const onRouteHide = function () {
   _forceHideRoutes = false;
 }
 
+const onFullscreenToggle = function() {
+  if (!document.fullscreenElement) {
+    $('#btn-fullscreen').find('i').removeClass('fa-expand');
+    $('#btn-fullscreen').find('i').addClass('fa-compress');
+    document.documentElement.requestFullscreen();
+  } else if (document.exitFullscreen) {
+    $('#btn-fullscreen').find('i').removeClass('fa-compress');
+    $('#btn-fullscreen').find('i').addClass('fa-expand');
+    document.exitFullscreen();
+  }
+}
+
+const refreshCanvas = function() {
+  document.getElementById('canvas').width = window.innerWidth;
+  document.getElementById('canvas').height = window.innerHeight;
+  document.getElementById('background-image').width = window.innerWidth;
+  document.getElementById('background-image').height = window.innerHeight;
+
+  if (_cropper instanceof Cropper) {
+    if (_cropper.element == document.getElementById('img-bg-preview')) {
+      _cropper.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height)
+    }
+    else {
+      _cropper.setAspectRatio(CURRENT_SCENE.getGridAspectRatio())
+    }
+  }
+
+  if (_spellRuler instanceof Shape) {
+    _spellRuler.draw();
+  }
+
+  if (CURRENT_SCENE != null) {
+    CURRENT_SCENE.drawBackground();
+
+    if (_gridShape != null) {
+      const currGridWidth = $('#input-grid-width').val();
+      const currGridHeight = $('#input-grid-height').val();
+
+      const valX = currGridWidth * CURRENT_SCENE.canvas.width;
+      const valY = currGridHeight * CURRENT_SCENE.canvas.height;
+      CURRENT_SCENE.drawPieces({
+        gridWidth: valX,
+        gridHeight: valY
+      });
+      CURRENT_SCENE.drawBackdrop();
+      _gridShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
+
+      if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
+
+        $('#grid-width-display').html(parseInt(valX) + 'px');
+        $('#grid-height-display').html(parseInt(valY) + 'px');
+
+        $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${valX / 2}px)`);
+        $('.grid-indicator').css('width', valX + 'px');
+        $('.grid-indicator').css('height', valY + 'px');
+      }
+    }
+    else {
+      CURRENT_SCENE.drawGridSetting();
+      CURRENT_SCENE.drawPieces();
+    }
+  }
+}
+
 const initDom = function () {
   var can = document.getElementById('canvas');
   can.width = window.innerWidth;
   can.height = window.innerHeight;
 
-  new ResizeObserver(function () {
-    document.getElementById('canvas').width = window.innerWidth;
-    document.getElementById('canvas').height = window.innerHeight;
-    document.getElementById('background-image').width = window.innerWidth;
-    document.getElementById('background-image').height = window.innerHeight;
-
-    if (_cropper instanceof Cropper) {
-      if (_cropper.element == document.getElementById('img-bg-preview')) {
-        _cropper.setAspectRatio(CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height)
-      }
-      else {
-        _cropper.setAspectRatio(CURRENT_SCENE.getGridAspectRatio())
-      }
-    }
-
-    if (_spellRuler instanceof Shape) {
-      _spellRuler.draw();
-    }
-
-    if (CURRENT_SCENE != null) {
-      CURRENT_SCENE.drawBackground();
-      CURRENT_SCENE.drawPieces();
-      if (_gridShape != null) {
-        const currGridWidth = $('#input-grid-width').val();
-        const currGridHeight = $('#input-grid-height').val();
-
-        const valX = currGridWidth * CURRENT_SCENE.canvas.width;
-        const valY = currGridHeight * CURRENT_SCENE.canvas.height;
-        _gridShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2, backdrop: "#000000a0" });
-
-        if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
-
-          $('#grid-width-display').html(parseInt(valX) + 'px');
-          $('#grid-height-display').html(parseInt(valY) + 'px');
-
-          $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${valX / 2}px)`);
-          $('.grid-indicator').css('width', valX + 'px');
-          $('.grid-indicator').css('height', valY + 'px');
-        }
-      }
-      else {
-        CURRENT_SCENE.drawGridSetting();
-      }
-    }
-  }).observe(document.body);
+  new ResizeObserver(refreshCanvas).observe(document.body);
+  document.addEventListener('fullscreenchange', refreshCanvas);
 
   // init cropper
   Cropper.setDefaults({
@@ -1458,7 +1498,7 @@ const initDom = function () {
       menuToggleTimeout = setTimeout(() => {
         $('.menu-toggle').removeClass('opacity-100');
         bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
-      }, 450);
+      }, 650);
     }
   });
   $('.menu-toggle').on('mouseout', function () {
@@ -1470,7 +1510,8 @@ const initDom = function () {
   $('#input-spell-size').on('change', onSpellSizeChange);
   $('.btn-grid-size').on('click', onGridSizeChange);
   $('.rotate-btn').on('click', onCropperRotate);
-  // $('.quick-add').on('click', onQuickAdd);
+  document.getElementById('btn-fullscreen').addEventListener('click', onFullscreenToggle);
+  document.getElementById('input-display-grid').addEventListener('change', onGridDisplayToggle);
   document.getElementById('btn-tutorial').addEventListener('click', onTutorial);
   document.getElementById('canvas-submenu-change-bg').addEventListener('click', onChangeBackgroundModal);
   document.getElementById('btn-change-bg').addEventListener('click', onChangeBackgroundModal);
@@ -1550,7 +1591,7 @@ const initDom = function () {
   document.getElementById('modal-bg').addEventListener("show.bs.modal", () => resetModalBgForm());
 
   document.getElementById("modal-grid").addEventListener("hide.bs.modal", () => {
-    if (_gridSettingMode) {
+    if (_drawMode) {
       _gridShape = null;
       CURRENT_SCENE.drawPieces();
     }
@@ -1574,13 +1615,13 @@ const initDom = function () {
       return;
     }
 
-    if (_gridSettingMode) {
+    if (_drawMode) {
       let pos = {
         x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
         y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
       }
       initGridShape(pos.x, pos.y);
-      _gridSettingMode = GridSettingMode.Drawing;
+      _drawMode = DrawMode.Drawing;
       return;
     }
     if (_spellRuler instanceof Shape) {
@@ -1617,7 +1658,7 @@ const initDom = function () {
       args.clientX = args.touches[0].clientX;
       args.clientY = args.touches[0].clientY;
     }
-    if (_gridSettingMode == GridSettingMode.Drawing && _gridShape != null) {
+    if (_drawMode == DrawMode.Drawing && _gridShape != null) {
       CURRENT_SCENE.drawPieces();
       const origin = {
         x: _gridShape.getX() - _gridShape.width / 2,
@@ -1671,8 +1712,8 @@ const initDom = function () {
     if (args.type == 'touchend') {
       clearTimeout(touchRightClickTimeout);
     }
-    if (_gridSettingMode && _gridShape != null) {
-      _gridSettingMode = GridSettingMode.AwaitingInput;
+    if (_drawMode && _gridShape != null) {
+      _drawMode = DrawMode.AwaitingInput;
       const width = Math.abs(_gridShape.width);
       const height = Math.abs(_gridShape.height);
       $('.grid-indicator').css('width', width + 'px');

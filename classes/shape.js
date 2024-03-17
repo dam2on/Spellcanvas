@@ -39,11 +39,6 @@ class Shape extends Piece {
         const currentStrokeStyle = this.ctx.strokeStyle;
         const currentLineWidth = this.ctx.lineWidth;
 
-        if (options.backdrop) {
-            this.ctx.fillStyle = options.backdrop;
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        }
-
         this.path = new Path2D();
         this.ctx.fillStyle = this.color + Number(this.opacity).toString(16);
         this.ctx.strokeStyle = options.strokeStyle ?? this.ctx.fillStyle;
