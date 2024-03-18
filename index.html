@@ -92,11 +92,11 @@
         background-size: cover;">
     </canvas>
     <ul id="canvas-submenu" class="dropdown-menu" style="position: absolute">
-        <li><a id="canvas-submenu-add-piece" class="dropdown-item" href="javascript:void(0)">Create Piece Here</a>
+        <li><a id="canvas-submenu-add-piece" class="dropdown-item" href="javascript:void(0)">New Piece Here</a>
         </li>
-        <li><a id="canvas-submenu-change-bg" class="host-only dropdown-item" href="javascript:void(0)">Edit
+        <li><a id="canvas-submenu-change-bg" class="host-only dropdown-item" href="javascript:void(0)">Set
                 Background</a></li>
-        <li><a id="canvas-submenu-adjust-grid" class="host-only dropdown-item" href="javascript:void(0)">Adjust Grid</a>
+        <li><a id="canvas-submenu-adjust-grid" class="host-only dropdown-item" href="javascript:void(0)">Grid Settings</a>
         </li>
     </ul>
 
@@ -167,7 +167,7 @@
                 <div id="section-permissions" class="form-group my-3" style="display: none;">
                     <div>Permissions</div>
                     <div class="form-check form-switch">
-                        <label class="form-check-label" for="permissions-own-pieces">Players can only edit their own
+                        <label class="form-check-label" for="permissions-own-pieces">Players can only modify their own
                             pieces</label>
                         <input class="form-check-input" type="checkbox" role="switch" id="permissions-own-pieces">
                     </div>
@@ -195,23 +195,29 @@
             </div>
             <div class="mt-auto d-flex justify-content-between">
                 <a href="https://spellcanvas.canny.io/bug-reports" target="blank">Submit Feedback</a>
-                <a id="btn-tutorial" href="javascript:void(0)"><i class="fa-solid fa-circle-question"></i></a>
+                <a id="btn-tutorial" role="button" href="javascript:void(0)"><i
+                        class="fa-solid fa-circle-question"></i></a>
             </div>
             <div class="debug-info" style="display: none;">
 
             </div>
         </div>
-        <div>
-            <button class="btn btn-secondary menu-btn left-menu-btn" data-bs-target="#main-menu" data-bs-toggle="offcanvas" type="button"
-                style="position: relative; left: 399px; top: 1px;" aria-controls="main-menu">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-            <input class="btn-check menu-btn" type="checkbox" id="checkbox-route-toggle">
-            <label for="checkbox-route-toggle" style="position: relative; left: 399px; top: 1px;"
-                class="btn btn-outline-secondary me-1 bottom-btn">
-                <i class="fa-solid fa-route"></i>
-            </label>
+        <div style="position: relative; left: 399px; top: 1px;">
+            <div id="sub-menu-controls" style="border-radius: 0.2rem;">
+                <button id="btn-menu-toggle" class="no-focus btn btn-secondary menu-btn left-menu-btn" data-bs-target="#main-menu"
+                    data-bs-toggle="offcanvas" type="button" aria-controls="main-menu">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <input class="btn-check menu-btn" type="checkbox" id="checkbox-route-toggle">
+                <label for="checkbox-route-toggle" class="no-focus btn-sm btn btn-outline-secondary" style="margin-bottom: 0.1em; display: none;">
+                    <i class="fa-solid fa-route"></i>
+                </label>
+                <button class="no-focus btn btn-secondary menu-btn btn-sm" id="btn-fullscreen" type="button" style="margin-bottom: 0.1em; display: none;">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+            </div>
         </div>
+
     </div>
     <div class="offcanvas offcanvas-end" tabindex="-1" id="piece-menu" aria-labelledby="piece-menu-header">
         <div class="offcanvas-body">
@@ -437,12 +443,6 @@
                 </div>
                 <div class="offset-sm-2"></div>
             </div>
-        </div>
-        <div>
-            <button class="btn btn-secondary menu-btn right-menu-btn" id="btn-fullscreen" type="button"
-                style="position: relative; right: 40px; top: 1px;">
-                <i class="fa-solid fa-expand"></i>
-            </button>
         </div>
     </div>
     <!-- Modals -->

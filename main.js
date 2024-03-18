@@ -1490,26 +1490,42 @@ const initDom = function () {
     $('#piece-menu-image').attr('src', data);
   });
 
-  let menuToggleTimeout;
+  $('.menu-toggle').on('click', function () {
+    if (_draggedPiece == null) {
+      bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
+    }
+  });
   $('.menu-toggle').on('mouseover', function () {
     if (_draggedPiece == null) {
-      $('.menu-toggle').addClass('opacity-100');
-
-      menuToggleTimeout = setTimeout(() => {
-        $('.menu-toggle').removeClass('opacity-100');
-        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
-      }, 650);
+      $('.menu-toggle').addClass('blinking');
     }
   });
   $('.menu-toggle').on('mouseout', function () {
-    $('.menu-toggle').removeClass('opacity-100');
-    clearTimeout(menuToggleTimeout);
+    $('.menu-toggle').removeClass('blinking');
+  });
+
+  $('#btn-menu-toggle').on('mouseover', function() {
+    $('#sub-menu-controls').one('mouseleave', function() {
+      if (Shepherd.activeTour?.currentStep?.id == 'sub-menu-step') return; 
+      $('#sub-menu-controls').css('transition-duration', '0s');
+      $('#sub-menu-controls').css('width', '');
+      $('#sub-menu-controls').removeClass('background');
+      $('#btn-fullscreen').hide();
+      $('label[for="checkbox-route-toggle"]').hide();
+      $('#sub-menu-controls').css('transition-duration', '');
+    });
+
+    $('#sub-menu-controls').addClass('background');
+    $('#btn-fullscreen').fadeIn();
+    $('label[for="checkbox-route-toggle"]').fadeIn();
+    $('#sub-menu-controls').css('width', '7.35em');
   });
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change', onSpellSizeChange);
   $('.btn-grid-size').on('click', onGridSizeChange);
   $('.rotate-btn').on('click', onCropperRotate);
+  
   document.getElementById('btn-fullscreen').addEventListener('click', onFullscreenToggle);
   document.getElementById('input-display-grid').addEventListener('change', onGridDisplayToggle);
   document.getElementById('btn-tutorial').addEventListener('click', onTutorial);

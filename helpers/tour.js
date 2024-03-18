@@ -257,6 +257,7 @@ const initMainMenuTour = async function (isHost = true) {
     const tourId = Tutorials.Main;
 
     const tour = new Shepherd.Tour({
+        id: tourId,
         defaultStepOptions: {
             cancelIcon: {
                 enabled: true
@@ -479,7 +480,7 @@ const initMainMenuTour = async function (isHost = true) {
     }
 
     tour.addStep({
-        title: 'Hover Me!',
+        title: 'Click Me!',
         text: 'Open settings',
         attachTo: {
             element: document.querySelector(".menu-toggle"),
@@ -508,7 +509,7 @@ const initMainMenuTour = async function (isHost = true) {
         title: 'Or Click Me!',
         text: 'Open settings',
         attachTo: {
-            element: document.querySelector("button.left-menu-btn"),
+            element: document.getElementById("btn-menu-toggle"),
             on: 'top'
         },
         buttons: [
@@ -522,6 +523,7 @@ const initMainMenuTour = async function (isHost = true) {
             },
             {
                 action() {
+                    $("#btn-menu-toggle").trigger('mouseover');
                     return this.next();
                 },
                 text: 'Next'
@@ -530,15 +532,19 @@ const initMainMenuTour = async function (isHost = true) {
     });
 
     tour.addStep({
-        title: 'Click me!',
-        text: 'Toggle Fullscreen Mode',
+        id: 'sub-menu-step',
+        title: 'Also, Hover Me!',
+        text: 'Show previous piece position or toggle fullscreen mode!',
         attachTo: {
-            element: document.getElementById("btn-fullscreen"),
+            element: document.getElementById("btn-menu-toggle"),
             on: 'top'
         },
         buttons: [
             {
                 action() {
+                    setTimeout(function() {
+                        $("#btn-menu-toggle").trigger('mouseleave');
+                    }, 150);
                     $('.menu-toggle').addClass('blinking');
                     return this.back();
                 },
@@ -547,6 +553,9 @@ const initMainMenuTour = async function (isHost = true) {
             },
             {
                 action() {
+                    setTimeout(function() {
+                        $("#btn-menu-toggle").trigger('mouseleave');
+                    }, 150);
                     return this.complete();
                 },
                 text: 'Next'

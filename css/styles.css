@@ -18,9 +18,19 @@ body,
   /* Opera/IE 8+ */
 }
 
+.background {
+  background-color: #36454F !important
+}
+
 .dropdown-menu > li > a {
   background-color: #36454F;
   color: #f7f7f7;
+}
+
+#sub-menu-controls {
+  width: 2.55em;
+  transition: width 300ms cubic-bezier(0.075, 0.82, 0.165, 1);
+  max-height: 38px;
 }
 
 .subtle-text {
@@ -254,9 +264,10 @@ a[role="button"] {
 }
 
 .menu-toggle {
-  width: 2.4em;
+  width: 2.55em;
   position: absolute;
   opacity: 0;
+  cursor: pointer;
   background-image: linear-gradient(to right,#000000cc, transparent);
   transition: opacity 0.45s linear;
   height: 100%;
@@ -301,10 +312,10 @@ a[role="button"] {
 
 .blinking {
   opacity: 1;
-  -webkit-animation: blinkingAnimation 1.8s infinite;
-  -moz-animation: blinkingAnimation 1.8s infinite;
-  -o-animation: blinkingAnimation 1.8s infinite;
-  animation: blinkingAnimation 1.8s infinite;
+  -webkit-animation: blinkingAnimation 1.2s ease-out infinite;
+  -moz-animation: blinkingAnimation 1.2s ease-out infinite;
+  -o-animation: blinkingAnimation 1.2s ease-out infinite;
+  animation: blinkingAnimation 1.2s ease-out infinite;
 }
 
 @keyframes blinkingAnimation {
@@ -312,19 +323,11 @@ a[role="button"] {
     background-color: transparent;
   }
 
-  6% {
+  50% {
     background-color: #eaf0f0b0;
   }
 
-  29% {
-    background-color: transparent;
-  }
-
-  35% {
-    background-color: #eaf0f0b0;
-  }
-
-  58% {
+  100% {
     background-color: transparent;
   }
 }
