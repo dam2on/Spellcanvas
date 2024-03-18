@@ -215,34 +215,9 @@ const initGamePieceTour = async function (piece) {
                 action() {
                     $('label[for="checkbox-route-toggle"]').trigger('hover');
                     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
-                    return this.next();
-                },
-                text: 'Next'
-            }
-        ]
-    });
-
-    newGamePieceTour.addStep({
-        title: 'Toggle Routes',
-        text: 'Hover or click me to show most recent piece positions',
-        attachTo: {
-            element: document.querySelector('label[for="checkbox-route-toggle"]'),
-            on: 'top'
-        },
-        buttons: [
-            {
-                action() {
-                    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).show();
-                    return this.back();
-                },
-                classes: 'shepherd-button-secondary',
-                text: 'Back'
-            },
-            {
-                action() {
                     return this.complete();
                 },
-                text: 'OK'
+                text: 'Done!'
             }
         ]
     });
