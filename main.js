@@ -7,7 +7,7 @@ _host = null;
 
 _pieceInMenu = null;
 _spellRuler = null;
-_gridShape = null;
+_drawShape = null;
 _draggedPiece = null;
 _forceHideRoutes = false;
 _cropper = null;
@@ -106,7 +106,7 @@ const onGridSubmit = async function (e) {
 
   $('.draw-mode-overlay').hide();
   _drawMode = DrawMode.Off;
-  _gridShape = null;
+  _drawShape = null;
   await onGridChangeEvent({
     x: $('#input-grid-width').val(),
     y: $('#input-grid-height').val(),
@@ -123,14 +123,14 @@ const onGridSubmit = async function (e) {
 const onGridReset = function (e) {
   $('.draw-mode-overlay').hide();
   _drawMode = DrawMode.Off;
-  _gridShape = null;
+  _drawShape = null;
 }
 
 const initGridShape = function (x, y) {
-  _gridShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
-  _gridShape.color = '#eaf0f0';
-  _gridShape.opacity = 100;
-  _gridShape.updateSize();
+  _drawShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
+  _drawShape.color = '#eaf0f0';
+  _drawShape.opacity = 100;
+  _drawShape.updateSize();
 }
 
 const onGridDisplayToggle = async function () {
@@ -141,7 +141,7 @@ const onGridDisplayToggle = async function () {
     gridWidth: Number($('#input-grid-width').val() * CURRENT_SCENE.canvas.width)
   });
   CURRENT_SCENE.drawBackdrop();
-  _gridShape?.draw({ width: _gridShape.width, height: _gridShape.height, border: "#5f8585", borderWidth: 2 });
+  _drawShape?.draw({ width: _drawShape.width, height: _drawShape.height, border: "#5f8585", borderWidth: 2 });
 }
 
 const onGridSizeChange = function (e) {
@@ -174,11 +174,11 @@ const onGridSizeChange = function (e) {
     gridWidth: valX,
     gridHeight: valY
   });
-  if (_gridShape == null) {
+  if (_drawShape == null) {
     initGridShape(0.5, 0.5);
   }
   CURRENT_SCENE.drawBackdrop();
-  _gridShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
+  _drawShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
 }
 
 const onSpellRulerToggle = async function (args) {
@@ -1394,7 +1394,7 @@ const refreshCanvas = function() {
   if (CURRENT_SCENE != null) {
     CURRENT_SCENE.drawBackground();
 
-    if (_gridShape != null) {
+    if (_drawShape != null) {
       const currGridWidth = $('#input-grid-width').val();
       const currGridHeight = $('#input-grid-height').val();
 
@@ -1405,7 +1405,7 @@ const refreshCanvas = function() {
         gridHeight: valY
       });
       CURRENT_SCENE.drawBackdrop();
-      _gridShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
+      _drawShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
 
       if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
 
@@ -1624,7 +1624,7 @@ const initDom = function () {
 
   document.getElementById("modal-grid").addEventListener("hide.bs.modal", () => {
     if (_drawMode) {
-      _gridShape = null;
+      _drawShape = null;
       CURRENT_SCENE.drawPieces();
     }
   });
@@ -1690,18 +1690,18 @@ const initDom = function () {
       args.clientX = args.touches[0].clientX;
       args.clientY = args.touches[0].clientY;
     }
-    if (_drawMode == DrawMode.Drawing && _gridShape != null) {
+    if (_drawMode == DrawMode.Drawing && _drawShape != null) {
       CURRENT_SCENE.drawPieces();
       const origin = {
-        x: _gridShape.getX() - _gridShape.width / 2,
-        y: _gridShape.getY() - _gridShape.height / 2
+        x: _drawShape.getX() - _drawShape.width / 2,
+        y: _drawShape.getY() - _drawShape.height / 2
       }
       const dW = (args.clientX - origin.x);
       const dH = (args.clientY - origin.y);
-      _gridShape.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
-      _gridShape.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
+      _drawShape.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
+      _drawShape.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
 
-      _gridShape.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2 });
+      _drawShape.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2 });
       return;
     }
     if (_draggedPiece != null) {
@@ -1744,16 +1744,16 @@ const initDom = function () {
     if (args.type == 'touchend') {
       clearTimeout(touchRightClickTimeout);
     }
-    if (_drawMode && _gridShape != null) {
+    if (_drawMode && _drawShape != null) {
       _drawMode = DrawMode.AwaitingInput;
-      const width = Math.abs(_gridShape.width);
-      const height = Math.abs(_gridShape.height);
+      const width = Math.abs(_drawShape.width);
+      const height = Math.abs(_drawShape.height);
       $('.grid-indicator').css('width', width + 'px');
       $('.grid-indicator').css('height', height + 'px');
       $('#input-grid-width').val(width / CURRENT_SCENE.canvas.width);
       $('#input-grid-height').val(height / CURRENT_SCENE.canvas.height);
       onGridSizeChange();
-      // _gridShape = null;
+      // _drawShape = null;
       // CURRENT_SCENE.drawPieces();
     }
 

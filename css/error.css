@@ -5,7 +5,8 @@ body,
 .card,
 .dropdown-menu,
 .accordion-item,
-.accordion-button {
+.accordion-button,
+a {
   background-color: #36454F !important;
   color: #f7f7f7 !important;
   -webkit-box-sizing: border-box;
