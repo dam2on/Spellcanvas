@@ -279,7 +279,7 @@ class Scene {
             trailColor = await this.background.getContrastColor();
         }
 
-        for (var piece of this.pieces) {
+        for (var piece of this.pieces.filter(p => (options.hide ?? []).indexOf(p.id) == -1)) {
             piece.draw({trailColor});
         }
     }

@@ -371,6 +371,7 @@
                 <fieldset class="row mb-3">
                     <legend class="col-form-label col-sm-2 pt-0">Shape</legend>
                     <div class="col-sm-10">
+                        <span id="custom-shape-type-msg" style="display: none">Custom</span>
                         <div class="form-check">
                             <input id="radio-shape-menu-type-li" class="form-check-input" type="radio"
                                 name="radio-shape-menu-type" value="line">
@@ -409,7 +410,9 @@
                             <span class="input-group-text">ft</span>
                         </div>
                     </div>
-                    <div class="offset-sm-6"></div>
+                    <div class="col-sm-6">
+                        <button id="toggle-custom-shape-size" class="btn btn-secondary btn-sm" style="display: none;">Free Draw</button>
+                    </div>
                 </div>
                 <div class="row mb-2">
                     <label for="input-shape-menu-color" class="form-label col-sm-2">Color</label>
@@ -744,7 +747,6 @@
     <div style="display: none;">
         <img id="image-dead" src="img/dead.png" />
     </div>
-    <!-- <script type="text/javascript" src="helpers/bootstrap-form-validation.js"></script> -->
 </body>
 
 </html>

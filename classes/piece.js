@@ -4,9 +4,14 @@ class Piece {
         this.owner = ownerId;
         this.name = name;
         this.image = img;
-        this.size = Number(size);
-        this.width = this.size;
-        this.height = this.size;
+        if (typeof(size) == 'object') {
+            this.size = size;
+        }
+        else {
+            this.size = Number(size);
+            this.width = this.size;
+            this.height = this.size;
+        }
         this.conditions = [];
         this.rotation = 0;
         this.x = x;

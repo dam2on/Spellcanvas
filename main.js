@@ -66,6 +66,20 @@ const onBackgroundTypeChange = function () {
   }
 }
 
+const onShapeTypeChange = function () {
+  const shapeType = document.querySelector('input[type="radio"][name="radio-shape-menu-type"]:checked').value;
+  switch (shapeType) {
+    case ShapeType.Square:
+      $('#toggle-custom-shape-size').show();
+      $('#toggle-custom-shape-size').prop('disabled', false);
+      break;
+    default:
+      $('#toggle-custom-shape-size').hide();
+      $('#toggle-custom-shape-size').prop('disabled', true);
+      break;
+  }
+}
+
 const onChangeBackgroundSubmit = function () {
   $('#form-modal-bg').removeClass('was-validated');
   if (!isHost()) {
@@ -127,10 +141,11 @@ const onGridReset = function (e) {
 }
 
 const initGridShape = function (x, y) {
-  _drawShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
-  _drawShape.color = '#eaf0f0';
-  _drawShape.opacity = 100;
-  _drawShape.updateSize();
+  const gridShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
+  gridShape.color = '#eaf0f0';
+  gridShape.opacity = 100;
+  gridShape.updateSize();
+  return gridShape
 }
 
 const onGridDisplayToggle = async function () {
@@ -175,7 +190,7 @@ const onGridSizeChange = function (e) {
     gridHeight: valY
   });
   if (_drawShape == null) {
-    initGridShape(0.5, 0.5);
+    _drawShape = initGridShape(0.5, 0.5);
   }
   CURRENT_SCENE.drawBackdrop();
   _drawShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
@@ -360,23 +375,25 @@ const onUpdatePieceSubmit = async function () {
 
   if (_pieceInMenu instanceof Shape) {
     const type = document.querySelector('input[name="radio-shape-menu-type"]:checked').value;
-    const size = document.getElementById("input-shape-menu-size").value;
-    const color = document.getElementById("input-shape-menu-color").value;
-    const opacity = document.getElementById("input-shape-menu-opacity").value;
+    const size = document.getElementById('input-shape-menu-size').value;
+    const color = document.getElementById('input-shape-menu-color').value;
+    const opacity = document.getElementById('input-shape-menu-opacity').value;
     _pieceInMenu.type = type;
-    _pieceInMenu.size = Number(size);
+    if (!$('#input-shape-menu-size').prop('disabled')) {
+      _pieceInMenu.size = Number(size);
+    }
     _pieceInMenu.color = color;
     _pieceInMenu.contrastColor = invertColor(_pieceInMenu.color);
     _pieceInMenu.opacity = opacity;
   }
   else {
-    const name = document.getElementById("piece-menu-name").value;
+    const name = document.getElementById('piece-menu-name').value;
     const size = document.querySelector('input[name="radio-piece-menu-size"]:checked').value;
-    const statusConds = document.getElementById("piece-menu-status-conditions").value;
-    const dead = document.getElementById("piece-menu-dead").checked;
-    const hideShadow = document.getElementById("piece-menu-shadow").checked;
-    const file = document.getElementById("piece-menu-image-input").files[0];
-    const auraEnabled = document.getElementById("checkbox-piece-menu-aura").checked;
+    const statusConds = document.getElementById('piece-menu-status-conditions').value;
+    const dead = document.getElementById('piece-menu-dead').checked;
+    const hideShadow = document.getElementById('piece-menu-shadow').checked;
+    const file = document.getElementById('piece-menu-image-input').files[0];
+    const auraEnabled = document.getElementById('checkbox-piece-menu-aura').checked;
     _pieceInMenu.name = name;
     _pieceInMenu.dead = dead;
     _pieceInMenu.hideShadow = hideShadow;
@@ -993,6 +1010,18 @@ const onAddScene = async function () {
   }
 }
 
+const onToggleCustomShape = function() {
+  $('.draw-mode-overlay').show();
+  _drawMode = DrawMode.AwaitingInput;
+  _pieceInMenu.lock = document.getElementById('piece-menu-lock').checked;
+  _pieceInMenu.color = document.getElementById("input-shape-menu-color").value;
+  _pieceInMenu.opacity = document.getElementById("input-shape-menu-opacity").value;
+  _pieceInMenu.type = ShapeType.Square; // only squares have custom size support
+  _drawShape = Shape.fromObj(_pieceInMenu);
+  
+  bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
+}
+
 const onGridMode = function () {
   $("#canvas-submenu").css({ 'display': 'none' });
   $('.draw-mode-overlay').show();
@@ -1542,6 +1571,7 @@ const initDom = function () {
   $('.btn-grid-size').on('click', onGridSizeChange);
   $('.rotate-btn').on('click', onCropperRotate);
   
+  document.getElementById('toggle-custom-shape-size').addEventListener('click', onToggleCustomShape);
   document.getElementById('btn-fullscreen').addEventListener('click', onFullscreenToggle);
   document.getElementById('input-display-grid').addEventListener('change', onGridDisplayToggle);
   document.getElementById('btn-tutorial').addEventListener('click', onTutorial);
@@ -1567,6 +1597,7 @@ const initDom = function () {
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseenter', onRouteShow);
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseleave', onRouteHide);
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
+  $('input[type="radio"][name="radio-shape-menu-type"]').on('change', onShapeTypeChange);
   document.getElementById('input-aura-menu-opacity').addEventListener('input', (e) => {
     $('#value-aura-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
   });
@@ -1652,7 +1683,14 @@ const initDom = function () {
         x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
         y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
       }
-      initGridShape(pos.x, pos.y);
+      if (_drawShape == null) {
+        _drawShape = initGridShape(pos.x, pos.y);
+      }
+      else {
+        _drawShape.x = pos.x;
+        _drawShape.y = pos.y;
+        _drawShape.updateSize(Number(CURRENT_SCENE.gridRatio.feetPerGrid));
+      }
       _drawMode = DrawMode.Drawing;
       return;
     }
@@ -1691,7 +1729,9 @@ const initDom = function () {
       args.clientY = args.touches[0].clientY;
     }
     if (_drawMode == DrawMode.Drawing && _drawShape != null) {
-      CURRENT_SCENE.drawPieces();
+      CURRENT_SCENE.drawPieces({
+        hide: [_drawShape.id]
+      });
       const origin = {
         x: _drawShape.getX() - _drawShape.width / 2,
         y: _drawShape.getY() - _drawShape.height / 2
@@ -1744,17 +1784,48 @@ const initDom = function () {
     if (args.type == 'touchend') {
       clearTimeout(touchRightClickTimeout);
     }
+    else if (args.button != 0) {
+      // button: 0 is left click
+      return;
+    }
+
     if (_drawMode && _drawShape != null) {
-      _drawMode = DrawMode.AwaitingInput;
-      const width = Math.abs(_drawShape.width);
-      const height = Math.abs(_drawShape.height);
-      $('.grid-indicator').css('width', width + 'px');
-      $('.grid-indicator').css('height', height + 'px');
-      $('#input-grid-width').val(width / CURRENT_SCENE.canvas.width);
-      $('#input-grid-height').val(height / CURRENT_SCENE.canvas.height);
-      onGridSizeChange();
-      // _drawShape = null;
-      // CURRENT_SCENE.drawPieces();
+      const scenePiece = CURRENT_SCENE.getPieceById(_drawShape.id);
+      if (scenePiece != undefined) {
+        // custom piece sizing
+        scenePiece.x = _drawShape.x;
+        scenePiece.y = _drawShape.y;
+        scenePiece.size = {
+          x: Math.abs(((_drawShape.width / CURRENT_SCENE.canvas.width) / CURRENT_SCENE.gridRatio.x) * CURRENT_SCENE.gridRatio.feetPerGrid),
+          y: Math.abs(((_drawShape.height / CURRENT_SCENE.canvas.height) / CURRENT_SCENE.gridRatio.y) * CURRENT_SCENE.gridRatio.feetPerGrid)
+        };
+        scenePiece.updateSize();
+        _drawShape = null;
+        _drawMode = DrawMode.Off;
+        $('.draw-mode-overlay').hide();
+        CURRENT_SCENE.drawPieces();
+        if (isHost()) {
+          await CURRENT_SCENE.savePieces();
+
+          for (var player of PARTY.players) {
+            emitUpdatePieceEvent(player.id, scenePiece);
+          }
+        }
+        else {
+          emitUpdatePieceEvent(_host, scenePiece)
+        }
+      }
+      else {
+        // grid mode
+        _drawMode = DrawMode.AwaitingInput;
+        const width = Math.abs(_drawShape.width);
+        const height = Math.abs(_drawShape.height);
+        $('.grid-indicator').css('width', width + 'px');
+        $('.grid-indicator').css('height', height + 'px');
+        $('#input-grid-width').val(width / CURRENT_SCENE.canvas.width);
+        $('#input-grid-height').val(height / CURRENT_SCENE.canvas.height);
+        onGridSizeChange();
+      }
     }
 
     if (_draggedPiece == null) return;
@@ -1785,6 +1856,10 @@ const initDom = function () {
     e.preventDefault();
     if (CURRENT_SCENE == null) return; // player mode disable during load up
 
+    if (_drawMode) {
+      return;
+    }
+
     _pieceInMenu = shapeIntersects(e.clientX, e.clientY);
     if (_pieceInMenu != null) {
       $('.shape-only').hide();
@@ -1798,10 +1873,35 @@ const initDom = function () {
         $('.shape-only').show();
         $('input[name="radio-shape-menu-type"]').prop('checked', false);
         $(`input[name='radio-shape-menu-type'][value='${_pieceInMenu.type}']`).prop("checked", true);
-        $('#input-shape-menu-size').val(_pieceInMenu.size);
         $('#input-shape-menu-color').val(_pieceInMenu.color);
         $('#input-shape-menu-opacity').val(_pieceInMenu.opacity);
         $('#value-shape-menu-opacity').html(parseInt(100 * _pieceInMenu.opacity / 255) + '%');
+        if (_pieceInMenu.type == ShapeType.Square) {
+          $('#toggle-custom-shape-size').show();
+        }
+        else {
+          $('#toggle-custom-shape-size').hide();
+        }
+
+        if (typeof(_pieceInMenu.size) == 'object') {
+          // custom size
+          $('#custom-shape-type-msg').show();
+          $('#input-shape-menu-size').attr('type', 'text');
+          $('#input-shape-menu-size').prop('readonly', true);
+          $('#input-shape-menu-size').prop('disabled', true);
+          $('#input-shape-menu-size').val(`${Math.round(_pieceInMenu.size.x)} x ${Math.round(_pieceInMenu.size.y)}`);
+          $('input[name="radio-shape-menu-type"]').parent().hide();
+          $('input[name="radio-shape-menu-type"]').prop('disabled', true);
+        }
+        else {
+          $('#custom-shape-type-msg').hide();
+          $('input[name="radio-shape-menu-type"]').parent().show();
+          $('input[name="radio-shape-menu-type"]').prop('disabled', false);
+          $('#input-shape-menu-size').attr('type', 'number');
+          $('#input-shape-menu-size').prop('readonly', false);
+          $('#input-shape-menu-size').prop('disabled', false);
+          $('#input-shape-menu-size').val(_pieceInMenu.size);
+        }
       }
       else {
         $('.piece-only').show();
