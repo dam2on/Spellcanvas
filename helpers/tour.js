@@ -56,9 +56,6 @@ const initGamePieceTour = async function (piece) {
         buttons: [
             {
                 async action() {
-                    CURRENT_SCENE.deletePiece(piece);
-                    CURRENT_SCENE.drawPieces();
-                    await markTutorialComplete(tourId);
                     return this.cancel();
                 },
                 classes: 'shepherd-button-secondary',
@@ -429,7 +426,7 @@ const initMainMenuTour = async function (isHost = true) {
 
         tour.addStep({
             title: 'Manage Sessions',
-            text: 'Import/export session files to transfer progress between devices!',
+            text: "<p>Import/export session files to transfer progress between computers!</p><br/>Everything you do gets <strong>saved automatically</strong> to your browser. Clearing cookies or clicking the 'Clear Session' button will delete all saved data.",
             attachTo: {
                 element: document.getElementById("btn-import-session"),
                 on: 'right'
@@ -508,8 +505,8 @@ const initMainMenuTour = async function (isHost = true) {
 
     tour.addStep({
         id: 'sub-menu-step',
-        title: 'Also, Hover Me!',
-        text: 'Show previous piece position or toggle fullscreen mode!',
+        title: 'Also, hover me for extra utilities!',
+        text: '<i class="fa-solid fa-route"></i> Toggle lines showing recent moves<br/><i class="fa-solid fa-expand"></i> Toggle fullscreen mode',
         attachTo: {
             element: document.getElementById("btn-menu-toggle"),
             on: 'top'

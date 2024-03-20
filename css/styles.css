@@ -7,7 +7,9 @@ body,
 .offcanvas,
 .modal-content,
 .card,
-.dropdown-menu {
+.dropdown-menu,
+.accordion-item,
+.accordion-button {
   background-color: #36454F !important;
   color: #f7f7f7 !important;
   -webkit-box-sizing: border-box;
@@ -246,7 +248,7 @@ a[role="button"] {
   border: 1px dashed;
 }
 
-.grid-mode-overlay {
+.draw-mode-overlay {
     /* Add the blur effect */
   box-shadow: #5f8585 0px 2px 8px;
   text-align: center;

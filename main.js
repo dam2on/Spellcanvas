@@ -104,7 +104,7 @@ const onChangeBackgroundSubmit = function () {
 const onGridSubmit = async function (e) {
   e.preventDefault();
 
-  $('.grid-mode-overlay').hide();
+  $('.draw-mode-overlay').hide();
   _drawMode = DrawMode.Off;
   _gridShape = null;
   await onGridChangeEvent({
@@ -121,7 +121,7 @@ const onGridSubmit = async function (e) {
 }
 
 const onGridReset = function (e) {
-  $('.grid-mode-overlay').hide();
+  $('.draw-mode-overlay').hide();
   _drawMode = DrawMode.Off;
   _gridShape = null;
 }
@@ -851,6 +851,11 @@ const initPeerEvents = function () {
     debugger;
   });
 
+  _peer.on('close', function (a, e, i) {
+    // leave here to learn about 'close' event
+    debugger;
+  });
+
   _peer.on('error', function (a) {
     if (a.type == 'peer-unavailable') {
       console.warn(a.message);
@@ -990,7 +995,7 @@ const onAddScene = async function () {
 
 const onGridMode = function () {
   $("#canvas-submenu").css({ 'display': 'none' });
-  $('.grid-mode-overlay').show();
+  $('.draw-mode-overlay').show();
 
   if (!($('#modal-grid.modal.show').length)) {
     $('#modal-grid').find('.modal-dialog').css({
@@ -1239,6 +1244,7 @@ const initPeer = function () {
 
     if (hostQueryParam == null) {
       // host mode
+      document.title = 'GM - Spellcanvas';
 
       if (existingHostId != null) {
         _peer = new Peer(existingHostId, peerJsOptions);
@@ -1256,9 +1262,15 @@ const initPeer = function () {
         initMainMenuTour();
         resolve();
       });
+
+      _peer.on('close', function(e) {
+        window.location.href = window.location.origin + '/peererror.html';
+      });
     }
     else {
       // player mode
+      document.title = 'Player - Spellcanvas';
+
       _host = hostQueryParam;
       PARTY = new Party(_host);
       initInviteLink();
@@ -1276,7 +1288,11 @@ const initPeer = function () {
 
       // hide buttons for players
       $('.host-only').hide();
-      $('.host-only').find('input,button').prop('disabled', true)
+      $('.host-only').find('input,button').prop('disabled', true);
+
+      _peer.on('close', function(e) {
+        window.location.href = window.location.origin + '/peererror.html';
+      });
 
       // initial peer open
       _peer.on('open', function (id) {
