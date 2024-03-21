@@ -20,9 +20,9 @@ const downloadObjectAsJson = function (exportObj, exportName) {
     downloadAnchorNode.remove();
 }
 
-const resizeImage2 = async function(file, targetWidth) {
+const resizeImage2 = async function (file, targetWidth) {
     // not as efficient?
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         new Compressor(file, {
             quality: 0.6,
             width: targetWidth,
@@ -155,4 +155,57 @@ const initFormValidation = function () {
                 }
             }, false)
         });
+}
+
+const detectBrowserCompatibility = function () {
+    const ua = navigator.userAgent;
+    let tem;
+    let matches = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+    if (/trident/i.test(matches[1])) {
+        tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+        return 'IE ' + (tem[1] || '');
+    }
+    if (matches[1] === 'Chrome') {
+        tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+        if (tem != null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+    }
+    matches = matches[2] ? [matches[1], matches[2]] : [navigator.appName, navigator.appVersion, '-?'];
+    if ((tem = ua.match(/version\/(\d+)/i)) != null) matches.splice(1, 1, tem[1]);
+
+    const browser = matches[0].toLocaleLowerCase();
+    const version = Number(matches[1]);
+    let incompatible = false;
+
+    if (Number.isNaN(version)) {
+        console.warn('version is NaN: ' + matches[1]);
+    }
+    else {
+
+        switch (browser) {
+            case 'safari':
+                if (version < 14)
+                    incompatible = true;
+                break;
+            case 'chrome':
+            case 'edge':
+                if (version < 85)
+                    incompatible = true;
+                break;
+            case 'firefox':
+                if (version < 79)
+                    incompatible = true;
+                break;
+            case 'opera':
+                if (version < 71)
+                    incompatible = true;
+                break;
+            default:
+                incompatible = true;
+                break;
+        }
+    }
+
+    if (incompatible) {
+        alert(`Spellcanvas is not fully supported in this version of your browser: ${browser} ${version}. Please update to the latest version or you may experience limited functionality.`);
+    }
 }
