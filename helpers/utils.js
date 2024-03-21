@@ -206,6 +206,6 @@ const detectBrowserCompatibility = function () {
     }
 
     if (incompatible) {
-        alert(`Spellcanvas is not fully supported in this version of your browser: ${browser} ${version}. Please update to the latest version or you may experience limited functionality.`);
+        alert(`${browser} ${version} is out-of-date and not fully supported by Spellcanvas. Please update to the latest version or you may experience limited functionality.`);
     }
 }
