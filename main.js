@@ -1010,7 +1010,7 @@ const onAddScene = async function () {
   }
 }
 
-const onToggleCustomShape = function() {
+const onToggleCustomShape = function () {
   $('.draw-mode-overlay').show();
   _drawMode = DrawMode.AwaitingInput;
   _pieceInMenu.lock = document.getElementById('piece-menu-lock').checked;
@@ -1018,7 +1018,7 @@ const onToggleCustomShape = function() {
   _pieceInMenu.opacity = document.getElementById("input-shape-menu-opacity").value;
   _pieceInMenu.type = ShapeType.Square; // only squares have custom size support
   _drawShape = Shape.fromObj(_pieceInMenu);
-  
+
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
 }
 
@@ -1292,7 +1292,7 @@ const initPeer = function () {
         resolve();
       });
 
-      _peer.on('close', function(e) {
+      _peer.on('close', function (e) {
         window.location.href = window.location.origin + '/peererror.html';
       });
     }
@@ -1319,7 +1319,7 @@ const initPeer = function () {
       $('.host-only').hide();
       $('.host-only').find('input,button').prop('disabled', true);
 
-      _peer.on('close', function(e) {
+      _peer.on('close', function (e) {
         window.location.href = window.location.origin + '/peererror.html';
       });
 
@@ -1389,7 +1389,7 @@ const onRouteHide = function () {
   _forceHideRoutes = false;
 }
 
-const onFullscreenToggle = function() {
+const onFullscreenToggle = function () {
   if (!document.fullscreenElement) {
     $('#btn-fullscreen').find('i').removeClass('fa-expand');
     $('#btn-fullscreen').find('i').addClass('fa-compress');
@@ -1401,7 +1401,7 @@ const onFullscreenToggle = function() {
   }
 }
 
-const refreshCanvas = function() {
+const refreshCanvas = function () {
   document.getElementById('canvas').width = window.innerWidth;
   document.getElementById('canvas').height = window.innerHeight;
   document.getElementById('background-image').width = window.innerWidth;
@@ -1459,7 +1459,10 @@ const initDom = function () {
   can.height = window.innerHeight;
 
   new ResizeObserver(refreshCanvas).observe(document.body);
-  document.addEventListener('fullscreenchange', refreshCanvas);
+  document.addEventListener('fullscreenchange', function () {
+    // short delay, some browsers toggle a bookmarks bar that affects the window size
+    setTimeout(() => refreshCanvas(), 1200);
+  });
 
   // init cropper
   Cropper.setDefaults({
@@ -1549,9 +1552,9 @@ const initDom = function () {
     $('.menu-toggle').removeClass('blinking');
   });
 
-  $('#btn-menu-toggle').on('mouseover', function() {
-    $('#sub-menu-controls').one('mouseleave', function() {
-      if (Shepherd.activeTour?.currentStep?.id == 'sub-menu-step') return; 
+  $('#btn-menu-toggle').on('mouseover', function () {
+    $('#sub-menu-controls').one('mouseleave', function () {
+      if (Shepherd.activeTour?.currentStep?.id == 'sub-menu-step') return;
       $('#sub-menu-controls').css('transition-duration', '0s');
       $('#sub-menu-controls').css('width', '');
       $('#sub-menu-controls').removeClass('background');
@@ -1570,7 +1573,7 @@ const initDom = function () {
   $('#input-spell-size').on('change', onSpellSizeChange);
   $('.btn-grid-size').on('click', onGridSizeChange);
   $('.rotate-btn').on('click', onCropperRotate);
-  
+
   document.getElementById('toggle-custom-shape-size').addEventListener('click', onToggleCustomShape);
   document.getElementById('btn-fullscreen').addEventListener('click', onFullscreenToggle);
   document.getElementById('input-display-grid').addEventListener('change', onGridDisplayToggle);
@@ -1883,7 +1886,7 @@ const initDom = function () {
           $('#toggle-custom-shape-size').hide();
         }
 
-        if (typeof(_pieceInMenu.size) == 'object') {
+        if (typeof (_pieceInMenu.size) == 'object') {
           // custom size
           $('#custom-shape-type-msg').show();
           $('#input-shape-menu-size').attr('type', 'text');
@@ -1959,8 +1962,31 @@ const displayDebugInfo = function (text) {
   }
 }
 
+const detectBrowser = function () {
+  navigator.sayswho = (function () {
+    var ua = navigator.userAgent;
+    var tem;
+    var M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+    if (/trident/i.test(M[1])) {
+      tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+      return 'IE ' + (tem[1] || '');
+    }
+    if (M[1] === 'Chrome') {
+      tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+      if (tem != null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+    }
+    M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+    if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
+    return M.join(' ');
+  })();
+
+  alert(navigator.sayswho); // outputs: `Chrome 62`
+}
+
 
 window.onload = async function () {
+  detectBrowser();
+
   loading(true);
   initDom();
   initFormValidation();

@@ -27,11 +27,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"
         integrity="sha512-MgYeYFj8R3S6rvZHiJ1xA9cM/VDGcT4eRRFQwGA7qDP7NHbnWKNmAm28z0LVjOuUqjD0T9JxpDMdVqsZOSHaSA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-roundrect-polyfill@0.0.1/roundRect.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"
         integrity="sha512-9KkIqdfN7ipEW6B6k+Aq20PV31bjODg4AA52W+tYtAE0jE0kMx49bjJ3FgvS56wzmyfMUHbQ4Km2b7l9+Y/+Eg=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
 
     <script type="text/javascript" src="helpers/utils.js"></script>
     <script type="text/javascript" src="helpers/enums.js"></script>
@@ -60,8 +61,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shepherd.js/7.1.2/css/shepherd.min.css"
         integrity="sha512-k4DlYDc0mf1H92BOi4i/3VKmE2y5T5CuMAFGepXwYD39pmzeoJ7vIUM57esJkGtDNrWcX0V74cHPB/78415VdQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/tubular@latest/dist/tubular-bundle.min.css" />
-    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tubular@latest/dist/tubular-bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.min.css"
         integrity="sha512-17EgCFERpgZKcm0j0fEq1YCJuyAWdz9KUtv1EjVuaOz8pDnh/0nZxmU6BBXwaaxqoi9PQXnRWqlcDB027hgv9A=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -96,7 +97,8 @@
         </li>
         <li><a id="canvas-submenu-change-bg" class="host-only dropdown-item" href="javascript:void(0)">Set
                 Background</a></li>
-        <li><a id="canvas-submenu-adjust-grid" class="host-only dropdown-item" href="javascript:void(0)">Grid Settings</a>
+        <li><a id="canvas-submenu-adjust-grid" class="host-only dropdown-item" href="javascript:void(0)">Grid
+                Settings</a>
         </li>
     </ul>
 
@@ -204,15 +206,17 @@
         </div>
         <div style="position: relative; left: 399px; top: 1px;">
             <div id="sub-menu-controls" style="border-radius: 0.2rem;">
-                <button id="btn-menu-toggle" class="no-focus btn btn-secondary menu-btn left-menu-btn" data-bs-target="#main-menu"
-                    data-bs-toggle="offcanvas" type="button" aria-controls="main-menu">
+                <button id="btn-menu-toggle" class="no-focus btn btn-secondary menu-btn left-menu-btn"
+                    data-bs-target="#main-menu" data-bs-toggle="offcanvas" type="button" aria-controls="main-menu">
                     <i class="fa-solid fa-gear"></i>
                 </button>
                 <input class="btn-check menu-btn" type="checkbox" id="checkbox-route-toggle">
-                <label for="checkbox-route-toggle" class="no-focus btn-sm btn btn-outline-secondary" style="margin-bottom: 0.1em; display: none;">
+                <label for="checkbox-route-toggle" class="no-focus btn-sm btn btn-outline-secondary"
+                    style="margin-bottom: 0.1em; display: none;">
                     <i class="fa-solid fa-route"></i>
                 </label>
-                <button class="no-focus btn btn-secondary menu-btn btn-sm" id="btn-fullscreen" type="button" style="margin-bottom: 0.1em; display: none;">
+                <button class="no-focus btn btn-secondary menu-btn btn-sm" id="btn-fullscreen" type="button"
+                    style="margin-bottom: 0.1em; display: none;">
                     <i class="fa-solid fa-expand"></i>
                 </button>
             </div>
@@ -411,7 +415,8 @@
                         </div>
                     </div>
                     <div class="col-sm-6">
-                        <button id="toggle-custom-shape-size" class="btn btn-secondary btn-sm" style="display: none;">Free Draw</button>
+                        <button id="toggle-custom-shape-size" class="btn btn-secondary btn-sm"
+                            style="display: none;">Free Draw</button>
                     </div>
                 </div>
                 <div class="row mb-2">
