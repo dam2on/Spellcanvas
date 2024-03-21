@@ -219,6 +219,11 @@
                     style="margin-bottom: 0.1em; display: none;">
                     <i class="fa-solid fa-expand"></i>
                 </button>
+                <button class="no-focus btn btn-secondary menu-btn btn-sm" data-bs-target="#modal-dice"
+                    data-bs-toggle="modal" id="btn-dice-dialog" type="button"
+                    style="margin-bottom: 0.1em; display: none;">
+                    <i class="fa-solid fa-dice-five fa-lg"></i>
+                </button>
             </div>
         </div>
 
@@ -536,7 +541,7 @@
             </div>
         </div>
     </div>
-    </div>
+
     <div class="modal" id="modal-piece" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -742,6 +747,58 @@
                         </div>
                         <div class="text-center">
                             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Enter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="modal-dice" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog draggable-modal">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <h3 class="text-center">Dice Roller</h3>
+                    <form id="form-modal-dice" class="my-3">
+                        <div id="dice-list">
+                            <div class="w-75 mx-auto">
+                                <div class="row mb-2">
+                                    <div class="col-sm-8">
+                                        <div class="input-group input-group-sm">
+                                            <input class="form-control form-control-sm" type="number" value="1"
+                                                id="input-dice-num-0" />
+                                            <select class="form-select form-select-sm" id="select-dice-type-0">
+                                                <option value="2">d2</option>
+                                                <option value="3">d3</option>
+                                                <option value="4">d4</option>
+                                                <option value="6">d6</option>
+                                                <option value="8">d8</option>
+                                                <option value="10">d10</option>
+                                                <option value="12">d12</option>
+                                                <option value="20">d20</option>
+                                                <option value="100">d100</option>
+                                            </select>
+                                            <span class="input-group-text">+</span>
+                                            <input class="form-control form-control-sm" type="number" value="0"
+                                                id="input-dice-mod-0" />
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="input-group input-group-sm">
+                                            <input readonly type="number" class="form-control form-control-sm"
+                                                id="input-dice-result-0" />
+                                            <button id="btn-roll-single-0" onclick="onRollDice(0)"
+                                                class="btn btn-primary btn-sm" type="button">Roll</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="dice-rolls-0"></div>
+                            </div>
+
+                        </div>
+                        <button id="btn-add-dice" type="button" class="btn btn-primary btn-sm btn-round no-focus"><i
+                                class="fa-solid fa-plus"></i></button>
+                        <div class="text-center mt-3">
+                            <button type="button" id="btn-dice-roll" class="btn btn-primary">Roll All</button>
                         </div>
                     </form>
                 </div>

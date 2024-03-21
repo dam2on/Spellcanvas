@@ -11,7 +11,8 @@ const EventTypes = {
   InformPlayerRemoved: 'inform player removed',
   PermissionsUpdate: 'permissions update',
   LoadScene: 'load scene',
-  LoadSceneSuccess: 'load scene success'
+  LoadSceneSuccess: 'load scene success',
+  DiceRoll: 'dice roll'
 }
 
 const BackgroundType = {

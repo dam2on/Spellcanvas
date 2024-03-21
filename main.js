@@ -33,6 +33,77 @@ const onTutorial = async function () {
   initMainMenuTour(isHost());
 }
 
+const onRollAllDice = function() {
+  for (var i = 0; i < $('#dice-list').children().length; i++) {
+    onRollDice(i);
+  }
+}
+
+const onRollDice = function (index) {
+  const numDice = Number($('#input-dice-num-' + index).val());
+  const diceSides = Number($('#select-dice-type-' + index).val());
+  const diceMod = Number($('#input-dice-mod-' + index).val());
+
+  const results = [];
+  for (var i = 0; i < numDice; i++) {
+    results.push(Math.floor(Math.random() * diceSides) + 1);
+  }
+  const total = results.reduce((x, y) => x + y, 0) + diceMod;
+
+  $('#dice-rolls-' + index).html(`Dice: ${results.join(", ")}`);
+  $('#input-dice-result-' + index).val(total);
+
+  if (!isHost()) {
+    emitDiceRollEvent(_host, {
+      numDice: numDice,
+      diceSides: diceSides,
+      diceMod: diceMod,
+      rolls: results,
+      total: total
+    });
+  }
+}
+
+const onAddDice = function () {
+  const diceList = $('#dice-list');
+  const index = diceList.children().length;
+  const newDiceHtml = `<div class="w-75 mx-auto">
+  <div class="row mb-2">
+      <div class="col-sm-8">
+          <div class="input-group input-group-sm">
+              <input class="form-control form-control-sm" type="number" value="1"
+                  id="input-dice-num-${index}" />
+              <select class="form-select form-select-sm" id="select-dice-type-${index}">
+                  <option value="2">d2</option>
+                  <option value="3">d3</option>
+                  <option value="4">d4</option>
+                  <option value="6">d6</option>
+                  <option value="8">d8</option>
+                  <option value="10">d10</option>
+                  <option value="12">d12</option>
+                  <option value="20">d20</option>
+                  <option value="100">d100</option>
+              </select>
+              <span class="input-group-text">+</span>
+              <input class="form-control form-control-sm" type="number" value="0"
+                  id="input-dice-mod-${index}" />
+          </div>
+      </div>
+      <div class="col-sm-4">
+          <div class="input-group input-group-sm">
+              <input readonly type="number" class="form-control form-control-sm"
+                  id="input-dice-result-${index}" />
+              <button id="btn-roll-single-${index}" onclick="onRollDice(${index})"
+                  class="btn btn-primary btn-sm" type="button">Roll</button>
+          </div>
+      </div>
+  </div>
+  <div id="dice-rolls-${index}"></div>
+</div>`;
+
+  diceList.append(newDiceHtml);
+}
+
 const onCropperRotate = function (e) {
   if ($(this).hasClass('rotate-left')) {
     _cropper?.rotate(-90);
@@ -214,7 +285,7 @@ const onSpellRulerToggle = async function (args) {
     CURRENT_SCENE.drawPieces();
   }
   else {
-    _spellRuler = new Shape(newGuid(), _player?.id ?? _host, type, $('#input-spell-size').val());
+    _spellRuler = new Shape(newGuid(), _player?.id ?? _host, type, sizeInput.val());
     _spellRuler.color = await CURRENT_SCENE.background.getContrastColor();
     sizeInput.show();
     sizeLabel.show();
@@ -240,7 +311,7 @@ const onSpellRulerToggle = async function (args) {
 const onSpellSizeChange = function (args) {
   if (_spellRuler == null) return;
 
-  _spellRuler.updateSize(Number($(this).val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
+  _spellRuler.updateSize($('#input-spell-size').val());
 }
 
 const onQuickAdd = async function (pieceId) {
@@ -560,6 +631,13 @@ const emitChangeBackgroundEvent = function (peerId) {
   });
 }
 
+const emitDiceRollEvent = function(peerId, data) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function () {
+    conn.send({ event: EventTypes.DiceRoll, roll: data });
+  });
+}
+
 const emitAddPieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
@@ -674,6 +752,16 @@ const onPermissionsChange = async function () {
   for (player of PARTY.players) {
     emitPermissionsChangeEvent(player.id)
   }
+}
+
+const onRollDiceEvent = function(peerId, roll) {
+  if (!isHost()) {
+    console.warn('Only host can receive dice roll events');
+    return;
+  }
+
+
+  PARTY.getPlayer(peerId)?.updateOrCreateDom(CURRENT_SCENE.pieces);
 }
 
 const onChangeBackgroundEvent = async function (obj = null) {
@@ -931,6 +1019,9 @@ const initPeerEvents = function () {
       }
 
       switch (data.event) {
+        case EventTypes.DiceRoll:
+          onRollDiceEvent(conn.peer, data.roll);
+          break;
         case EventTypes.AddPiece:
           onAddPieceEvent(conn.peer, data.piece);
           break;
@@ -1559,23 +1650,27 @@ const initDom = function () {
       $('#sub-menu-controls').css('width', '');
       $('#sub-menu-controls').removeClass('background');
       $('#btn-fullscreen').hide();
+      $('#btn-dice-dialog').hide();
       $('label[for="checkbox-route-toggle"]').hide();
       $('#sub-menu-controls').css('transition-duration', '');
     });
 
     $('#sub-menu-controls').addClass('background');
     $('#btn-fullscreen').fadeIn();
+    $('#btn-dice-dialog').fadeIn();
     $('label[for="checkbox-route-toggle"]').fadeIn();
-    $('#sub-menu-controls').css('width', '7.35em');
+    $('#sub-menu-controls').css('width', '9.7em');
   });
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
-  $('#input-spell-size').on('change', onSpellSizeChange);
+  $('#input-spell-size').on('change input', onSpellSizeChange);
   $('.btn-grid-size').on('click', onGridSizeChange);
   $('.rotate-btn').on('click', onCropperRotate);
 
   document.getElementById('toggle-custom-shape-size').addEventListener('click', onToggleCustomShape);
   document.getElementById('btn-fullscreen').addEventListener('click', onFullscreenToggle);
+  document.getElementById('btn-dice-roll').addEventListener('click', onRollAllDice);
+  document.getElementById('btn-add-dice').addEventListener('click', onAddDice);
   document.getElementById('input-display-grid').addEventListener('change', onGridDisplayToggle);
   document.getElementById('btn-tutorial').addEventListener('click', onTutorial);
   document.getElementById('canvas-submenu-change-bg').addEventListener('click', onChangeBackgroundModal);
@@ -1622,6 +1717,10 @@ const initDom = function () {
     });
 
     $('#modal-grid').find('.modal-dialog').draggable();
+  });
+
+  document.getElementById('modal-dice').addEventListener('show.bs.modal', function () {
+    $('#modal-dice').find('.modal-dialog').draggable();
   });
 
   document.getElementById('modal-grid').addEventListener('hidden.bs.modal', function () {
