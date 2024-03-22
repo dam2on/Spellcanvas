@@ -236,7 +236,7 @@ const onGridReset = function (e) {
 }
 
 const initGridShape = function (x, y) {
-  const gridShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.grid.feetPerGrid, x, y);
+  const gridShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
   gridShape.color = '#eaf0f0';
   gridShape.opacity = 100;
   gridShape.updateSize();
@@ -738,7 +738,7 @@ const emitGridSizeChangeEvent = function (peerId) {
     conn.on('open', function () {
       conn.send({
         event: EventTypes.GridChange,
-        gridSize: CURRENT_SCENE.grid
+        gridSize: CURRENT_SCENE.gridRatio
       });
       resolve();
     });
@@ -923,10 +923,10 @@ const onUpdatePieceEvent = async function (peerId, piece) {
 }
 
 const onGridChangeEvent = async function (grid) {
-  CURRENT_SCENE.grid = grid;
+  CURRENT_SCENE.gridRatio = grid;
 
   if (_spellRuler instanceof Shape) {
-    _spellRuler.updateSize(Number($('#input-spell-size').val()) / CURRENT_SCENE.grid.feetPerGrid);
+    _spellRuler.updateSize(Number($('#input-spell-size').val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
     _spellRuler.draw();
   }
 
@@ -1576,7 +1576,7 @@ const refreshCanvas = function () {
       CURRENT_SCENE.drawBackdrop();
       _drawShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
 
-      if (currGridWidth != CURRENT_SCENE.grid.x || currGridHeight != CURRENT_SCENE.grid.y) {
+      if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
 
         $('#grid-width-display').html(parseInt(valX) + 'px');
         $('#grid-height-display').html(parseInt(valY) + 'px');
@@ -1832,8 +1832,8 @@ const initDom = function () {
 
     if (_drawMode) {
       let pos = {
-        x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.grid.x / 2,
-        y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.grid.y / 2
+        x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
+        y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
       }
       if (_drawShape == null) {
         _drawShape = initGridShape(pos.x, pos.y);
@@ -1841,7 +1841,7 @@ const initDom = function () {
       else {
         _drawShape.x = pos.x;
         _drawShape.y = pos.y;
-        _drawShape.updateSize(Number(CURRENT_SCENE.grid.feetPerGrid));
+        _drawShape.updateSize(Number(CURRENT_SCENE.gridRatio.feetPerGrid));
       }
       _drawMode = DrawMode.Drawing;
       return;
@@ -1948,8 +1948,8 @@ const initDom = function () {
         scenePiece.x = _drawShape.x;
         scenePiece.y = _drawShape.y;
         scenePiece.size = {
-          x: Math.abs(((_drawShape.width / CURRENT_SCENE.canvas.width) / CURRENT_SCENE.grid.x) * CURRENT_SCENE.grid.feetPerGrid),
-          y: Math.abs(((_drawShape.height / CURRENT_SCENE.canvas.height) / CURRENT_SCENE.grid.y) * CURRENT_SCENE.grid.feetPerGrid)
+          x: Math.abs(((_drawShape.width / CURRENT_SCENE.canvas.width) / CURRENT_SCENE.gridRatio.x) * CURRENT_SCENE.gridRatio.feetPerGrid),
+          y: Math.abs(((_drawShape.height / CURRENT_SCENE.canvas.height) / CURRENT_SCENE.gridRatio.y) * CURRENT_SCENE.gridRatio.feetPerGrid)
         };
         scenePiece.updateSize();
         _drawShape = null;

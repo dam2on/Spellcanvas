@@ -62,7 +62,7 @@ class Shape extends Piece {
                 this.path.ellipse(coords.x, coords.y, this.width, this.height, 0, 0, 2 * Math.PI);
                 break;
             case ShapeType.Cone:
-                const ratio = (CURRENT_SCENE.grid.x * this.canvas.width) / (CURRENT_SCENE.grid.y * this.canvas.height);
+                const ratio = (CURRENT_SCENE.gridRatio.x * this.canvas.width) / (CURRENT_SCENE.gridRatio.y * this.canvas.height);
                 const horizontalAngle = (.9236) / ratio // weighted 53 degree angle
                 const verticalAngle = (.9236) * ratio;
                 const halfway = Math.abs(verticalAngle - horizontalAngle) / 2;
@@ -111,31 +111,31 @@ class Shape extends Piece {
         if (size != undefined) {
             this.size = Number(size);
         }
-        const baseWidth = CURRENT_SCENE.grid.x * this.canvas.width;
-        const widthHeightDiff = (baseWidth - CURRENT_SCENE.grid.y * this.canvas.height) / 2;
+        const baseWidth = CURRENT_SCENE.gridRatio.x * this.canvas.width;
+        const widthHeightDiff = (baseWidth - CURRENT_SCENE.gridRatio.y * this.canvas.height) / 2;
         switch (this.type) {
             case ShapeType.Line:
-                this.width = CURRENT_SCENE.grid.x * this.canvas.width * this.size / CURRENT_SCENE.grid.feetPerGrid;
-                this.height = CURRENT_SCENE.grid.y * this.canvas.height;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
+                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height;
                 if (widthHeightDiff != 0) {
-                    this.width = (this.size / CURRENT_SCENE.grid.feetPerGrid) * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
+                    this.width = (this.size / CURRENT_SCENE.gridRatio.feetPerGrid) * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
                     this.height = (baseWidth - widthHeightDiff) - widthHeightDiff * Math.cos(2 * this.rotation);
                 }
                 break;
             case ShapeType.Circle:
-                this.width = CURRENT_SCENE.grid.x * this.canvas.width * this.size / (2 * CURRENT_SCENE.grid.feetPerGrid);
-                this.height = CURRENT_SCENE.grid.y * this.canvas.height * this.size / (2 * CURRENT_SCENE.grid.feetPerGrid);
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / (2 * CURRENT_SCENE.gridRatio.feetPerGrid);
+                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * this.size / (2 * CURRENT_SCENE.gridRatio.feetPerGrid);
                 break;
             case ShapeType.Cone:
-                this.width = CURRENT_SCENE.grid.x * this.canvas.width * this.size / CURRENT_SCENE.grid.feetPerGrid;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * this.size / CURRENT_SCENE.gridRatio.feetPerGrid;
                 if (widthHeightDiff != 0) {
-                    this.width = (this.size / CURRENT_SCENE.grid.feetPerGrid) * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
+                    this.width = (this.size / CURRENT_SCENE.gridRatio.feetPerGrid) * ((baseWidth - widthHeightDiff) + widthHeightDiff * Math.cos(2 * this.rotation));
                 }
                 this.height = this.width; // only for intersection logic
                 break;
             case ShapeType.Square:
-                this.width = CURRENT_SCENE.grid.x * this.canvas.width * (this.size.x ?? this.size) / CURRENT_SCENE.grid.feetPerGrid;
-                this.height = CURRENT_SCENE.grid.y * this.canvas.height * (this.size.y ?? this.size) / CURRENT_SCENE.grid.feetPerGrid;
+                this.width = CURRENT_SCENE.gridRatio.x * this.canvas.width * (this.size.x ?? this.size) / CURRENT_SCENE.gridRatio.feetPerGrid;
+                this.height = CURRENT_SCENE.gridRatio.y * this.canvas.height * (this.size.y ?? this.size) / CURRENT_SCENE.gridRatio.feetPerGrid;
                 break;
             default:
                 console.warn("shape type not recognized: " + type);
