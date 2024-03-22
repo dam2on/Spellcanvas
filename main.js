@@ -59,20 +59,18 @@ const onRollDice = function (index, broadcast = true) {
   $('#dice-rolls-' + index).html(`Dice: ${results.join(", ")}`);
   $('#input-dice-result-' + index).val(total);
 
-  if (!isHost()) {
-    const rollPayload = {
-      numDice: numDice,
-      diceSides: diceSides,
-      diceMod: diceMod,
-      rolls: results,
-      total: total
-    };
-    if (broadcast) {
-      emitDiceRollEvent(_host, [rollPayload]);
-    }
-    else {
-      return rollPayload;
-    }
+  const rollPayload = {
+    numDice: numDice,
+    diceSides: diceSides,
+    diceMod: diceMod,
+    rolls: results,
+    total: total
+  };
+  if (broadcast && !isHost()) {
+    emitDiceRollEvent(_host, [rollPayload]);
+  }
+  else {
+    return rollPayload;
   }
 }
 
@@ -220,7 +218,9 @@ const onGridSubmit = async function (e) {
     x: $('#input-grid-width').val(),
     y: $('#input-grid-height').val(),
     feetPerGrid: $('#input-feet-per-grid').val(),
-    display: $('#input-display-grid').prop('checked')
+    display: $('#input-display-grid').prop('checked'),
+    color: $('#input-grid-color').val(),
+    opacity: $('#input-grid-opacity').val()
   });
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
 
@@ -236,17 +236,29 @@ const onGridReset = function (e) {
 }
 
 const initGridShape = function (x, y) {
-  const gridShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.gridRatio.feetPerGrid, x, y);
+  const gridShape = new Shape(newGuid(), _host, ShapeType.Square, CURRENT_SCENE.grid.feetPerGrid, x, y);
   gridShape.color = '#eaf0f0';
   gridShape.opacity = 100;
   gridShape.updateSize();
   return gridShape
 }
 
-const onGridDisplayToggle = async function () {
-  CURRENT_SCENE.gridRatio.display = $('#input-display-grid').prop('checked');
+const onToggleGridDisplay = async function () {
+  const display = $('#input-display-grid').prop('checked');
+  let color = $('#input-grid-color').val();
+  let opacity = $('#input-grid-opacity').val();
+  if (display) {
+    $('#grid-color-container').show();
+    $('#grid-opacity-value').html(parseInt(100 * Number(opacity) / 255) + '%');
+  }
+  else {
+    $('#grid-color-container').hide();
+  }
 
   await CURRENT_SCENE.drawPieces({
+    gridDisplay: display,
+    gridColor: color,
+    gridOpacity: opacity,
     gridHeight: Number($('#input-grid-height').val() * CURRENT_SCENE.canvas.height),
     gridWidth: Number($('#input-grid-width').val() * CURRENT_SCENE.canvas.width)
   });
@@ -254,9 +266,12 @@ const onGridDisplayToggle = async function () {
   _drawShape?.draw({ width: _drawShape.width, height: _drawShape.height, border: "#5f8585", borderWidth: 2 });
 }
 
-const onGridSizeChange = function (e) {
+const onGridChange = function (e) {
   let valX = Number($('#input-grid-width').val() * CURRENT_SCENE.canvas.width);
   let valY = Number($('#input-grid-height').val() * CURRENT_SCENE.canvas.height);
+  let color = $('#input-grid-color').val();
+  let opacity = $('#input-grid-opacity').val();
+  $('#grid-opacity-value').html(parseInt(100 * Number(opacity) / 255) + '%');
 
   if ($(this)[0] == $('#btn-grid-left')[0]) {
     valX -= 1;
@@ -281,8 +296,11 @@ const onGridSizeChange = function (e) {
   $('.grid-indicator').css('height', valY + 'px');
 
   CURRENT_SCENE.drawPieces({
+    gridDisplay: $('#input-display-grid').prop('checked'),
     gridWidth: valX,
-    gridHeight: valY
+    gridHeight: valY,
+    gridColor: color,
+    gridOpacity: opacity
   });
   if (_drawShape == null) {
     _drawShape = initGridShape(0.5, 0.5);
@@ -720,7 +738,7 @@ const emitGridSizeChangeEvent = function (peerId) {
     conn.on('open', function () {
       conn.send({
         event: EventTypes.GridChange,
-        gridSize: CURRENT_SCENE.gridRatio
+        gridSize: CURRENT_SCENE.grid
       });
       resolve();
     });
@@ -905,10 +923,10 @@ const onUpdatePieceEvent = async function (peerId, piece) {
 }
 
 const onGridChangeEvent = async function (grid) {
-  CURRENT_SCENE.gridRatio = grid;
+  CURRENT_SCENE.grid = grid;
 
   if (_spellRuler instanceof Shape) {
-    _spellRuler.updateSize(Number($('#input-spell-size').val()) / CURRENT_SCENE.gridRatio.feetPerGrid);
+    _spellRuler.updateSize(Number($('#input-spell-size').val()) / CURRENT_SCENE.grid.feetPerGrid);
     _spellRuler.draw();
   }
 
@@ -1553,7 +1571,7 @@ const refreshCanvas = function () {
       CURRENT_SCENE.drawBackdrop();
       _drawShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
 
-      if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
+      if (currGridWidth != CURRENT_SCENE.grid.x || currGridHeight != CURRENT_SCENE.grid.y) {
 
         $('#grid-width-display').html(parseInt(valX) + 'px');
         $('#grid-height-display').html(parseInt(valY) + 'px');
@@ -1690,14 +1708,15 @@ const initDom = function () {
 
   $('#spell-ruler').find('input.btn-check').on('click', onSpellRulerToggle);
   $('#input-spell-size').on('change input', onSpellSizeChange);
-  $('.btn-grid-size').on('click', onGridSizeChange);
   $('.rotate-btn').on('click', onCropperRotate);
-
+  $('.btn-grid-size').on('click', onGridChange);
+  document.getElementById('input-grid-color').addEventListener('input', onGridChange);
+  document.getElementById('input-grid-opacity').addEventListener('input', onGridChange);
   document.getElementById('toggle-custom-shape-size').addEventListener('click', onToggleCustomShape);
   document.getElementById('btn-fullscreen').addEventListener('click', onFullscreenToggle);
   document.getElementById('btn-dice-roll').addEventListener('click', onRollAllDice);
   document.getElementById('btn-add-dice').addEventListener('click', onAddDice);
-  document.getElementById('input-display-grid').addEventListener('change', onGridDisplayToggle);
+  document.getElementById('input-display-grid').addEventListener('change', onToggleGridDisplay);
   document.getElementById('btn-tutorial').addEventListener('click', onTutorial);
   document.getElementById('canvas-submenu-change-bg').addEventListener('click', onChangeBackgroundModal);
   document.getElementById('btn-change-bg').addEventListener('click', onChangeBackgroundModal);
@@ -1808,8 +1827,8 @@ const initDom = function () {
 
     if (_drawMode) {
       let pos = {
-        x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
-        y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
+        x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.grid.x / 2,
+        y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.grid.y / 2
       }
       if (_drawShape == null) {
         _drawShape = initGridShape(pos.x, pos.y);
@@ -1817,7 +1836,7 @@ const initDom = function () {
       else {
         _drawShape.x = pos.x;
         _drawShape.y = pos.y;
-        _drawShape.updateSize(Number(CURRENT_SCENE.gridRatio.feetPerGrid));
+        _drawShape.updateSize(Number(CURRENT_SCENE.grid.feetPerGrid));
       }
       _drawMode = DrawMode.Drawing;
       return;
@@ -1924,8 +1943,8 @@ const initDom = function () {
         scenePiece.x = _drawShape.x;
         scenePiece.y = _drawShape.y;
         scenePiece.size = {
-          x: Math.abs(((_drawShape.width / CURRENT_SCENE.canvas.width) / CURRENT_SCENE.gridRatio.x) * CURRENT_SCENE.gridRatio.feetPerGrid),
-          y: Math.abs(((_drawShape.height / CURRENT_SCENE.canvas.height) / CURRENT_SCENE.gridRatio.y) * CURRENT_SCENE.gridRatio.feetPerGrid)
+          x: Math.abs(((_drawShape.width / CURRENT_SCENE.canvas.width) / CURRENT_SCENE.grid.x) * CURRENT_SCENE.grid.feetPerGrid),
+          y: Math.abs(((_drawShape.height / CURRENT_SCENE.canvas.height) / CURRENT_SCENE.grid.y) * CURRENT_SCENE.grid.feetPerGrid)
         };
         scenePiece.updateSize();
         _drawShape = null;
@@ -1952,7 +1971,7 @@ const initDom = function () {
         $('.grid-indicator').css('height', height + 'px');
         $('#input-grid-width').val(width / CURRENT_SCENE.canvas.width);
         $('#input-grid-height').val(height / CURRENT_SCENE.canvas.height);
-        onGridSizeChange();
+        onGridChange();
       }
     }
 

@@ -3,7 +3,7 @@ class Scene {
         this.id = id;
         this.name = "My Scene";
         this.owner = ownerId;
-        this.gridRatio = {
+        this.grid = {
             x: 1/23,
             y: 1/13,
             feetPerGrid: 5
@@ -124,7 +124,7 @@ class Scene {
             id: this.id,
             name: this.name,
             owner: this.owner,
-            gridRatio: this.gridRatio,
+            gridRatio: this.grid,
             thumbnail: {
                 fg: this.canvas.toDataURL(),
                 bg: this.background.getPosterImgUrl()
@@ -147,7 +147,7 @@ class Scene {
     }
 
     getGridAspectRatio() {
-        return this.gridRatio.x * this.canvas.width / (this.gridRatio.y * this.canvas.height);
+        return this.grid.x * this.canvas.width / (this.grid.y * this.canvas.height);
     }
 
     getSizeMB() {
@@ -167,7 +167,7 @@ class Scene {
     async saveGrid() {
         Scene.updateOrCreateDom(this);
         await this.saveScene(); // update thumbnail in storage
-        await localforage.setItem(`${StorageKeys.GridRatio}-${this.id}`, this.gridRatio);
+        await localforage.setItem(`${StorageKeys.GridRatio}-${this.id}`, this.grid);
     }
 
     async savePieces() {
@@ -206,15 +206,24 @@ class Scene {
     }
 
     drawGridSetting() {
-        const valX = parseInt(this.gridRatio.x * this.canvas.width);
-        const valY = parseInt(this.gridRatio.y * this.canvas.height);
+        const valX = parseInt(this.grid.x * this.canvas.width);
+        const valY = parseInt(this.grid.y * this.canvas.height);
         
-        $('#input-display-grid').prop('checked', this.gridRatio.display);
-        $('#input-feet-per-grid').val(this.gridRatio.feetPerGrid);
-        $('#input-grid-width').val(this.gridRatio.x);
-        $('#input-grid-height').val(this.gridRatio.y);
+        $('#input-display-grid').prop('checked', this.grid.display);
+        $('#input-grid-color').val(this.grid.color);
+        $('#input-grid-opacity').val(this.grid.opacity);
+        $('#grid-opacity-value').html(parseInt(100 * (this.grid.opacity ?? 0) / 255) + '%');
+        $('#input-feet-per-grid').val(this.grid.feetPerGrid);
+        $('#input-grid-width').val(this.grid.x);
+        $('#input-grid-height').val(this.grid.y);
         $('#grid-width-display').html(parseInt(valX) + 'px');
         $('#grid-height-display').html(parseInt(valY) + 'px');
+        if (this.grid.display) {
+            $('#grid-color-container').show();
+        }
+        else {
+            $('#grid-color-container').hide();
+        }
       
         $('#grid-indicator-end-buffer').css('margin-right', `calc(50% - 3.5rem - ${valX / 2}px)`);
         $('.grid-indicator').css('width', valX + 'px');
@@ -224,11 +233,13 @@ class Scene {
     }
 
     async drawGrid(options = {}) {
-        const gridHeightPx = options.gridHeight ?? this.gridRatio.y * this.canvas.height;
-        const gridWidthPx = options.gridWidth ?? this.gridRatio.x * this.canvas.width;
+        const gridHeightPx = options.gridHeight ?? this.grid.y * this.canvas.height;
+        const gridWidthPx = options.gridWidth ?? this.grid.x * this.canvas.width;
+        const gridColor = options.gridColor ?? this.grid.color ?? await this.background.getContrastColor();
+        const gridOpacity = options.gridOpacity ?? this.grid.opacity;
 
         const prevStrokeColor = this.ctx.strokeStyle;
-        this.ctx.strokeStyle = await this.background.getContrastColor();
+        this.ctx.strokeStyle = gridColor + opacityToHexStr(gridOpacity);
         let colIndexPx = 0;
         do {
             colIndexPx += gridWidthPx;
@@ -270,7 +281,7 @@ class Scene {
     async drawPieces(options = {}) {
         this.clearCanvas();
 
-        if (this.gridRatio.display) {
+        if (this.grid.display || options.gridDisplay) {
             await this.drawGrid(options);
         }
 

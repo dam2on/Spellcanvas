@@ -20,6 +20,13 @@ const downloadObjectAsJson = function (exportObj, exportName) {
     downloadAnchorNode.remove();
 }
 
+const opacityToHexStr = function(opacity) {
+    let value = Number(opacity).toString(16);
+    if (value.length == 1)
+        value = "0" + value;
+    return value;
+}
+
 const resizeImage2 = async function (file, targetWidth) {
     // not as efficient?
     return new Promise(function (resolve, reject) {
