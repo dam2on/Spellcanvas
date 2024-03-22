@@ -1000,6 +1000,7 @@ const initPeerEvents = function () {
 
   _peer.on('close', function (a, e, i) {
     // leave here to learn about 'close' event
+    console.log('peer closed');
     debugger;
   });
 
@@ -1108,11 +1109,6 @@ const initPeerEvents = function () {
           break;
       }
     });
-  });
-
-  _peer.on('close', function (e, a) {
-    console.log('peer closed');
-    debugger;
   });
 }
 
@@ -1427,7 +1423,12 @@ const initPeer = function () {
         resolve();
       });
 
+      _peer.on('error', function (e) {
+        debugger;
+      });
+
       _peer.on('close', function (e) {
+        debugger;
         window.location.href = window.location.origin + '/peererror.html';
       });
     }
@@ -1453,6 +1454,10 @@ const initPeer = function () {
       // hide buttons for players
       $('.host-only').hide();
       $('.host-only').find('input,button').prop('disabled', true);
+
+      _peer.on('error', function (e) {
+        debugger;
+      });
 
       _peer.on('close', function (e) {
         window.location.href = window.location.origin + '/peererror.html';
