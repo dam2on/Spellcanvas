@@ -33,13 +33,19 @@ const onTutorial = async function () {
   initMainMenuTour(isHost());
 }
 
-const onRollAllDice = function() {
+const onRollAllDice = function () {
+  const payloads = [];
   for (var i = 0; i < $('#dice-list').children().length; i++) {
-    onRollDice(i);
+    payloads.push(onRollDice(i, false));
+  }
+
+  // send all at once
+  if (!isHost()) {
+    emitDiceRollEvent(_host, payloads);
   }
 }
 
-const onRollDice = function (index) {
+const onRollDice = function (index, broadcast = true) {
   const numDice = Number($('#input-dice-num-' + index).val());
   const diceSides = Number($('#select-dice-type-' + index).val());
   const diceMod = Number($('#input-dice-mod-' + index).val());
@@ -54,52 +60,70 @@ const onRollDice = function (index) {
   $('#input-dice-result-' + index).val(total);
 
   if (!isHost()) {
-    emitDiceRollEvent(_host, {
+    const rollPayload = {
       numDice: numDice,
       diceSides: diceSides,
       diceMod: diceMod,
       rolls: results,
       total: total
-    });
+    };
+    if (broadcast) {
+      emitDiceRollEvent(_host, [rollPayload]);
+    }
+    else {
+      return rollPayload;
+    }
   }
+}
+
+const onRemoveDice = function (index) {
+  $('#dice-container-' + index).remove();
 }
 
 const onAddDice = function () {
   const diceList = $('#dice-list');
   const index = diceList.children().length;
-  const newDiceHtml = `<div class="w-75 mx-auto">
-  <div class="row mb-2">
-      <div class="col-sm-8">
-          <div class="input-group input-group-sm">
-              <input class="form-control form-control-sm" type="number" value="1"
-                  id="input-dice-num-${index}" />
-              <select class="form-select form-select-sm" id="select-dice-type-${index}">
-                  <option value="2">d2</option>
-                  <option value="3">d3</option>
-                  <option selected value="4">d4</option>
-                  <option value="6">d6</option>
-                  <option value="8">d8</option>
-                  <option value="10">d10</option>
-                  <option value="12">d12</option>
-                  <option value="20">d20</option>
-                  <option value="100">d100</option>
-              </select>
-              <span class="input-group-text">+</span>
-              <input class="form-control form-control-sm" type="number" value="0"
-                  id="input-dice-mod-${index}" />
-          </div>
-      </div>
-      <div class="col-sm-4">
-          <div class="input-group input-group-sm">
-              <input readonly type="number" class="form-control form-control-sm"
-                  id="input-dice-result-${index}" />
-              <button id="btn-roll-single-${index}" onclick="onRollDice(${index})"
-                  class="btn btn-primary btn-sm" type="button">Roll</button>
-          </div>
-      </div>
-  </div>
-  <div id="dice-rolls-${index}"></div>
-</div>`;
+  const newDiceHtml = `
+  <div id="dice-container-${index}" class="row">
+        <div class="col-sm-1">
+            <button id="btn-remove-dice-${index}" onclick="onRemoveDice(${index})"
+                class="btn btn-danger btn-round btn-sm" type="button"><i class="fa-solid fa-minus"></i></button>
+        </div>
+        <div class="col-sm-10">
+            <div class="row mb-2">
+                <div class="col-sm-8">
+                    <div class="input-group input-group-sm">
+                        <input class="form-control form-control-sm" type="number" value="1"
+                            id="input-dice-num-${index}" />
+                        <select class="form-select form-select-sm" id="select-dice-type-${index}">
+                            <option value="2">d2</option>
+                            <option value="3">d3</option>
+                            <option selected value="4">d4</option>
+                            <option value="6">d6</option>
+                            <option value="8">d8</option>
+                            <option value="10">d10</option>
+                            <option value="12">d12</option>
+                            <option value="20">d20</option>
+                            <option value="100">d100</option>
+                        </select>
+                        <span class="input-group-text">+</span>
+                        <input class="form-control form-control-sm" type="number" value="0"
+                            id="input-dice-mod-${index}" />
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="input-group input-group-sm">
+                        <input readonly type="number" class="form-control form-control-sm"
+                            id="input-dice-result-${index}" />
+                        <button id="btn-roll-single-${index}" onclick="onRollDice(${index})"
+                            class="btn btn-primary btn-sm" type="button">Roll</button>
+                    </div>
+                </div>
+                <div id="dice-rolls-${index}"></div>
+            </div>
+        </div>
+        <div class="offset-sm-1"></div>
+    </div>`;
 
   diceList.append(newDiceHtml);
 }
@@ -574,7 +598,7 @@ const onLoadSceneSuccessEvent = function (peerId) {
 
   const player = PARTY.getPlayer(peerId);
   player.status = PlayerStatus.Connected;
-  player.updateOrCreateDom(CURRENT_SCENE.pieces);
+  player.updateOrCreateDom({ pieces: CURRENT_SCENE.pieces });
 }
 
 const onInformPlayerRemovedEvent = function () {
@@ -631,10 +655,10 @@ const emitChangeBackgroundEvent = function (peerId) {
   });
 }
 
-const emitDiceRollEvent = function(peerId, data) {
+const emitDiceRollEvent = function (peerId, rolls) {
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
-    conn.send({ event: EventTypes.DiceRoll, roll: data });
+    conn.send({ event: EventTypes.DiceRoll, rolls: rolls });
   });
 }
 
@@ -754,14 +778,14 @@ const onPermissionsChange = async function () {
   }
 }
 
-const onRollDiceEvent = function(peerId, roll) {
+const onRollDiceEvent = async function (peerId, rolls) {
   if (!isHost()) {
     console.warn('Only host can receive dice roll events');
     return;
   }
 
-
-  PARTY.getPlayer(peerId)?.updateOrCreateDom(CURRENT_SCENE.pieces);
+  PARTY.getPlayer(peerId)?.addRoll(rolls);
+  await PARTY.save();
 }
 
 const onChangeBackgroundEvent = async function (obj = null) {
@@ -789,7 +813,7 @@ const onAddPieceEvent = async function (peerId, piece) {
   const stillLoading = !!CURRENT_SCENE.unloadedPieces.length;
   const newPiece = CURRENT_SCENE.addPiece(piece);
   if (isHost()) {
-    PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
+    PARTY.getPlayer(newPiece.owner)?.updateOrCreateDom({ pieces: CURRENT_SCENE.pieces });
 
     for (var player of PARTY.players) {
       if (player.id == peerId) continue;
@@ -838,7 +862,7 @@ const onDeletePieceEvent = async function (peerId, id) {
   CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
-    PARTY.getPlayer(piece.owner)?.updateOrCreateDom(CURRENT_SCENE.pieces);
+    PARTY.getPlayer(piece.owner)?.updateOrCreateDom({ pieces: CURRENT_SCENE.pieces });
 
     for (var player of PARTY.players) {
       if (player.id == peerId) continue;
@@ -865,7 +889,7 @@ const onUpdatePieceEvent = async function (peerId, piece) {
   const updatedPiece = CURRENT_SCENE.updatePiece(piece);
 
   if (isHost()) {
-    $("#list-connected-party-members").append(PARTY.getPlayer(peerId).updateOrCreateDom(CURRENT_SCENE.pieces));
+    $("#list-connected-party-members").append(PARTY.getPlayer(peerId).updateOrCreateDom({ pieces: CURRENT_SCENE.pieces }));
 
     for (var player of PARTY.players) {
       if (player.id == peerId) continue;
@@ -915,7 +939,7 @@ const onPlayerJoinEvent = async function (player) {
 
 
   player.status = PlayerStatus.Pending;
-  $('#list-connected-party-members').append(player.updateOrCreateDom(CURRENT_SCENE.pieces));
+  $('#list-connected-party-members').append(player.updateOrCreateDom({ pieces: CURRENT_SCENE.pieces }));
   emitPermissionsChangeEvent(player.id);
   emitConnectedToHostEvent(player.id);
   emitLoadSceneEvent(player.id);
@@ -970,7 +994,7 @@ const initPeerEvents = function () {
           const player = PARTY.getPlayer(idMatch[0]);
           if (player != null) {
             player.status = PlayerStatus.Disconnected;
-            player.updateOrCreateDom(CURRENT_SCENE.pieces);
+            player.updateOrCreateDom({ pieces: CURRENT_SCENE.pieces });
           }
         }
         else if (_host == idMatch[0]) {
@@ -1020,7 +1044,7 @@ const initPeerEvents = function () {
 
       switch (data.event) {
         case EventTypes.DiceRoll:
-          onRollDiceEvent(conn.peer, data.roll);
+          onRollDiceEvent(conn.peer, data.rolls);
           break;
         case EventTypes.AddPiece:
           onAddPieceEvent(conn.peer, data.piece);
@@ -1204,7 +1228,7 @@ const onChangeScene = async function (id) {
   CURRENT_SCENE.draw();
 
   for (var player of PARTY.players) {
-    player.updateOrCreateDom(CURRENT_SCENE.pieces);
+    player.updateOrCreateDom({ pieces: CURRENT_SCENE.pieces });
     emitLoadSceneEvent(player.id);
   }
 }
@@ -1229,9 +1253,11 @@ const onExportSession = async function () {
 
   const partyVal = await localforage.getItem(`${StorageKeys.Party}-${_host}`);
   PARTY = Party.fromObj(partyVal);
-  for (var player of PARTY.players) {
-    $("#list-connected-party-members").append(player.updateOrCreateDom(CURRENT_SCENE.pieces));
-  }
+
+  // i don't think this is necessary???
+  // for (var player of PARTY.players) {
+  //   $("#list-connected-party-members").append(player.updateOrCreateDom(CURRENT_SCENE.pieces));
+  // }
   exportVal.party = PARTY;
 
   exportVal.host = _host;
@@ -1346,7 +1372,7 @@ const restoreHostSession = async function () {
   if (partyVal != null) {
     PARTY = Party.fromObj(partyVal);
     for (var player of PARTY.players) {
-      $("#list-connected-party-members").append(player.updateOrCreateDom(CURRENT_SCENE.pieces));
+      $("#list-connected-party-members").append(player.updateOrCreateDom({ pieces: CURRENT_SCENE.pieces }));
     }
     for (var permission of PARTY.permissions) {
       document.getElementById(permission.elementId).checked = permission.value;

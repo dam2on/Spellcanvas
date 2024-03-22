@@ -69,6 +69,10 @@
     <link rel="stylesheet" href="css/loader.css">
     <link rel="stylesheet" href="css/styles.css">
     <!-- <link rel="stylesheet" href="css/styles.min.css"> -->
+    <meta name="description" content="Spellcanvas is a minimalistic, virtual tabletop designed for online play!">
+    <meta name="robots" content="index">
+    <meta name="google" content="nositelinkssearchbox">
+    </metaname>
 </head>
 
 <body>
@@ -548,7 +552,8 @@
                 <form id="form-modal-piece" class="needs-validation">
                     <div class="modal-header">
                         <h5 class="modal-title">Add New Game Piece</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body py-0">
                         <input hidden id="input-piece-init-pos-x" />
@@ -661,7 +666,8 @@
                 <form id="form-modal-bg" class="needs-validation">
                     <div class="modal-header">
                         <h5 class="modal-title">Set Background</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body py-0">
                         <fieldset class="row">
@@ -753,50 +759,53 @@
             </div>
         </div>
     </div>
-    <div class="modal" id="modal-dice" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal" id="modal-dice" tabindex="-1">
         <div class="modal-dialog draggable-modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Dice Roller</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="form-modal-dice" class="my-3">
                         <div id="dice-list">
-                            <div class="w-75 mx-auto">
-                                <div class="row mb-2">
-                                    <div class="col-sm-8">
-                                        <div class="input-group input-group-sm">
-                                            <input class="form-control form-control-sm" type="number" value="1"
-                                                id="input-dice-num-0" />
-                                            <select class="form-select form-select-sm" id="select-dice-type-0">
-                                                <option value="2">d2</option>
-                                                <option value="3">d3</option>
-                                                <option selected value="4">d4</option>
-                                                <option value="6">d6</option>
-                                                <option value="8">d8</option>
-                                                <option value="10">d10</option>
-                                                <option value="12">d12</option>
-                                                <option value="20">d20</option>
-                                                <option value="100">d100</option>
-                                            </select>
-                                            <span class="input-group-text">+</span>
-                                            <input class="form-control form-control-sm" type="number" value="0"
-                                                id="input-dice-mod-0" />
+                            <div class="row">
+                                <div class="offset-sm-1 col-sm-10">
+                                    <div class="row mb-2">
+                                        <div class="col-sm-8">
+                                            <div class="input-group input-group-sm">
+                                                <input class="form-control form-control-sm" type="number" value="1"
+                                                    id="input-dice-num-0" />
+                                                <select class="form-select form-select-sm" id="select-dice-type-0">
+                                                    <option value="2">d2</option>
+                                                    <option value="3">d3</option>
+                                                    <option selected value="4">d4</option>
+                                                    <option value="6">d6</option>
+                                                    <option value="8">d8</option>
+                                                    <option value="10">d10</option>
+                                                    <option value="12">d12</option>
+                                                    <option value="20">d20</option>
+                                                    <option value="100">d100</option>
+                                                </select>
+                                                <span class="input-group-text">+</span>
+                                                <input class="form-control form-control-sm" type="number" value="0"
+                                                    id="input-dice-mod-0" />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <div class="input-group input-group-sm">
-                                            <input readonly type="number" class="form-control form-control-sm"
-                                                id="input-dice-result-0" />
-                                            <button id="btn-roll-single-0" onclick="onRollDice(0)"
-                                                class="btn btn-primary btn-sm" type="button">Roll</button>
+                                        <div class="col-sm-4">
+                                            <div class="input-group input-group-sm">
+                                                <input readonly type="number" class="form-control form-control-sm"
+                                                    id="input-dice-result-0" />
+                                                <button id="btn-roll-single-0" onclick="onRollDice(0)"
+                                                    class="btn btn-primary btn-sm" type="button">Roll</button>
+                                            </div>
                                         </div>
+                                        <div id="dice-rolls-0"></div>
                                     </div>
                                 </div>
-                                <div id="dice-rolls-0"></div>
+                                <div class="offset-sm-1"></div>
                             </div>
-
                         </div>
                         <button id="btn-add-dice" type="button" class="btn btn-primary btn-sm btn-round no-focus"><i
                                 class="fa-solid fa-plus"></i></button>

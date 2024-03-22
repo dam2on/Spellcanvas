@@ -4,22 +4,37 @@ class Player {
         this.name = name ?? "New Player";
         this.isHost = isHost;
         this.status = PlayerStatus.Pending;
+        this.rolls = [];
     }
 
     static fromObj(obj) {
-        return new Player(obj.id, obj.name, obj.isHost);
+        const player = new Player(obj.id, obj.name, obj.isHost);
+        player.rolls = obj.rolls;
+        return player;
     }
 
-    updateOrCreateDom(pieces = null) {
+    updateOrCreateDom(content = {}) {
         $("#empty-party-msg").hide();
         $("#section-permissions").show();
 
         let pieceHtml = "";
+        let rollHtml = "";
 
-        if (pieces != null) {
-            for (var piece of pieces.filter(p => p.owner == this.id && p.objectType == "Piece")) {
+        if (content.pieces != null) {
+            for (var piece of content.pieces.filter(p => p.owner == this.id && p.objectType == "Piece")) {
                 const imgSrc = piece.image instanceof HTMLImageElement ? piece.image.src : piece.image;
                 pieceHtml += `<img style="margin-right: 0.5em; width: 1em;" title="${piece.name}" src=${imgSrc}>`;
+            }
+        }
+
+        if (this.rolls.length > 0) {
+            for (var roll of this.rolls) {
+                let rollDesc = `${roll.numDice}d${roll.diceSides}`;
+                if (roll.diceMod != 0)
+                    rollDesc += `+${roll.diceMod}`;
+
+                rollDesc += `; rolls: ${roll.rolls.join(",")}`;
+                rollHtml += `<span class="badge bg-secondary me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="${rollDesc}">${roll.total}</span>`;
             }
         }
 
@@ -27,7 +42,9 @@ class Player {
         if (!!existingDom.length) {
             $('#player-status-' + this.id).removeClass();
             $('#player-status-' + this.id).addClass(this.statusIconClassList());
-            $('#player-pieces-' + this.id).html(pieceHtml);
+            $('#player-rolls-' + this.id).html(rollHtml);
+            if (content.pieces != null)
+                $('#player-pieces-' + this.id).html(pieceHtml);
         }
         else {
             return $(`
@@ -35,7 +52,8 @@ class Player {
                 <li class="list-group-item player-label" id="player-${this.id}" ontouchstart="onPlayerMenu(event, '${this.id}')" oncontextmenu="onPlayerMenu(event, '${this.id}')">
                     <span class="col-1"><i id="player-status-${this.id}" class="${this.statusIconClassList()}"></i></span>
                     <span class="col-4">${this.name}</span>
-                    <span id="player-pieces-${this.id}" class="col-7">${pieceHtml}</span>
+                    <span id="player-pieces-${this.id}" class="col-4">${pieceHtml}</span>
+                    <span id="player-rolls-${this.id}" class="col-3">${rollHtml}</span>
                 </li>
                 <ul class="dropdown-menu" role="menu">
                     <li><a class="dropdown-item" onclick="onDeletePlayer('${this.id}')" href="javascript:void(0)">Delete ${this.name}</a></li>
@@ -66,5 +84,13 @@ class Player {
         }
 
         return classList;
+    }
+
+    addRoll(rolls) {
+        for (var roll of rolls) {
+            this.rolls.unshift(roll);
+        }
+        this.rolls = this.rolls.slice(0, 3); // only keep 3 latest rolls
+        this.updateOrCreateDom();
     }
 }
