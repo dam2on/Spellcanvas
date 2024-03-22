@@ -76,7 +76,7 @@ const onAddDice = function () {
               <select class="form-select form-select-sm" id="select-dice-type-${index}">
                   <option value="2">d2</option>
                   <option value="3">d3</option>
-                  <option value="4">d4</option>
+                  <option selected value="4">d4</option>
                   <option value="6">d6</option>
                   <option value="8">d8</option>
                   <option value="10">d10</option>
@@ -664,7 +664,7 @@ const emitMovePieceEvent = function (peerId, piece) {
 }
 
 const emitDeletePieceEvent = function (peerId, id) {
-  if (CURRENT_SCENE.getPieceById(id) == null) return;
+  // don't care if piece exists or not, handle that on receiving end
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
     conn.send({
