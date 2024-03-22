@@ -1530,6 +1530,8 @@ const onRouteHide = function () {
 }
 
 const onFullscreenToggle = function () {
+  $("#canvas-submenu").css({ 'display': 'none' });
+
   if (!document.fullscreenElement) {
     $('#btn-fullscreen').find('i').removeClass('fa-expand');
     $('#btn-fullscreen').find('i').addClass('fa-compress');
@@ -1719,6 +1721,7 @@ const initDom = function () {
   document.getElementById('input-grid-opacity').addEventListener('input', onGridChange);
   document.getElementById('toggle-custom-shape-size').addEventListener('click', onToggleCustomShape);
   document.getElementById('btn-fullscreen').addEventListener('click', onFullscreenToggle);
+  document.getElementById('canvas-submenu-fullscreen').addEventListener('click', onFullscreenToggle);
   document.getElementById('btn-dice-roll').addEventListener('click', onRollAllDice);
   document.getElementById('btn-add-dice').addEventListener('click', onAddDice);
   document.getElementById('input-display-grid').addEventListener('change', onToggleGridDisplay);
@@ -1757,6 +1760,10 @@ const initDom = function () {
     $('.extra-grid-controls').hide();
   });
 
+  document.getElementById("main-menu").addEventListener("show.bs.offcanvas", () => {
+    $("#canvas-submenu").css({ 'display': 'none' });
+  });
+
   document.getElementById('modal-grid').addEventListener('show.bs.modal', function () {
     $('.menu-toggle').hide();
     $('.menu-btn').prop('disabled', true);
@@ -1771,6 +1778,7 @@ const initDom = function () {
 
   document.getElementById('modal-dice').addEventListener('show.bs.modal', function () {
     $('#modal-dice').find('.modal-dialog').draggable();
+    $("#canvas-submenu").css({ 'display': 'none' });
   });
 
   document.getElementById('modal-grid').addEventListener('hidden.bs.modal', function () {
@@ -2030,6 +2038,8 @@ const initDom = function () {
         $('#value-shape-menu-opacity').html(parseInt(100 * _pieceInMenu.opacity / 255) + '%');
         if (_pieceInMenu.type == ShapeType.Square) {
           $('#toggle-custom-shape-size').show();
+          $('#toggle-custom-shape-size').prop('disabled', false);
+
         }
         else {
           $('#toggle-custom-shape-size').hide();

@@ -11,6 +11,7 @@ cp error.html output
 cp css/error.css output/css
 cp peererror.html output
 cp img/bg.jpg output/img
+cp img/size-desc.png output/img
 cp img/dead.png output/img
 cp img/grid-help.gif output/img
 cp img/error.gif output/img
