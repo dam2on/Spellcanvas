@@ -27,7 +27,7 @@ class Player {
             }
         }
 
-        if (this.rolls.length > 0) {
+        if (this.rolls?.length > 0) {
             for (var roll of this.rolls) {
                 let rollDesc = `${roll.numDice}d${roll.diceSides}`;
                 if (roll.diceMod != 0)
