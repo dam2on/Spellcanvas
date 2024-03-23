@@ -20,7 +20,7 @@ class Background {
                 break;
             case BackgroundType.Video:
                 $('#canvas').css('background-image', '');
-                $('#background-image').attr('src', '');
+                $('#background-image').removeAttr('src');
                 $('#background-image').hide();
                 $('#video').attr('data-vbg', this.url);
                 _video = new VideoBackgrounds($('#video'));

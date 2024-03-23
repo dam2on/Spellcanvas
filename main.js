@@ -459,7 +459,7 @@ const onAddPieceModal = async function () {
 
 const resetModalPieceForm = function () {
   $('#input-piece-name').val(null);
-  $('#img-piece-preview').attr('src', '');
+  $('#img-piece-preview').removeAttr('src');
   $('#input-piece-img').val('');
   $('#input-piece-img').attr('type', 'text');
   $('#input-piece-img').attr('type', 'file');
@@ -473,7 +473,7 @@ const resetModalPieceForm = function () {
 }
 
 const resetModalBgForm = function () {
-  $('#img-bg-preview').attr('src', '');
+  $('#img-bg-preview').removeAttr('src');
   $('#input-bg-video').val(null);
   $('#input-bg-image').val('');
   $('#input-bg-image').attr('type', 'text');
@@ -1742,11 +1742,17 @@ const initDom = function () {
     $('#img-bg-preview').attr('src', data);
   });
 
+  document.getElementById('input-bg-image-url').addEventListener('input', function() {
+    $('#btn-bg-image-preview').click();
+  });
   document.getElementById('btn-bg-image-preview').addEventListener('click', async function (e) {
     $('.img-preview-loader').show();
     $('#img-bg-preview').attr('src', $('#input-bg-image-url').val());
   });
 
+  document.getElementById('input-piece-img-url').addEventListener('input', function() {
+    $('#btn-piece-img-preview').click();
+  });
   document.getElementById('btn-piece-img-preview').addEventListener('click', async function (e) {
     $('.img-preview-loader').show();
     $('#img-piece-preview').attr('src', $('#input-piece-img-url').val());
