@@ -169,7 +169,7 @@ const initGamePieceTour = async function (piece) {
 
     newGamePieceTour.addStep({
         title: 'Other settings',
-        text: 'Mark your piece as dead, hide the shadow border, or prevent it from being re-positioned',
+        text: 'Mark your piece as dead, hide the shadow border, or prevent it from being moved around',
         attachTo: {
             element: document.getElementById('piece-menu-dead').parentElement.parentElement,
             on: 'left'
@@ -271,62 +271,11 @@ const initMainMenuTour = async function (isHost = true) {
         ]
     });
 
-
-    if (isHost) {
-        tour.addStep({
-            title: 'Set Background',
-            text: 'Upload an image to use as the background',
-            attachTo: {
-                element: document.getElementById("btn-change-bg"),
-                on: 'right'
-            },
-            buttons: [
-                {
-                    action() {
-                        return this.back();
-                    },
-                    classes: 'shepherd-button-secondary',
-                    text: 'Back'
-                },
-                {
-                    action() {
-                        return this.next();
-                    },
-                    text: 'Next'
-                }
-            ]
-        });
-    
-        tour.addStep({
-            title: "Grid Settings",
-            text: "Dial in the size of your background's grid to ensure game pieces and spell shapes are to scale",
-            attachTo: {
-                element: document.getElementById('btn-grid-mode'),
-                on: 'right'
-            },
-            buttons: [
-                {
-                    action() {
-                        return this.back();
-                    },
-                    classes: 'shepherd-button-secondary',
-                    text: 'Back'
-                },
-                {
-                    action() {
-                        return this.next();
-                    },
-                    text: 'Next'
-                }
-            ]
-        });
-    }
-
     tour.addStep({
-        title: 'Add Game Piece',
-        text: 'Upload your own images and turn them into interactive game pieces',
+        title: 'Settings Menu',
+        text: isHost ? 'Set the background, map out the grid, and create your own game pieces!' : 'Create your own game pieces!',
         attachTo: {
-            element: document.getElementById("btn-add-piece"),
+            element: isHost ? document.getElementById("btn-change-bg").parentElement : document.getElementById("btn-add-piece").parentElement,
             on: 'right'
         },
         buttons: [
@@ -346,10 +295,9 @@ const initMainMenuTour = async function (isHost = true) {
         ]
     });
 
-
     tour.addStep({
         title: 'Spell Ruler',
-        text: 'Measure spell coverage and range. Click to make a spell shape permanent. Scroll to rotate lines & cones',
+        text: 'Measure spell coverage and range. Scroll to rotate lines & cones.<br /><br/>Click to make a spell area permanent, allowing your party to see!',
         attachTo: {
             element: document.getElementById('spell-ruler'),
             on: 'right'
@@ -402,7 +350,7 @@ const initMainMenuTour = async function (isHost = true) {
 
         tour.addStep({
             title: 'Party',
-            text: 'Invite players and view your current party',
+            text: 'Invite players and view your current party.<br/><br/>You can right-click on a player for more options. Additionally, any pieces they create as well as their 3 most recent dice rolls will show up here!',
             attachTo: {
                 element: document.getElementById("section-party-menu"),
                 on: 'right'
@@ -470,31 +418,6 @@ const initMainMenuTour = async function (isHost = true) {
             {
                 action() {
                     $('.menu-toggle').removeClass('blinking');
-                    return this.next();
-                },
-                text: 'Next'
-            }
-        ]
-    });
-
-    tour.addStep({
-        title: 'Or Click Me!',
-        text: 'Open settings',
-        attachTo: {
-            element: document.getElementById("btn-menu-toggle"),
-            on: 'top'
-        },
-        buttons: [
-            {
-                action() {
-                    $('.menu-toggle').addClass('blinking');
-                    return this.back();
-                },
-                classes: 'shepherd-button-secondary',
-                text: 'Back'
-            },
-            {
-                action() {
                     $("#btn-menu-toggle").trigger('mouseover');
                     return this.next();
                 },
@@ -505,8 +428,8 @@ const initMainMenuTour = async function (isHost = true) {
 
     tour.addStep({
         id: 'sub-menu-step',
-        title: 'Also, hover me for extra utilities!',
-        text: '<i class="fa-solid fa-route"></i> Toggle lines showing recent moves<br/><i class="fa-solid fa-dice-five"></i> Dice roller<i class="fa-solid fa-expand"></i> Toggle fullscreen mode<br/>',
+        title: 'Or hover me for extra utilities!',
+        text: '<i class="fa-solid fa-route"></i> Toggle lines showing recent moves<br/><i class="fa-solid fa-dice-five"></i> Dice roller<br/><i class="fa-solid fa-expand"></i> Toggle fullscreen mode<br/><br/>Clicking the gear will open Settings',
         attachTo: {
             element: document.getElementById("btn-menu-toggle"),
             on: 'top'
@@ -514,6 +437,7 @@ const initMainMenuTour = async function (isHost = true) {
         buttons: [
             {
                 action() {
+                    $('.menu-toggle').addClass('blinking');
                     setTimeout(function() {
                         $("#btn-menu-toggle").trigger('mouseleave');
                     }, 150);

@@ -140,12 +140,12 @@ const onBackgroundImageSourceChange = function() {
   const imgSource = document.querySelector('input[type="radio"][name="radio-bg-img-source"]:checked').value;
   switch(imgSource) {
     case ImageSource.File:
-      $("#input-bg-image-url").removeAttr("required").parent().hide();
+      $("#input-bg-image-url").removeAttr("required").hide();
       $("#input-bg-image").show().attr("required", "required");
       break;
     case ImageSource.URL:
       $("#input-bg-image").hide().removeAttr("required");
-      $("#input-bg-image-url").attr("required", "required").parent().show();
+      $("#input-bg-image-url").attr("required", "required").show();
       break;
   }
 }
@@ -156,12 +156,12 @@ const onPieceImageSourceChange = function() {
   const imgSource = document.querySelector('input[type="radio"][name="radio-piece-img-source"]:checked').value;
   switch(imgSource) {
     case ImageSource.File:
-      $("#input-piece-img-url").removeAttr("required").parent().hide();
+      $("#input-piece-img-url").removeAttr("required").hide();
       $("#input-piece-img").show().attr("required", "required");
       break;
     case ImageSource.URL:
       $("#input-piece-img").hide().removeAttr("required");
-      $("#input-piece-img-url").attr("required", "required").parent().show();
+      $("#input-piece-img-url").attr("required", "required").show();
       break;
   }
 }
@@ -278,21 +278,21 @@ const onToggleGridDisplay = async function () {
   let color = $('#input-grid-color').val();
   let opacity = $('#input-grid-opacity').val();
   if (display) {
-    $('#grid-color-container').show();
+    $('#grid-color-container').fadeIn();
     $('#grid-opacity-value').html(parseInt(100 * Number(opacity) / 255) + '%');
   }
   else {
     $('#grid-color-container').hide();
   }
 
-  await CURRENT_SCENE.drawPieces({
+  CURRENT_SCENE.drawBackdrop();
+  CURRENT_SCENE.drawPieces({
     gridDisplay: display,
     gridColor: color,
     gridOpacity: opacity,
     gridHeight: Number($('#input-grid-height').val() * CURRENT_SCENE.canvas.height),
     gridWidth: Number($('#input-grid-width').val() * CURRENT_SCENE.canvas.width)
   });
-  CURRENT_SCENE.drawBackdrop();
   _drawShape?.draw({ width: _drawShape.width, height: _drawShape.height, border: "#5f8585" });
 }
 
@@ -325,6 +325,7 @@ const onGridChange = function (e) {
   $('.grid-indicator').css('width', valX + 'px');
   $('.grid-indicator').css('height', valY + 'px');
 
+  CURRENT_SCENE.drawBackdrop();
   CURRENT_SCENE.drawPieces({
     gridDisplay: $('#input-display-grid').prop('checked'),
     gridWidth: valX,
@@ -335,7 +336,6 @@ const onGridChange = function (e) {
   if (_drawShape == null) {
     _drawShape = initGridShape(0.5, 0.5);
   }
-  CURRENT_SCENE.drawBackdrop();
   _drawShape.draw({ width: valX, height: valY, border: "#5f8585" });
 }
 
@@ -1743,17 +1743,11 @@ const initDom = function () {
   });
 
   document.getElementById('input-bg-image-url').addEventListener('input', function() {
-    $('#btn-bg-image-preview').click();
-  });
-  document.getElementById('btn-bg-image-preview').addEventListener('click', async function (e) {
     $('.img-preview-loader').show();
     $('#img-bg-preview').attr('src', $('#input-bg-image-url').val());
   });
 
   document.getElementById('input-piece-img-url').addEventListener('input', function() {
-    $('#btn-piece-img-preview').click();
-  });
-  document.getElementById('btn-piece-img-preview').addEventListener('click', async function (e) {
     $('.img-preview-loader').show();
     $('#img-piece-preview').attr('src', $('#input-piece-img-url').val());
   });
