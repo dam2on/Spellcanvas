@@ -233,6 +233,9 @@ class Scene {
     }
 
     async drawGrid(options = {}) {
+        const shouldDisplay = options.gridDisplay ?? this.gridRatio.display; // prio options over current setting
+        if (!shouldDisplay) return;
+
         const gridHeightPx = options.gridHeight ?? this.gridRatio.y * this.canvas.height;
         const gridWidthPx = options.gridWidth ?? this.gridRatio.x * this.canvas.width;
         const gridColor = options.gridColor ?? this.gridRatio.color ?? await this.background.getContrastColor();
@@ -281,10 +284,8 @@ class Scene {
     async drawPieces(options = {}) {
         this.clearCanvas();
 
-        if (this.gridRatio.display || options.gridDisplay) {
-            await this.drawGrid(options);
-        }
-
+        await this.drawGrid(options);
+        
         let trailColor = null;
         if (options.addTrail || document.getElementById('checkbox-route-toggle').checked) {
             trailColor = await this.background.getContrastColor();

@@ -294,7 +294,7 @@ class Piece {
         // add border
         if (options.border) {
             this.ctx.lineWidth = 4;
-            this.ctx.strokeStyle = "#FFEA00";
+            this.ctx.strokeStyle = options.border;
             this.ctx.beginPath();
             this.ctx.moveTo(this.getX(), this.getY());
             this.ctx.lineTo(this.getX() + this.width, this.getY());

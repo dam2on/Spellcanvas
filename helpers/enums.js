@@ -20,6 +20,11 @@ const BackgroundType = {
   Video: 'video'
 }
 
+const ImageSource = {
+  File: 'file',
+  URL: 'url'
+}
+
 const StorageKeys = {
   Player: 'player',
   HostId: 'host id',

@@ -9,7 +9,7 @@ class Player {
 
     static fromObj(obj) {
         const player = new Player(obj.id, obj.name, obj.isHost);
-        player.rolls = obj.rolls;
+        player.rolls = obj.rolls ?? [];
         return player;
     }
 
@@ -27,7 +27,7 @@ class Player {
             }
         }
 
-        if (this.rolls?.length > 0) {
+        if (this.rolls.length > 0) {
             for (var roll of this.rolls) {
                 let rollDesc = `${roll.numDice}d${roll.diceSides}`;
                 if (roll.diceMod != 0)

@@ -117,7 +117,7 @@ const onAddDice = function () {
                             class="btn btn-primary btn-sm" type="button">Roll</button>
                     </div>
                 </div>
-                <div id="dice-rolls-${index}"></div>
+                <div id="dice-rolls-${index}" class="font-sm"></div>
             </div>
         </div>
         <div class="offset-sm-1"></div>
@@ -134,6 +134,36 @@ const onCropperRotate = function (e) {
     _cropper?.rotate(90);
   }
   _cropper?.zoomTo(-1);
+}
+
+const onBackgroundImageSourceChange = function() {
+  const imgSource = document.querySelector('input[type="radio"][name="radio-bg-img-source"]:checked').value;
+  switch(imgSource) {
+    case ImageSource.File:
+      $("#input-bg-image-url").removeAttr("required").parent().hide();
+      $("#input-bg-image").show().attr("required", "required");
+      break;
+    case ImageSource.URL:
+      $("#input-bg-image").hide().removeAttr("required");
+      $("#input-bg-image-url").attr("required", "required").parent().show();
+      break;
+  }
+}
+
+const onPieceImageSourceChange = function() {
+  $('#piece-img-error-msg').hide();
+  $('#btn-modal-piece-ok').removeAttr('disabled');
+  const imgSource = document.querySelector('input[type="radio"][name="radio-piece-img-source"]:checked').value;
+  switch(imgSource) {
+    case ImageSource.File:
+      $("#input-piece-img-url").removeAttr("required").parent().hide();
+      $("#input-piece-img").show().attr("required", "required");
+      break;
+    case ImageSource.URL:
+      $("#input-piece-img").hide().removeAttr("required");
+      $("#input-piece-img-url").attr("required", "required").parent().show();
+      break;
+  }
 }
 
 const onBackgroundTypeChange = function () {
@@ -185,7 +215,7 @@ const onChangeBackgroundSubmit = function () {
   switch (bgType) {
     case BackgroundType.Image:
       const bgImgFile = document.getElementById('input-bg-image').files[0];
-      const croppedImg = _cropper.getCroppedCanvas().toDataURL(bgImgFile?.type);
+      const croppedImg = _cropper.getCroppedCanvas().toDataURL(bgImgFile?.type ?? null);
       CURRENT_SCENE.setBackground(new Background(BackgroundType.Image, croppedImg));
       break;
     case BackgroundType.Video:
@@ -263,7 +293,7 @@ const onToggleGridDisplay = async function () {
     gridWidth: Number($('#input-grid-width').val() * CURRENT_SCENE.canvas.width)
   });
   CURRENT_SCENE.drawBackdrop();
-  _drawShape?.draw({ width: _drawShape.width, height: _drawShape.height, border: "#5f8585", borderWidth: 2 });
+  _drawShape?.draw({ width: _drawShape.width, height: _drawShape.height, border: "#5f8585" });
 }
 
 const onGridChange = function (e) {
@@ -306,7 +336,7 @@ const onGridChange = function (e) {
     _drawShape = initGridShape(0.5, 0.5);
   }
   CURRENT_SCENE.drawBackdrop();
-  _drawShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
+  _drawShape.draw({ width: valX, height: valY, border: "#5f8585" });
 }
 
 const onSpellRulerToggle = async function (args) {
@@ -435,6 +465,9 @@ const resetModalPieceForm = function () {
   $('#input-piece-img').attr('type', 'file');
   $('#input-piece-init-pos-x').val(null);
   $('#input-piece-init-pos-y').val(null);
+  $('#piece-img-error-msg').hide();
+  $('#btn-modal-piece-ok').removeAttr('disabled');
+  $('#input-piece-img-url').val(null);
   $('.rotate-btn').parent().hide();
   _cropper?.destroy();
 }
@@ -445,6 +478,9 @@ const resetModalBgForm = function () {
   $('#input-bg-image').val('');
   $('#input-bg-image').attr('type', 'text');
   $('#input-bg-image').attr('type', 'file');
+  $('#bg-img-error-msg').hide();
+  $('#btn-modal-bg-ok').removeAttr('disabled');
+  $('#input-bg-image-url').val(null);
   $('.rotate-btn').parent().hide();
   _cropper?.destroy();
 }
@@ -600,6 +636,7 @@ const onLoadSceneEvent = async function (scene) {
   if (!!CURRENT_SCENE.unloadedPieces.length) {
     emitRequestPiecesEvent(scene.pieces);
     CURRENT_SCENE.drawBackground();
+    CURRENT_SCENE.drawGrid();
   }
   else {
     CURRENT_SCENE.draw();
@@ -1576,7 +1613,7 @@ const refreshCanvas = function () {
         gridHeight: valY
       });
       CURRENT_SCENE.drawBackdrop();
-      _drawShape.draw({ width: valX, height: valY, border: "#5f8585", borderWidth: 2 });
+      _drawShape.draw({ width: valX, height: valY, border: "#5f8585" });
 
       if (currGridWidth != CURRENT_SCENE.gridRatio.x || currGridHeight != CURRENT_SCENE.gridRatio.y) {
 
@@ -1603,28 +1640,40 @@ const initDom = function () {
   new ResizeObserver(refreshCanvas).observe(document.body);
   document.addEventListener('fullscreenchange', function () {
     // short delay, some browsers toggle a bookmarks bar that affects the window size
-    setTimeout(() => refreshCanvas(), 1200);
+    if (CURRENT_SCENE.background.type == BackgroundType.Image) {
+      setTimeout(() => refreshCanvas(), 1200);
+    }
+    else {
+      refreshCanvas()
+    }
   });
 
   // init cropper
   Cropper.setDefaults({
     viewMode: 2,
     autoCropArea: 1,
+    checkCrossOrigin: false,
+    checkOrientation: false,
     ready() {
       $('.img-preview-loader').hide();
       $('.rotate-btn').parent().show();
 
       // attach crop zoom events for loading a previous image
       if (_cropper.element == document.getElementById('img-bg-preview')) {
+        $('#img-bg-preview').attr('crossorigin', 'anonymous');
         $('#img-bg-preview').one('crop zoom', function () {
           document.getElementById('input-bg-image').removeAttribute('required');
         });
       }
       else if (_cropper.element == document.getElementById('piece-menu-image')) {
+        $('#piece-menu-image').attr('crossorigin', 'anonymous');
         $('#piece-menu-image').one('crop zoom', function () {
           _pieceInMenu.imageCropped = true;
           $('#btn-update-piece').addClass('shake');
         });
+      }
+      else if (_cropper.element == document.getElementById('img-piece-preview')) {
+        $('#img-piece-preview').attr('crossorigin', 'anonymous');
       }
     }
   });
@@ -1640,13 +1689,16 @@ const initDom = function () {
 
   // init croppers
   $('#img-piece-preview').on('load', function () {
+    $('#piece-img-error-msg').hide();
+    $('#btn-modal-piece-ok').removeAttr('disabled');
     _cropper?.destroy();
     _cropper = new Cropper(document.getElementById('img-piece-preview'), {
       initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
     });
   });
   $('#img-bg-preview').on('load', function () {
-    console.log('initing bg cropper');
+    $('#bg-img-error-msg').hide();
+    $('#btn-modal-bg-ok').removeAttr('disabled');
     _cropper?.destroy();
     _cropper = new Cropper(document.getElementById('img-bg-preview'), {
       initialAspectRatio: CURRENT_SCENE.canvas.width / CURRENT_SCENE.canvas.height
@@ -1657,6 +1709,22 @@ const initDom = function () {
     _cropper = new Cropper(document.getElementById('piece-menu-image'), {
       initialAspectRatio: CURRENT_SCENE.getGridAspectRatio()
     });
+  });
+  $('#img-piece-preview').on('error', function (e) {
+    console.error(e);
+    $('.img-preview-loader').hide();
+    $('#piece-img-error-msg').show();
+    $('#btn-modal-piece-ok').attr('disabled', 'disabled');
+  });
+  $('#img-bg-preview').on('error', function (e) {
+    console.error(e);
+    $('.img-preview-loader').hide();
+    $('#bg-img-error-msg').show();
+    $('#btn-modal-bg-ok').attr('disabled', 'disabled');
+  });
+  $('#piece-menu-image').on('error', function (e) {
+    console.error(e);
+    $('.img-preview-loader').hide();
   });
 
   // init carousel
@@ -1672,6 +1740,16 @@ const initDom = function () {
     $('.img-preview-loader').show();
     const data = await resizeImage(e.target.files[0], CURRENT_SCENE.canvas.width);
     $('#img-bg-preview').attr('src', data);
+  });
+
+  document.getElementById('btn-bg-image-preview').addEventListener('click', async function (e) {
+    $('.img-preview-loader').show();
+    $('#img-bg-preview').attr('src', $('#input-bg-image-url').val());
+  });
+
+  document.getElementById('btn-piece-img-preview').addEventListener('click', async function (e) {
+    $('.img-preview-loader').show();
+    $('#img-piece-preview').attr('src', $('#input-piece-img-url').val());
   });
 
   document.getElementById('piece-menu-image-input').addEventListener('change', async function (e) {
@@ -1748,6 +1826,8 @@ const initDom = function () {
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseenter', onRouteShow);
   document.querySelector('label[for="checkbox-route-toggle"]').addEventListener('mouseleave', onRouteHide);
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
+  $('input[type="radio"][name="radio-bg-img-source"]').on('change', onBackgroundImageSourceChange);
+  $('input[type="radio"][name="radio-piece-img-source"]').on('change', onPieceImageSourceChange);
   $('input[type="radio"][name="radio-shape-menu-type"]').on('change', onShapeTypeChange);
   document.getElementById('input-aura-menu-opacity').addEventListener('input', (e) => {
     $('#value-aura-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
@@ -1901,7 +1981,7 @@ const initDom = function () {
       _drawShape.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
       _drawShape.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
 
-      _drawShape.draw({ width: dW, height: dH, border: "#5f8585", borderWidth: 2 });
+      _drawShape.draw({ width: dW, height: dH, border: "#5f8585" });
       return;
     }
     if (_draggedPiece != null) {
@@ -2012,7 +2092,7 @@ const initDom = function () {
     }
   });
 
-  can.addEventListener('contextmenu', (e) => {
+  can.addEventListener('contextmenu', async (e) => {
     e.preventDefault();
     if (CURRENT_SCENE == null) return; // player mode disable during load up
 
@@ -2025,7 +2105,7 @@ const initDom = function () {
       $('.shape-only').hide();
       $('.piece-only').hide();
       bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("piece-menu")).show();
-      _pieceInMenu.draw({ border: "#FFEA00" });
+      _pieceInMenu.draw({ border: await CURRENT_SCENE.background.getContrastColor() });
 
       document.getElementById("piece-menu-lock").checked = _pieceInMenu.lock;
 

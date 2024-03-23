@@ -506,7 +506,7 @@ const initMainMenuTour = async function (isHost = true) {
     tour.addStep({
         id: 'sub-menu-step',
         title: 'Also, hover me for extra utilities!',
-        text: '<i class="fa-solid fa-route"></i> Toggle lines showing recent moves<br/><i class="fa-solid fa-expand"></i> Toggle fullscreen mode<br/><i class="fa-solid fa-dice-five"></i> Dice roller',
+        text: '<i class="fa-solid fa-route"></i> Toggle lines showing recent moves<br/><i class="fa-solid fa-dice-five"></i> Dice roller<i class="fa-solid fa-expand"></i> Toggle fullscreen mode<br/>',
         attachTo: {
             element: document.getElementById("btn-menu-toggle"),
             on: 'top'

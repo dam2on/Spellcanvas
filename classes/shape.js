@@ -81,10 +81,8 @@ class Shape extends Piece {
         this.ctx.fill(this.path);
 
         if (options.border) {
-            this.ctx.strokeStyle = options.border;
-            if (!!options.borderWidth) {
-                this.ctx.lineWidth = options.borderWidth;
-            }
+            this.ctx.strokeStyle = invertColor(this.color);
+            this.ctx.lineWidth = 3;
             this.ctx.stroke(this.path);
         }
 

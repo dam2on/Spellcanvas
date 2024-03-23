@@ -112,8 +112,8 @@
         <li><a id="canvas-submenu-fullscreen" class="dropdown-item" href="javascript:void(0)">Toggle
                 Fullscreen</a>
         </li>
-        <li><a id="canvas-submenu-roll-dice" data-bs-toggle="modal" data-bs-target="#modal-dice"
-                class="dropdown-item" href="javascript:void(0)">Roll Dice</a>
+        <li><a id="canvas-submenu-roll-dice" data-bs-toggle="modal" data-bs-target="#modal-dice" class="dropdown-item"
+                href="javascript:void(0)">Roll Dice</a>
         </li>
     </ul>
 
@@ -230,14 +230,14 @@
                     style="margin-bottom: 0.1em; display: none;">
                     <i class="fa-solid fa-route"></i>
                 </label>
-                <button class="no-focus btn btn-secondary menu-btn btn-sm" id="btn-fullscreen" type="button"
-                    style="margin-bottom: 0.1em; display: none;">
-                    <i class="fa-solid fa-expand"></i>
-                </button>
                 <button class="no-focus btn btn-secondary menu-btn btn-sm" data-bs-target="#modal-dice"
                     data-bs-toggle="modal" id="btn-dice-dialog" type="button"
                     style="margin-bottom: 0.1em; display: none;">
                     <i class="fa-solid fa-dice-five fa-lg"></i>
+                </button>
+                <button class="no-focus btn btn-secondary menu-btn btn-sm" id="btn-fullscreen" type="button"
+                    style="margin-bottom: 0.1em; display: none;">
+                    <i class="fa-solid fa-expand"></i>
                 </button>
             </div>
         </div>
@@ -439,7 +439,9 @@
                         style="display: none;">Free Draw</button>
 
                     <div class="col-sm-2">
-                        <a tabindex="0" style="cursor: pointer; text-decoration: none;" role="button" data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="left" data-bs-html="true" data-bs-content="<img src='img/size-desc.png'></img>">
+                        <a tabindex="0" style="cursor: pointer; text-decoration: none;" role="button"
+                            data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="left"
+                            data-bs-html="true" data-bs-content="<img src='img/size-desc.png'></img>">
                             <i class="fa-solid fa-circle-question"></i>
                         </a>
                     </div>
@@ -596,6 +598,9 @@
                             <div>
                                 <img id="img-piece-preview" class="cropper-hidden" style="max-width: 100%;"></img>
                             </div>
+                            <div id="piece-img-error-msg" class="invalid-feedback">
+                                Error loading image
+                            </div>
                             <div class="btn-group-sm btn-group mt-2" style="display: none;">
                                 <button type="button"
                                     class="btn btn-sm btn-secondary no-focus rotate-btn rotate-left"><i
@@ -605,16 +610,33 @@
                                         class="fa-solid fa-rotate-right"></i></button>
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <label for="input-piece-img" class="form-label col-sm-2">Image
-                            </label>
-                            <div class="col-sm-10">
-                                <input id="input-piece-img" type="file" class="form-control form-control-sm" required />
-                                <div class="invalid-feedback">
-                                    Please upload a valid jpeg or png file.
+                        <fieldset class="row align-items-center mb-3">
+                            <legend class="col-form-label col-sm-2 pt-0">Image</legend>
+                            <div class="col-sm-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="radio-piece-img-source"
+                                        id="radio-piece-img-source-file" value="file" checked>
+                                    <label class="form-check-label" for="radio-piece-img-source-file">
+                                        File
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="radio-piece-img-source"
+                                        id="radio-piece-img-source-url" value="url">
+                                    <label class="form-check-label" for="radio-piece-img-source-url">
+                                        URL
+                                    </label>
                                 </div>
                             </div>
-                        </div>
+                            <div class="col-sm-8">
+                                <input id="input-piece-img" type="file" class="form-control form-control-sm"  required />
+                                <div class="input-group input-group-sm" style="display: none;">
+                                    <input id="input-piece-img-url" type="url" class="form-control form-control-sm" />
+                                    <button id="btn-piece-img-preview" type="button" class="btn btn-secondary">Load
+                                        Preview</button>
+                                </div>
+                            </div>
+                        </fieldset>
                         <div class="row mb-3">
                             <label class="form-label col-sm-2" for="input-piece-name">Name</label>
                             <div class="col-sm-10">
@@ -726,6 +748,9 @@
                             <div>
                                 <img id="img-bg-preview" class="cropper-hidden" style="max-width: 100%;"></img>
                             </div>
+                            <div id="bg-img-error-msg" class="invalid-feedback">
+                                Error loading image
+                            </div>
                             <div class="btn-group-sm btn-group mt-2" style="display: none;">
                                 <button type="button"
                                     class="btn btn-sm btn-secondary no-focus rotate-btn rotate-left"><i
@@ -735,15 +760,40 @@
                                         class="fa-solid fa-rotate-right"></i></button>
                             </div>
                         </div>
-                        <div class="row mt-3 image-only">
-                            <label class="form-label col-sm-2" for="input-bg-image">Source</label>
-                            <div class="col-sm-10">
-                                <input id="input-bg-image" type="file" class="form-control form-control-sm" required />
+
+                        <fieldset class="row image-only align-items-center">
+                            <legend class="col-form-label col-sm-2 pt-0">Source</legend>
+                            <div class="col-sm-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="radio-bg-img-source"
+                                        id="radio-bg-img-source-file" value="file" checked>
+                                    <label class="form-check-label" for="radio-bg-img-source-file">
+                                        File
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="radio-bg-img-source"
+                                        id="radio-bg-img-source-url" value="url">
+                                    <label class="form-check-label" for="radio-bg-img-source-url">
+                                        URL
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-sm-8">
+                                <input id="input-bg-image" type="file" class="form-control form-control-sm"  required />
                                 <div class="invalid-feedback">
                                     Please upload a valid jpeg or png file.
                                 </div>
+                                <div class="input-group input-group-sm" style="display: none;">
+                                    <input id="input-bg-image-url" type="url" class="form-control form-control-sm" />
+                                    <button id="btn-bg-image-preview" type="button" class="btn btn-secondary">Load
+                                        Preview</button>
+                                    <div class="invalid-feedback">
+                                        Could not load image from URL.
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </fieldset>
                         <div class="row mt-3 video-only" style="display: none;">
                             <div class="offset-sm-2 col-sm-10 subtle-text" style="font-size: 0.9rem;"><i
                                     class="fa-solid fa-triangle-exclamation text-warning"></i> Experimental Feature
@@ -834,7 +884,7 @@
                                                     class="btn btn-primary btn-sm" type="button">Roll</button>
                                             </div>
                                         </div>
-                                        <div id="dice-rolls-0"></div>
+                                        <div id="dice-rolls-0" class="font-sm"></div>
                                     </div>
                                 </div>
                                 <div class="offset-sm-1"></div>
