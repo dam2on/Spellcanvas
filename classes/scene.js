@@ -209,7 +209,7 @@ class Scene {
         const valX = parseInt(this.gridRatio.x * this.canvas.width);
         const valY = parseInt(this.gridRatio.y * this.canvas.height);
         
-        $('#input-display-grid').prop('checked', this.gridRatio.display);
+        $('#input-display-grid').prop('checked', !!this.gridRatio.display);
         $('#input-grid-color').val(this.gridRatio.color);
         $('#input-grid-opacity').val(this.gridRatio.opacity);
         $('#grid-opacity-value').html(parseInt(100 * (this.gridRatio.opacity ?? 0) / 255) + '%');
