@@ -357,7 +357,7 @@
                     </div>
                 </div>
                 <div class="aura-only">
-                    <!-- <hr /> -->
+                    <hr />
                     <div class="row mb-3">
                         <label for="input-aura-menu-size" class="form-label col-sm-2">Radius</label>
                         <div class="col-sm-4">
@@ -410,7 +410,13 @@
                 <fieldset class="row mb-3">
                     <legend class="col-form-label col-sm-2 pt-0">Shape</legend>
                     <div class="col-sm-10">
-                        <span id="custom-shape-type-msg" style="display: none">Custom</span>
+                        <span id="custom-shape-type-msg" style="display: none">Custom
+                            <a tabindex="0" style="cursor: pointer; text-decoration: none;"
+                                role="button" data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="left"
+                                data-bs-html="true"
+                                data-bs-content="Click the <span class='badge bg-secondary'>Free Size</span> button to draw a custom rectangle.<br/><br/>Use the Spell Ruler  in the settings menu <span class='badge bg-secondary'>s</span> to create other standard shapes.">
+                                <i class="fa-solid fa-circle-question"></i>
+                            </a></span>
                         <div class="form-check">
                             <input id="radio-shape-menu-type-li" class="form-check-input" type="radio"
                                 name="radio-shape-menu-type" value="line">
@@ -454,14 +460,9 @@
                         style="display: none;">Free Size</button>
 
                     <div class="col-sm-2">
-                        <a id="tooltip-shape-size" tabindex="0" style="cursor: pointer; text-decoration: none;" role="button"
-                            data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="left"
+                        <a id="tooltip-shape-size" tabindex="0" style="cursor: pointer; text-decoration: none;"
+                            role="button" data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="left"
                             data-bs-html="true" data-bs-content="<img src='img/size-desc.png'></img>">
-                            <i class="fa-solid fa-circle-question"></i>
-                        </a>
-                        <a id="tooltip-shape-size-free" tabindex="0" style="cursor: pointer; text-decoration: none;" role="button"
-                            data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="left"
-                            data-bs-html="true" data-bs-content="Click the <span class='badge bg-secondary'>Free Size</span> button to draw a custom rectangle.<br/><br/>Use the Spell Ruler  in the settings menu <span class='badge bg-secondary'>s</span> to create other standard shapes.">
                             <i class="fa-solid fa-circle-question"></i>
                         </a>
                     </div>

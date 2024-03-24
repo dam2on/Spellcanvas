@@ -549,7 +549,7 @@ const onUpdatePieceSubmit = async function () {
     _pieceInMenu.updateSize(size);
     _pieceInMenu.updateConditions(statusConds);
     if (auraEnabled) {
-      _pieceInMenu.aura = new Shape(_pieceInMenu.id, _pieceInMenu.owner, $('#checkbox-piece-menu-aura').val(), $('#input-aura-menu-size').val(), _pieceInMenu.x, _pieceInMenu.y);
+      _pieceInMenu.aura = new Shape(_pieceInMenu.id, _pieceInMenu.owner, $('#checkbox-piece-menu-aura').val(), $('#input-aura-menu-size').val() * 2, _pieceInMenu.x, _pieceInMenu.y);
       _pieceInMenu.aura.color = $('#input-aura-menu-color').val();
       _pieceInMenu.aura.contrastColor = invertColor(_pieceInMenu.aura.color);
       _pieceInMenu.aura.opacity = $('#input-aura-menu-opacity').val();
@@ -2154,7 +2154,6 @@ const initDom = function () {
 
         if (typeof (_pieceInMenu.size) == 'object') {
           // custom size
-          $('#tooltip-shape-size-free').show();
           $('#tooltip-shape-size').hide();
           $('#custom-shape-type-msg').show();
           $('#input-shape-menu-size').attr('type', 'text');
@@ -2165,7 +2164,6 @@ const initDom = function () {
           $('input[name="radio-shape-menu-type"]').prop('disabled', true);
         }
         else {
-          $('#tooltip-shape-size-free').hide();
           $('#tooltip-shape-size').show();
           $('#custom-shape-type-msg').hide();
           $('input[name="radio-shape-menu-type"]').parent().show();
@@ -2198,7 +2196,7 @@ const initDom = function () {
         if (_pieceInMenu.aura != null) {
           $('.aura-only').show();
           document.getElementById("checkbox-piece-menu-aura").checked = true;
-          document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size;
+          document.getElementById("input-aura-menu-size").value = _pieceInMenu.aura.size / 2;
           document.getElementById("input-aura-menu-color").value = _pieceInMenu.aura.color;
           document.getElementById('input-aura-menu-opacity').value = _pieceInMenu.aura.opacity;
           $('#value-aura-menu-opacity').html(parseInt(100 * (_pieceInMenu.aura?.opacity ?? 0) / 255) + '%');
