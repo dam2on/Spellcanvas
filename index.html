@@ -98,19 +98,37 @@
     </canvas>
     <ul id="canvas-submenu" class="dropdown-menu" style="position: absolute">
         <li><a id="canvas-submenu-settings" data-bs-toggle="offcanvas" data-bs-target="#main-menu" class="dropdown-item"
-                href="javascript:void(0)"><div class="d-flex justify-content-between"><span>Settings</span><em>s</em></div></a>
+                href="javascript:void(0)">
+                <div class="d-flex justify-content-between"><span>Settings</span><span
+                        class="badge bg-secondary">s</span></div>
+            </a>
         </li>
         <hr />
-        <li><a id="canvas-submenu-add-piece" class="dropdown-item" href="javascript:void(0)"><div class="d-flex justify-content-between"><span>New Piece Here</span><em>p</em></div></a>
+        <li><a id="canvas-submenu-add-piece" class="dropdown-item" href="javascript:void(0)">
+                <div class="d-flex justify-content-between"><span>New Piece Here</span><span
+                        class="ms-3 badge bg-secondary">p</span></div>
+            </a>
         </li>
-        <li><a id="canvas-submenu-change-bg" class="host-only dropdown-item" href="javascript:void(0)"><div class="d-flex justify-content-between"><span>Set Background</span><em>b</em></div></a></li>
-        <li><a id="canvas-submenu-adjust-grid" class="host-only dropdown-item" href="javascript:void(0)"><div class="d-flex justify-content-between"><span>Grid Settings</span><em>g</em></div></a>
+        <li><a id="canvas-submenu-change-bg" class="host-only dropdown-item" href="javascript:void(0)">
+                <div class="d-flex justify-content-between"><span>Background</span><span
+                        class="badge bg-secondary">b</span></div>
+            </a></li>
+        <li><a id="canvas-submenu-adjust-grid" class="host-only dropdown-item" href="javascript:void(0)">
+                <div class="d-flex justify-content-between"><span>Grid</span><span class="badge bg-secondary">g</span>
+                </div>
+            </a>
         </li>
         <hr />
-        <li><a id="canvas-submenu-fullscreen" class="dropdown-item" href="javascript:void(0)"><div class="d-flex justify-content-between"><span>Toggle Fullscreen</span><em>f</em></div></a>
-        </li>
         <li><a id="canvas-submenu-roll-dice" data-bs-toggle="modal" data-bs-target="#modal-dice" class="dropdown-item"
-                href="javascript:void(0)"><div class="d-flex justify-content-between"><span>Roll Dice</span><em>d</em></div></a>
+                href="javascript:void(0)">
+                <div class="d-flex justify-content-between"><span>Roll Dice</span><span
+                        class="badge bg-secondary">d</span></div>
+            </a>
+        </li>
+        <li><a id="canvas-submenu-fullscreen" class="dropdown-item" href="javascript:void(0)">
+                <div class="d-flex justify-content-between"><span>Fullscreen</span><span
+                        class="badge bg-secondary">f</span></div>
+            </a>
         </li>
     </ul>
 
@@ -433,12 +451,17 @@
                     </div>
 
                     <button id="toggle-custom-shape-size" class="col-sm-4 btn btn-secondary btn-sm"
-                        style="display: none;">Free Draw</button>
+                        style="display: none;">Free Size</button>
 
                     <div class="col-sm-2">
-                        <a tabindex="0" style="cursor: pointer; text-decoration: none;" role="button"
+                        <a id="tooltip-shape-size" tabindex="0" style="cursor: pointer; text-decoration: none;" role="button"
                             data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="left"
                             data-bs-html="true" data-bs-content="<img src='img/size-desc.png'></img>">
+                            <i class="fa-solid fa-circle-question"></i>
+                        </a>
+                        <a id="tooltip-shape-size-free" tabindex="0" style="cursor: pointer; text-decoration: none;" role="button"
+                            data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="left"
+                            data-bs-html="true" data-bs-content="Click the <span class='badge bg-secondary'>Free Size</span> button to draw a custom rectangle.<br/><br/>Use the Spell Ruler  in the settings menu <span class='badge bg-secondary'>s</span> to create other standard shapes.">
                             <i class="fa-solid fa-circle-question"></i>
                         </a>
                     </div>
@@ -536,7 +559,8 @@
                             </div>
                         </div>
                         <div class="row align-items-end my-3">
-                            <label class="offset-sm-3 form-label col-sm-3 font-sm" for="input-feet-per-grid">Square Length</label>
+                            <label class="offset-sm-3 form-label col-sm-3 font-sm" for="input-feet-per-grid">Square
+                                Length</label>
                             <div class="col-sm-3 ps-0">
                                 <div class="input-group input-group-sm">
                                     <input id="input-feet-per-grid" type="number" class="form-control form-control-sm"
@@ -750,7 +774,8 @@
                         <div class="image-only my-3 text-center">
                             <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
                             <div>
-                                <img id="img-bg-preview" class="cropper-hidden" style="max-width: 100%;"></img>
+                                <img id="img-bg-preview" class="cropper-hidden" style="max-width: 100%;"
+                                    crossorigin="anonymous"></img>
                             </div>
                             <div id="bg-img-error-msg" class="invalid-feedback">
                                 Error loading image

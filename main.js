@@ -489,7 +489,7 @@ const onAddPieceSubmit = async function (e) {
   $('#form-modal-piece').removeClass('was-validated');
   const name = $('#input-piece-name').val();
   const file = $('#input-piece-img')[0].files[0];
-  const croppedImg = _cropper.getCroppedCanvas().toDataURL(file.type);
+  const croppedImg = _cropper.getCroppedCanvas().toDataURL(file?.type);
   const size = document.querySelector('input[name="radio-piece-size"]:checked').value;
   const initPos = {
     x: Number($('#input-piece-init-pos-x').val() == '' ? 0.3 : $('#input-piece-init-pos-x').val()),
@@ -1641,10 +1641,11 @@ const initDom = function () {
   document.addEventListener('fullscreenchange', function () {
     // short delay, some browsers toggle a bookmarks bar that affects the window size
     if (CURRENT_SCENE.background.type == BackgroundType.Image) {
+      refreshCanvas();
       setTimeout(() => refreshCanvas(), 1200);
     }
     else {
-      refreshCanvas()
+      refreshCanvas();
     }
   });
 
@@ -2153,6 +2154,8 @@ const initDom = function () {
 
         if (typeof (_pieceInMenu.size) == 'object') {
           // custom size
+          $('#tooltip-shape-size-free').show();
+          $('#tooltip-shape-size').hide();
           $('#custom-shape-type-msg').show();
           $('#input-shape-menu-size').attr('type', 'text');
           $('#input-shape-menu-size').prop('readonly', true);
@@ -2162,6 +2165,8 @@ const initDom = function () {
           $('input[name="radio-shape-menu-type"]').prop('disabled', true);
         }
         else {
+          $('#tooltip-shape-size-free').hide();
+          $('#tooltip-shape-size').show();
           $('#custom-shape-type-msg').hide();
           $('input[name="radio-shape-menu-type"]').parent().show();
           $('input[name="radio-shape-menu-type"]').prop('disabled', false);
