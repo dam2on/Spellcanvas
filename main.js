@@ -1859,7 +1859,7 @@ const initDom = function () {
 
   document.getElementById('modal-dice').addEventListener('show.bs.modal', function () {
     $('#modal-dice').find('.modal-dialog').draggable();
-    $("#canvas-submenu").css({ 'display': 'none' });
+    $("#canvas-submenu").css({ 'display': 'none' });    
   });
 
   document.getElementById('modal-grid').addEventListener('hidden.bs.modal', function () {
@@ -1920,6 +1920,8 @@ const initDom = function () {
         onFullscreenToggle();
         break;
       case 'd':
+        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
+        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-dice')).toggle();
         break;
       default:
