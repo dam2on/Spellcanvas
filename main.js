@@ -1900,6 +1900,32 @@ const initDom = function () {
     }
   });
 
+  document.body.onkeyup = function(e) {
+    if (e.target.tagName == 'INPUT') return;
+    switch (e.key) {
+      case 's':
+        bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).toggle();
+        break;
+      case 'p':
+        onAddPieceModal();
+        break;
+      case 'b':
+        onChangeBackgroundModal();
+        break;
+      case 'g':
+        onGridMode();
+        break;
+      case 'f':
+        onFullscreenToggle();
+        break;
+      case 'd':
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-dice')).toggle();
+        break;
+      default:
+        break;
+    }
+  }
+
   // canvas
   let touchRightClickTimeout;
   $(can).on('mousedown touchstart', async function (args) {
