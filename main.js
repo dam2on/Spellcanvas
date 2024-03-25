@@ -242,6 +242,10 @@ const onGridSubmit = async function (e) {
   e.preventDefault();
 
   $('.draw-mode-overlay').hide();
+  const gridOrigin = _drawShape == null ? null : {
+    x: _drawShape.x,
+    y: _drawShape.y
+  }
   _drawMode = DrawMode.Off;
   _drawShape = null;
   await onGridChangeEvent({
@@ -250,7 +254,8 @@ const onGridSubmit = async function (e) {
     feetPerGrid: $('#input-feet-per-grid').val(),
     display: $('#input-display-grid').prop('checked'),
     color: $('#input-grid-color').val(),
-    opacity: $('#input-grid-opacity').val()
+    opacity: $('#input-grid-opacity').val(),
+    gridOrigin: gridOrigin ?? CURRENT_SCENE.gridRatio.gridOrigin
   });
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).hide();
 
@@ -288,6 +293,10 @@ const onToggleGridDisplay = async function () {
   CURRENT_SCENE.drawBackdrop();
   CURRENT_SCENE.drawPieces({
     gridDisplay: display,
+    gridOrigin: {
+      x: _drawShape?.x ?? 0,
+      y: _drawShape?.y ?? 0
+    },
     gridColor: color,
     gridOpacity: opacity,
     gridHeight: Number($('#input-grid-height').val() * CURRENT_SCENE.canvas.height),
@@ -331,12 +340,16 @@ const onGridChange = function (e) {
     gridWidth: valX,
     gridHeight: valY,
     gridColor: color,
-    gridOpacity: opacity
+    gridOpacity: opacity,
+    gridOrigin: _drawShape == null ? undefined : {
+      x: _drawShape.x,
+      y: _drawShape.y
+    }
   });
-  if (_drawShape == null) {
-    _drawShape = initGridShape(0.5, 0.5);
-  }
-  _drawShape.draw({ width: valX, height: valY, border: "#5f8585" });
+  // if (_drawShape == null) {
+  //   _drawShape = initGridShape(0.5, 0.5);
+  // }
+  _drawShape?.draw({ width: valX, height: valY, border: "#5f8585" });
 }
 
 const onSpellRulerToggle = async function (args) {
@@ -1072,7 +1085,7 @@ const initPeerEvents = function () {
 
   _peer.on('connection', function (conn) {
     conn.on('data', function (data) {
-      if (isHost() && PARTY.deletedPlayerIds.indexOf(conn.peer) >= 0) {
+      if (isHost() && PARTY?.deletedPlayerIds.indexOf(conn.peer) >= 0) {
         // refuse connection from deleted player
         emitInformPlayerRemovedEvent(conn.peer);
         conn.close();
@@ -1903,6 +1916,8 @@ const initDom = function () {
 
   document.body.onkeyup = function(e) {
     if (e.target.tagName == 'INPUT') return;
+    debugger;
+
     switch (e.key) {
       case 's':
         bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).toggle();
@@ -1923,6 +1938,11 @@ const initDom = function () {
         bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
         bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-dice')).toggle();
+        break;
+      case 'Enter':
+        if (bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu'))._isShown) {
+          onUpdatePieceSubmit();
+        }
         break;
       default:
         break;
@@ -2246,5 +2266,6 @@ window.onload = async function () {
   else {
     initMainMenuTour(false);
   }
+
   loading(false);
 }

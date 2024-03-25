@@ -240,28 +240,43 @@ class Scene {
         const gridWidthPx = options.gridWidth ?? this.gridRatio.x * this.canvas.width;
         const gridColor = options.gridColor ?? this.gridRatio.color ?? await this.background.getContrastColor();
         const gridOpacity = options.gridOpacity ?? this.gridRatio.opacity;
+        const gridOrigin = options.gridOrigin ?? this.gridRatio.gridOrigin ?? {x: 0, y: 0};
+        debugger;
 
         const prevStrokeColor = this.ctx.strokeStyle;
         this.ctx.strokeStyle = gridColor + opacityToHexStr(gridOpacity);
-        let colIndexPx = 0;
+        const drawLine = (x1, y1, x2, y2) => {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.stroke();
+        }
+
+        let colIndexPx = (gridOrigin.x * this.canvas.width) - (gridWidthPx / 2) - gridWidthPx;
         do {
             colIndexPx += gridWidthPx;
-            this.ctx.beginPath();
-            this.ctx.moveTo(colIndexPx, 0);
-            this.ctx.lineTo(colIndexPx, this.canvas.height);
-            this.ctx.stroke();
+            drawLine(colIndexPx, 0, colIndexPx, this.canvas.height);
         }
         while(colIndexPx < this.canvas.width);
+        colIndexPx = (gridOrigin.x * this.canvas.width) - (gridWidthPx / 2);
+        do {
+            colIndexPx -= gridWidthPx;
+            drawLine(colIndexPx, 0, colIndexPx, this.canvas.height);
+        }
+        while(colIndexPx > 0);
 
-        let rowIndexPx = 0;
+        let rowIndexPx = (gridOrigin.y * this.canvas.height) - (gridHeightPx / 2) - gridHeightPx;
         do {
             rowIndexPx += gridHeightPx;
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, rowIndexPx);
-            this.ctx.lineTo(this.canvas.width, rowIndexPx);
-            this.ctx.stroke();
+            drawLine(0, rowIndexPx, this.canvas.width, rowIndexPx);
         }
         while(rowIndexPx < this.canvas.height);
+        rowIndexPx = (gridOrigin.y * this.canvas.height) - (gridHeightPx / 2);
+        do {
+            rowIndexPx -= gridHeightPx;
+            drawLine(0, rowIndexPx, this.canvas.width, rowIndexPx);
+        }
+        while(rowIndexPx > 0);
 
         this.ctx.strokeStyle = prevStrokeColor;
     }
