@@ -166,6 +166,21 @@ const onPieceImageSourceChange = function() {
   }
 }
 
+const onPieceMenuImageSourceChange = function() {
+  $('#piece-menu-img-error-msg').hide();
+  const imgSource = document.querySelector('input[type="radio"][name="radio-piece-menu-img-source"]:checked').value;
+  switch(imgSource) {
+    case ImageSource.File:
+      $("#input-piece-menu-img-url").removeAttr("required").hide();
+      $("#piece-menu-image-input").show().attr("required", "required");
+      break;
+    case ImageSource.URL:
+      $("#piece-menu-image-input").hide().removeAttr("required");
+      $("#input-piece-menu-img-url").attr("required", "required").show();
+      break;
+  }
+}
+
 const onBackgroundTypeChange = function () {
   const bgType = document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value;
   switch (bgType) {
@@ -1756,15 +1771,20 @@ const initDom = function () {
     $('#img-bg-preview').attr('src', data);
   });
 
-  document.getElementById('input-bg-image-url').addEventListener('input', function() {
+  document.getElementById('input-bg-image-url').addEventListener('input', debounce(function() {
     $('.img-preview-loader').show();
     $('#img-bg-preview').attr('src', $('#input-bg-image-url').val());
-  });
+  }, 200));
 
-  document.getElementById('input-piece-img-url').addEventListener('input', function() {
+  document.getElementById('input-piece-img-url').addEventListener('input', debounce(function() {
     $('.img-preview-loader').show();
     $('#img-piece-preview').attr('src', $('#input-piece-img-url').val());
-  });
+  }, 200));
+
+  document.getElementById('input-piece-menu-img-url').addEventListener('input', debounce(function() {
+    $('.img-preview-loader').show();
+    $('#piece-menu-image').attr('src', $('#input-piece-menu-img-url').val());
+  }, 200));
 
   document.getElementById('piece-menu-image-input').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
@@ -1842,6 +1862,7 @@ const initDom = function () {
   $('input[type="radio"][name="radio-bg-type"]').on('change', onBackgroundTypeChange);
   $('input[type="radio"][name="radio-bg-img-source"]').on('change', onBackgroundImageSourceChange);
   $('input[type="radio"][name="radio-piece-img-source"]').on('change', onPieceImageSourceChange);
+  $('input[type="radio"][name="radio-piece-menu-img-source"]').on('change', onPieceMenuImageSourceChange);
   $('input[type="radio"][name="radio-shape-menu-type"]').on('change', onShapeTypeChange);
   document.getElementById('input-aura-menu-opacity').addEventListener('input', (e) => {
     $('#value-aura-menu-opacity').html(parseInt(100 * e.target.value / 255) + '%');
@@ -1892,6 +1913,7 @@ const initDom = function () {
     imgInput.value = null;
     imgInput.type = "text";
     imgInput.type = "file";
+    $('#input-piece-menu-img-url').val(null);
     CURRENT_SCENE.drawPieces();
     $('#piece-menu-image').unbind('crop zoom');
     $('#btn-update-piece').removeClass('shake');
