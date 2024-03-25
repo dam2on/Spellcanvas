@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/error.css">
     <script type="text/javascript">
         window.onload = async function () {
+            history.pushState({page_id: 2}, null, window.location.href);
             const hostId = await localforage.getItem('host id');
             const inviteLinkTag = document.getElementById('a-invite-link');
             inviteLinkTag.innerText = `www.spellcanvas.com/index.html?host=${hostId}`;

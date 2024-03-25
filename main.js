@@ -1493,7 +1493,6 @@ const initPeer = function () {
       });
 
       _peer.on('close', function (e) {
-        debugger;
         window.location.href = window.location.origin + '/peererror.html';
       });
     }
@@ -2276,6 +2275,7 @@ const displayDebugInfo = function (text) {
 
 
 window.onload = async function () {
+  history.replaceState({page_id: 1}, null, window.location.href);
   detectBrowserCompatibility();
   loading(true);
   initDom();

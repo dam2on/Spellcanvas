@@ -28,7 +28,7 @@
         integrity="sha512-MgYeYFj8R3S6rvZHiJ1xA9cM/VDGcT4eRRFQwGA7qDP7NHbnWKNmAm28z0LVjOuUqjD0T9JxpDMdVqsZOSHaSA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-roundrect-polyfill@0.0.1/roundRect.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/debounce@2.0.0/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/javascript-debounce@1.0.1/dist/javascript-debounce.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"
         integrity="sha512-9KkIqdfN7ipEW6B6k+Aq20PV31bjODg4AA52W+tYtAE0jE0kMx49bjJ3FgvS56wzmyfMUHbQ4Km2b7l9+Y/+Eg=="
@@ -47,7 +47,6 @@
     <script type="text/javascript" src="classes/scene.js"></script>
     <script type="text/javascript" src="helpers/tour.js"></script>
     <script type="text/javascript" src="main.js"></script>
-    <!-- <script type="text/javascript" src="main.min.js"></script> -->
 
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
@@ -69,7 +68,6 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="css/loader.css">
     <link rel="stylesheet" href="css/styles.css">
-    <!-- <link rel="stylesheet" href="css/styles.min.css"> -->
     <meta name="description" content="Spellcanvas is a minimalistic, virtual tabletop designed for online play!">
     <meta name="robots" content="index">
     <meta name="google" content="nositelinkssearchbox">
@@ -266,7 +264,8 @@
                 <div class="text-center">
                     <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
                     <div>
-                        <img id="piece-menu-image" class="cropper-hidden" style="max-width: 100%;" crossorigin="anonymous"/>
+                        <img id="piece-menu-image" class="cropper-hidden" style="max-width: 100%;"
+                            crossorigin="anonymous" />
                     </div>
                     <div id="piece-menu-img-error-msg" class="invalid-feedback">
                         Error loading image
@@ -658,7 +657,8 @@
                         <div class="mb-3 text-center">
                             <span class="img-preview-loader fa-solid fa-spinner" style="display: none;"></span>
                             <div>
-                                <img id="img-piece-preview" class="cropper-hidden" style="max-width: 100%;" crossorigin="anonymous"></img>
+                                <img id="img-piece-preview" class="cropper-hidden" style="max-width: 100%;"
+                                    crossorigin="anonymous"></img>
                             </div>
                             <div id="piece-img-error-msg" class="invalid-feedback">
                                 Error loading image

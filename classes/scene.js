@@ -241,7 +241,6 @@ class Scene {
         const gridColor = options.gridColor ?? this.gridRatio.color ?? await this.background.getContrastColor();
         const gridOpacity = options.gridOpacity ?? this.gridRatio.opacity;
         const gridOrigin = options.gridOrigin ?? this.gridRatio.gridOrigin ?? {x: 0, y: 0};
-        debugger;
 
         const prevStrokeColor = this.ctx.strokeStyle;
         this.ctx.strokeStyle = gridColor + opacityToHexStr(gridOpacity);
