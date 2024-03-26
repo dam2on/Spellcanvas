@@ -2,7 +2,15 @@ const isLocal = function () {
     return window.location.host == '127.0.0.1:5500'
 }
 
+const disablePeer = function() { 
+    const disablePeerLocally = false;
+    return isLocal() && disablePeerLocally;
+}
+
 const isHost = function () {
+    if (_peer == null) {
+        return _host != null;
+    }
     return _peer.id == _host;
 }
 

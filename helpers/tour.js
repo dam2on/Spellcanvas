@@ -59,7 +59,7 @@ const initGamePieceTour = async function (piece) {
                     return this.cancel();
                 },
                 classes: 'shepherd-button-secondary',
-                text: 'Skip Tutorial'
+                text: 'I already know'
             },
             {
                 action() {
@@ -250,8 +250,8 @@ const initMainMenuTour = async function (isHost = true) {
     });
 
     tour.addStep({
-        title: 'Welcome to Spellcanvas!',
-        text: 'Spellcanvas is a minimalistic, virtual tabletop designed for online play!',
+        title: 'Welcome!',
+        text: 'Spellcanvas is a free minimalistic VTT with no sign-up or login required!<br/><br/>How to use: <ul><li>Set the background</li><li>Map out the grid</li><li>Add pieces</li><li>Send an invite link to your players so they can interact with the scene!</li></ul>',
         buttons: [
             {
                 async action() {
@@ -259,14 +259,14 @@ const initMainMenuTour = async function (isHost = true) {
                     return this.cancel();
                 },
                 classes: 'shepherd-button-secondary',
-                text: "Skip Tutorial"
+                text: "Figure it out <i class='ms-1 fa-solid fa-gear'></i>"
             },
             {
                 action() {
                     bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).show();
                     return this.next();
                 },
-                text: "Let's Explore"
+                text: "Take the tour"
             }
         ]
     });
@@ -279,13 +279,6 @@ const initMainMenuTour = async function (isHost = true) {
             on: 'right'
         },
         buttons: [
-            {
-                action() {
-                    return this.back();
-                },
-                classes: 'shepherd-button-secondary',
-                text: 'Back'
-            },
             {
                 action() {
                     return this.next();
@@ -452,6 +445,34 @@ const initMainMenuTour = async function (isHost = true) {
                     setTimeout(function() {
                         $("#btn-menu-toggle").trigger('mouseleave');
                     }, 150);
+                    $("#canvas-submenu").css({ 'display': 'block', 'top': document.getElementById('canvas').height * 0.3, 'left': document.getElementById('canvas').width * 0.3 });
+                    return this.next();
+                },
+                text: 'Next'
+            }
+        ]
+    });
+
+    tour.addStep({
+        id: 'canvas-right-click',
+        title: 'Quick settings & Hot keys!',
+        text: 'You can access some useful utilities by <strong>Right-clicking</strong> anywhere on the background.',
+        attachTo: {
+            element: document.getElementById("canvas-submenu"),
+            on: 'right'
+        },
+        buttons: [
+            {
+                action() {
+                    $('#canvas-submenu').hide();
+                    return this.back();
+                },
+                classes: 'shepherd-button-secondary',
+                text: 'Back'
+            },
+            {
+                action() {
+                    $('#canvas-submenu').hide();
                     return this.complete();
                 },
                 text: 'Next'

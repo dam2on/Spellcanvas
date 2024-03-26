@@ -1,4 +1,4 @@
-const peerJsOptions = isLocal() ? {} : {
+const peerJsOptions = isLocal() ? { debug: 1 } : {
     host: 'dndcombatapp-413415.uc.r.appspot.com',
     port: 443,
     path: '/',

@@ -1471,30 +1471,40 @@ const initPeer = function () {
       // host mode
       document.title = 'GM - Spellcanvas';
 
-      if (existingHostId != null) {
-        _peer = new Peer(existingHostId, peerJsOptions);
-        _peer.reconnect();
-      }
-      else {
-        _peer = new Peer(newGuid(), peerJsOptions);
-      }
-
-      _peer.on('open', async function (id) {
-        _host = id;
+      if (disablePeer()) {
+        _host = existingHostId ?? newGuid();
         await localforage.setItem(StorageKeys.HostId, _host);
         initInviteLink();
-        initPeerEvents();
         initMainMenuTour();
         resolve();
-      });
+      }
+      else {
+        if (existingHostId != null) {
+          _peer = new Peer(existingHostId, peerJsOptions);
+          _peer.reconnect();
+        }
+        else {
+          _peer = new Peer(newGuid(), peerJsOptions);
+        }
+  
+        _peer.on('open', async function (id) {
+          _host = id;
+          await localforage.setItem(StorageKeys.HostId, _host);
+          initInviteLink();
+          initPeerEvents();
+          initMainMenuTour();
+          resolve();
+        });
+  
+        _peer.on('error', function (e) {
+          debugger;
+        });
+  
+        _peer.on('close', function (e) {
+          window.location.href = window.location.origin + '/peererror.html';
+        });
+      }
 
-      _peer.on('error', function (e) {
-        debugger;
-      });
-
-      _peer.on('close', function (e) {
-        window.location.href = window.location.origin + '/peererror.html';
-      });
     }
     else {
       // player mode
