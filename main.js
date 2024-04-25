@@ -218,7 +218,7 @@ const onShapeTypeChange = function () {
   }
 }
 
-const onChangeBackgroundSubmit = function () {
+const onChangeBackgroundSubmit = async function () {
   $('#form-modal-bg').removeClass('was-validated');
   if (!isHost()) {
     console.warn("only host can change bg");
@@ -226,6 +226,13 @@ const onChangeBackgroundSubmit = function () {
   }
 
   const bgType = document.querySelector('input[type="radio"][name="radio-bg-type"]:checked').value;
+
+  const newScene = $('#bg-new-scene').prop('checked');
+  if (newScene) {
+    await CURRENT_SCENE.saveScene();
+    CURRENT_SCENE = new Scene(newGuid(), _host);
+    await localforage.setItem(StorageKeys.CurrentSceneId, CURRENT_SCENE.id);
+  }
 
   switch (bgType) {
     case BackgroundType.Image:
@@ -242,9 +249,23 @@ const onChangeBackgroundSubmit = function () {
       break;
   }
 
-  onChangeBackgroundEvent();
-  for (var player of PARTY.players) {
-    emitChangeBackgroundEvent(player.id);
+  if (newScene) {
+    CURRENT_SCENE.draw();
+    await CURRENT_SCENE.saveBackground();
+    await CURRENT_SCENE.saveScene();
+  
+    Scene.updateOrCreateDom(CURRENT_SCENE).insertBefore($('#btn-add-scene').parent());
+    $('#option-' + CURRENT_SCENE.id).prop('checked', true);
+  
+    for (var player of PARTY.players) {
+      emitLoadSceneEvent(player.id);
+    }
+  }
+  else {
+    onChangeBackgroundEvent();
+    for (var player of PARTY.players) {
+      emitChangeBackgroundEvent(player.id);
+    }
   }
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).hide();
@@ -442,7 +463,9 @@ const onQuickAdd = async function (pieceId) {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-piece')).hide();
 }
 
-const onChangeBackgroundModal = function () {
+const onChangeBackgroundModal = function (args) {
+  $('#bg-new-scene').prop('checked', args === true);
+
   $("#canvas-submenu").css({ 'display': 'none' });
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).show();
@@ -1188,20 +1211,13 @@ const displaySceneList = async function (scenePartials) {
 }
 
 const onAddScene = async function () {
-  await CURRENT_SCENE.saveScene();
-
-  CURRENT_SCENE = new Scene(newGuid(), _host);
-  CURRENT_SCENE.draw();
-  await localforage.setItem(StorageKeys.CurrentSceneId, CURRENT_SCENE.id);
-  await CURRENT_SCENE.saveScene();
-
-  // $('#scene-list').prepend(Scene.updateOrCreateDom(CURRENT_SCENE));
-  Scene.updateOrCreateDom(CURRENT_SCENE).insertBefore($('#btn-add-scene').parent());
-  $('#option-' + CURRENT_SCENE.id).prop('checked', true);
-
-  for (var player of PARTY.players) {
-    emitLoadSceneEvent(player.id);
+  if (!isHost()) {
+    console.warn('only host can add scene');
+    return;
   }
+
+  onChangeBackgroundModal(true);
+  // new scene gets created after background submit
 }
 
 const onToggleCustomShape = function () {
@@ -1776,7 +1792,7 @@ const initDom = function () {
 
   document.getElementById('input-bg-image').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
-    const data = await resizeImage(e.target.files[0], CURRENT_SCENE.canvas.width);
+    const data = await resizeImage(e.target.files[0], CURRENT_SCENE.canvas.width * 3);
     $('#img-bg-preview').attr('src', data);
   });
 
