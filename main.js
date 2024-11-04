@@ -435,6 +435,31 @@ const onSpellSizeChange = function (args) {
   _spellRuler.updateSize($('#input-spell-size').val());
 }
 
+const onSpellRotate = function (args) {
+  let rotateDirection = -1;
+  if (args.originalEvent instanceof WheelEvent) {
+    rotateDirection = args.originalEvent.deltaY < 0 ? -1 : 1
+  }
+  else if (args instanceof KeyboardEvent) {
+    if (args.key === 'ArrowDown')
+      rotateDirection = -1;
+    else if (args.key === 'ArrowUp')
+      rotateDirection = 1;
+  }
+  if (_spellRuler != null) {
+    CURRENT_SCENE.drawPieces();
+    _spellRuler.rotation += (Math.PI / 32 * (rotateDirection));
+    if (_spellRuler instanceof Shape) {
+      _spellRuler.draw();
+    }
+
+  }
+  else if (_draggedPiece != null) {
+    _draggedPiece.rotation += (Math.PI / 32 * (rotateDirection));
+    CURRENT_SCENE.drawPieces();
+  }
+}
+
 const onQuickAdd = async function (pieceId) {
   const pieceToAdd = (await localforage.getItem(StorageKeys.SessionPieces)).find(p => p.id == pieceId);
   pieceToAdd.id = newGuid();
@@ -1083,13 +1108,11 @@ const initPeerEvents = function () {
   _peer.on('disconnected', function (a, e, i) {
     // leave here to learn about mmore errors
     _peer.reconnect();
-    debugger;
   });
 
   _peer.on('close', function (a, e, i) {
     // leave here to learn about 'close' event
     console.log('peer closed');
-    debugger;
   });
 
   _peer.on('error', function (a) {
@@ -1792,7 +1815,7 @@ const initDom = function () {
 
   document.getElementById('input-bg-image').addEventListener('change', async function (e) {
     $('.img-preview-loader').show();
-    const data = await resizeImage(e.target.files[0], CURRENT_SCENE.canvas.width * 3);
+    const data = await resizeImage(e.target.files[0], CURRENT_SCENE.canvas.width * 10);
     $('#img-bg-preview').attr('src', data);
   });
 
@@ -1963,7 +1986,6 @@ const initDom = function () {
 
   document.body.onkeyup = function(e) {
     if (e.target.tagName == 'INPUT') return;
-    debugger;
 
     switch (e.key) {
       case 's':
@@ -1990,6 +2012,10 @@ const initDom = function () {
         if (bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu'))._isShown) {
           onUpdatePieceSubmit();
         }
+        break;
+      case 'ArrowDown':
+      case 'ArrowUp':
+        onSpellRotate(e);
         break;
       default:
         break;
@@ -2102,20 +2128,7 @@ const initDom = function () {
       }
     }
   });
-  $(can).on('wheel', function (args) {
-    if (_spellRuler != null) {
-      CURRENT_SCENE.drawPieces();
-      _spellRuler.rotation += (Math.PI / 32 * (args.originalEvent.deltaY < 0 ? -1 : 1));
-      if (_spellRuler instanceof Shape) {
-        _spellRuler.draw();
-      }
-
-    }
-    else if (_draggedPiece != null) {
-      _draggedPiece.rotation += (Math.PI / 32 * (args.originalEvent.deltaY < 0 ? -1 : 1));
-      CURRENT_SCENE.drawPieces();
-    }
-  });
+  $(can).on('wheel', onSpellRotate);
   $(can).on('mouseup touchend', async function (args) {
     if (args.type == 'touchend') {
       clearTimeout(touchRightClickTimeout);
