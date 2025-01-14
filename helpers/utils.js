@@ -1,5 +1,5 @@
 const isLocal = function () {
-    return window.location.host == '127.0.0.1:5500'
+    return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 }
 
 const disablePeer = function() { 
