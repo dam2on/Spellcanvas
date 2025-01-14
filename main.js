@@ -1540,7 +1540,7 @@ const initPeer = function () {
         });
   
         _peer.on('close', function (e) {
-          window.location.href = window.location.origin + '/peererror.html';
+          window.location.href = 'peererror.html';
         });
       }
 
@@ -1573,7 +1573,7 @@ const initPeer = function () {
       });
 
       _peer.on('close', function (e) {
-        window.location.href = window.location.origin + '/peererror.html';
+        window.location.href = 'peererror.html';
       });
 
       // initial peer open
