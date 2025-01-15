@@ -1091,7 +1091,7 @@ const onDeletePlayer = async function (id) {
 }
 
 const initInviteLink = function () {
-  $('#input-invite-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + (isLocal() ? '' : '/index.html') + `?host=${encodeURI(_host)}`);
+  $('#input-invite-link').val(window.location.origin + window.location.pathname.replace(/\/+$/, '') + `?host=${encodeURI(_host)}`);
   $("#btn-copy-invite-link").click(async function () {
     var popover = bootstrap.Popover.getOrCreateInstance(this);
     await navigator.clipboard.writeText($('#input-invite-link').val());
@@ -1540,7 +1540,7 @@ const initPeer = function () {
         });
   
         _peer.on('close', function (e) {
-          window.location.href = window.location.origin + '/peererror.html';
+          window.location.href = 'peererror.html';
         });
       }
 
@@ -1573,7 +1573,7 @@ const initPeer = function () {
       });
 
       _peer.on('close', function (e) {
-        window.location.href = window.location.origin + '/peererror.html';
+        window.location.href = 'peererror.html';
       });
 
       // initial peer open
