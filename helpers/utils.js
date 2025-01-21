@@ -19,13 +19,17 @@ const refreshPage = function (includePath = true) {
 }
 
 const downloadObjectAsJson = function (exportObj, exportName) {
-    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+    const blob = new Blob([JSON.stringify(exportObj)], {type: 'application/json'});
+    const downloadURL = URL.createObjectURL(blob);
+
     var downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("href", downloadURL);
     downloadAnchorNode.setAttribute("download", exportName + ".json");
     document.body.appendChild(downloadAnchorNode); // required for firefox
+
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+    URL.revokeObjectURL(downloadURL);
 }
 
 const opacityToHexStr = function(opacity) {
