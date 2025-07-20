@@ -1,0 +1,11 @@
+{
+  "name": "spellcanvas",
+  "scripts": {
+    "build": "python bundle.py"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "terser": "^5.0.0",
+    "uglifycss": "^0.0.29"
+  }
+}

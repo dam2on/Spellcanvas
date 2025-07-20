@@ -48,8 +48,8 @@ def moveFiles():
 
 def runCmds():
     cmds = [
-    "terser -c ecma=2016 -m --manglge-props --source-map -o output/main.min.js helpers/utils.js helpers/enums.js helpers/tour.js helpers/peerjs-options.js classes/* main.js",
-    "uglifycss --debug --output output/css/styles.min.css css/loader.css css/styles.css"]
+    "npx terser -c ecma=2016 -m --manglge-props --source-map -o output/main.min.js helpers/utils.js helpers/enums.js helpers/tour.js helpers/peerjs-options.js classes/* main.js",
+    "npx uglifycss --debug --output output/css/styles.min.css css/loader.css css/styles.css"]
     for c in cmds:
         run(c.split(), stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
     
