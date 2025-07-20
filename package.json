@@ -6,6 +6,7 @@
   "dependencies": {},
   "devDependencies": {
     "terser": "^5.0.0",
-    "uglifycss": "^0.0.29"
+    "uglifycss": "^0.0.29",
+    "html-minifier-terser": "^7.2.0"
   }
 }
