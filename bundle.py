@@ -53,7 +53,7 @@ def runCmds():
     for c in cmds:
         run(c.split(), stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
     
-    htmlMinifyCmd = "html-minifier-terser output/index.pre-min.html --collapse-boolean-attributes --collapse-whitespace --decode-entities --minify-css --minify-js --process-conditional-comments --remove-attribute-quotes --remove-comments --remove-empty-attributes --remove-optional-tags --remove-redundant-attributes --remove-script-type-attributes --sort-attributes --sort-class-name --trim-custom-fragments --use-short-doctype"
+    htmlMinifyCmd = "npx html-minifier-terser output/index.pre-min.html --collapse-boolean-attributes --collapse-whitespace --decode-entities --minify-css --minify-js --process-conditional-comments --remove-attribute-quotes --remove-comments --remove-empty-attributes --remove-optional-tags --remove-redundant-attributes --remove-script-type-attributes --sort-attributes --sort-class-name --trim-custom-fragments --use-short-doctype"
     htmlFile = open("output/index.html", "w+")
     call(htmlMinifyCmd.split(), stdout=htmlFile, shell=True)
     os.remove('output/index.pre-min.html')
