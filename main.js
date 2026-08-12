@@ -1953,6 +1953,18 @@ const initDom = function () {
     $('#img-bg-preview').unbind('crop zoom');
   });
 
+  document.getElementById('modal-player').addEventListener('show.bs.modal', async function () {
+    // TODO: potentially remove this first
+    document.addEventListener('keydown', (e) => {
+      if (e.key == 'Enter') {
+        e.preventDefault();
+        // prevents page from resubmitting when pressing enter on peer name input
+        const playerModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-player'));
+        playerModal.hide();
+      }
+    });
+  });
+
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
     // reset piece form
     _pieceInMenu = null;
