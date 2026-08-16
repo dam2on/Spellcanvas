@@ -13,7 +13,6 @@ _draggedPiece = null;
 _forceHideRoutes = false;
 _cropper = null;
 _drawMode = DrawMode.Off;
-_fowMode = FowMode.Off;
 
 const shapeIntersects = function (x, y, respectLock = false) {
   for (var piece of CURRENT_SCENE?.pieces) {
