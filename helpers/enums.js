@@ -12,7 +12,8 @@ const EventTypes = {
   PermissionsUpdate: 'permissions update',
   LoadScene: 'load scene',
   LoadSceneSuccess: 'load scene success',
-  DiceRoll: 'dice roll'
+  DiceRoll: 'dice roll',
+  UpdateFow: 'update fow'
 }
 
 const BackgroundType = {
@@ -36,7 +37,8 @@ const StorageKeys = {
   Permissions: 'permissions',
   Scenes: 'scenes',
   SessionPieces: 'session pieces',
-  CurrentSceneId: 'current scene id'
+  CurrentSceneId: 'current scene id',
+  FogOfWar: 'fog of war'
 }
 
 const PieceSizes = {
@@ -50,6 +52,12 @@ const PieceSizes = {
 }
 
 const DrawMode = {
+  Off: 0,
+  AwaitingInput: 1,
+  Drawing: 2
+}
+
+const FowMode = {
   Off: 0,
   AwaitingInput: 1,
   Drawing: 2

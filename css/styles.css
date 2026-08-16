@@ -178,7 +178,7 @@ a[role="button"] {
   cursor: pointer;
 }
 
-#modal-grid {
+#modal-grid, #modal-fow {
   position: relative;
 }
 
@@ -253,7 +253,7 @@ a[role="button"] {
   box-shadow: #5f8585 0px 2px 8px;
   text-align: center;
   background-color: #eaf0f0;
-  color: #5f8585;
+  color: #356b6b;
   z-index: 1059;
   opacity: 0.6;
   font-size: 20px;

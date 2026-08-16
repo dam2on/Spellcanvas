@@ -259,7 +259,7 @@ const initMainMenuTour = async function (isHost = true) {
                     return this.cancel();
                 },
                 classes: 'shepherd-button-secondary',
-                text: "Figure it out <i class='ms-1 fa-solid fa-gear'></i>"
+                text: "Skip tour <i class='ms-1 fa-solid fa-gear'></i>"
             },
             {
                 action() {

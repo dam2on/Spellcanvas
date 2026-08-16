@@ -44,6 +44,7 @@
     <script type="text/javascript" src="classes/background.js"></script>
     <script type="text/javascript" src="classes/shape.js"></script>
     <script type="text/javascript" src="classes/party.js"></script>
+    <script type="text/javascript" src="classes/fow.js"></script>
     <script type="text/javascript" src="classes/scene.js"></script>
     <script type="text/javascript" src="helpers/tour.js"></script>
     <script type="text/javascript" src="main.js"></script>
@@ -78,8 +79,8 @@
 <body>
     <!-- Main Scene -->
     <div class="loader" style="display: none;"></div>
-    <div class="draw-mode-overlay py-2" style="display: none;">
-        <h1>Click & drag to draw</h1>
+    <div class="draw-mode-overlay" style="display: none;">
+        <span style="font-weight: 700;">Click & drag to draw</span>
     </div>
     <div id="video" class="video-background">
     </div>
@@ -118,6 +119,11 @@
                 </div>
             </a>
         </li>
+        <li><a id="canvas-submenu-fog-of-war" class="host-only dropdown-item" href="javascript:void(0)">
+                <div class="d-flex justify-content-between"><span>Fog Of War</span><span class="badge bg-secondary">w</span>
+                </div>
+            </a>
+        </li>
         <hr />
         <li><a id="canvas-submenu-roll-dice" data-bs-toggle="modal" data-bs-target="#modal-dice" class="dropdown-item"
                 href="javascript:void(0)">
@@ -140,11 +146,14 @@
         <div class="offcanvas-body d-flex flex-column">
             <h4><i class="fa-solid fa-chess my-3 me-2"></i>Game Board</h4>
             <div class="mb-3 host-only">
-                <button id="btn-change-bg" class="btn btn-secondary btn-sm me-2" type="button">
-                    <i class="fa-regular fa-image"></i> Set Background
+                <button id="btn-change-bg" class="btn btn-secondary btn-sm" type="button">
+                    <i class="fa-regular fa-image me-1"></i>Background
                 </button>
                 <button id="btn-grid-mode" class="btn btn-sm btn-secondary">
-                    <i class="fa-solid fa-border-none me-2"></i>Grid Settings
+                    <i class="fa-solid fa-border-none me-1"></i>Grid
+                </button>
+                <button id="btn-fow-mode" class="btn btn-sm btn-secondary">
+                    <i class="fa-solid fa-eye-slash me-1"></i>Fog of War
                 </button>
             </div>
             <div class="mb-3">
@@ -536,6 +545,50 @@
         </div>
     </div>
     <!-- Modals -->
+    <div class="modal" id="modal-fow" tabindex="-1" data-bs-backdrop="false">
+        <div class="modal-dialog draggable-modal">
+            <div class="modal-content">
+                <form id="form-modal-fow">
+                    <div class="modal-header text-center">
+                        <h5 class="w-100">Fog Of War</h5>
+                    </div>
+                    <div class="modal-body py-0">
+                        <div class="row text-center mb-3">
+                            <span style="font-size: 14px;">Appears completely black to players</span>
+                        </div>
+
+                        <div class="row align-items-end mt-3" hidden>
+                            <div class="offset-sm-4 col-sm-6">
+                                <div class="form-check form-switch">
+                                    <label class="form-check-label font-sm" for="input-erase-fow">Erase Mode</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" disabled
+                                        id="input-erase-fow">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-end">
+                            <div class="offset-sm-4 col-sm-6">
+                                <div class="form-check form-switch">
+                                    <label class="form-check-label font-sm" for="input-display-fow">Enable</label>
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        id="input-enable-fow" checked>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="text-center mt-3">
+                                <button type="button" id="btn-reset-fow" class="btn btn-sm btn-danger">Delete Fog of War</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btn-modal-fow-ok">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <div class="modal" id="modal-grid" tabindex="-1" data-bs-backdrop="false">
         <div class="modal-dialog draggable-modal">
             <div class="modal-content">
@@ -636,7 +689,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="btn-modal-grid-ok">Looks Good!</button>
+                        <button type="submit" class="btn btn-primary" id="btn-modal-grid-ok">Save</button>
                     </div>
                 </form>
             </div>

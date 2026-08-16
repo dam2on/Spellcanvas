@@ -17,9 +17,12 @@
         window.onload = async function () {
             history.pushState({page_id: 2}, null, window.location.href);
             const hostId = await localforage.getItem('host id');
+            const hostLinkTag = document.getElementById('a-host-link');
+            hostLinkTag.innerText = window.location.origin;
+            hostLinkTag.href = window.location.origin;
             const inviteLinkTag = document.getElementById('a-invite-link');
-            inviteLinkTag.innerText = `www.spellcanvas.com/index.html?host=${hostId}`;
-            inviteLinkTag.href = `https://www.spellcanvas.com/index.html?host=${hostId}`;
+            inviteLinkTag.innerText = `${window.location.origin}/index.html?host=${hostId}`;
+            inviteLinkTag.href = `${window.location.origin}/index.html?host=${hostId}`;
         }
 
     </script>
@@ -47,7 +50,7 @@
             <img style="margin-left: 2em" class="img-fluid" src="img/sitemodes.jpg"></img>
             <ul>
                 <li class="d-block">1 - GM tab: This is the tab you see when you first visit: <a role="button"
-                        href="https://www.spellcanvas.com">www.spellcanvas.com</a></li>
+                        id="a-host-link" href="https://www.spellcanvas.com">www.spellcanvas.com</a></li>
                 <li class="d-block">2 - Player tab: This is the tab you see when you visit an invite link: <a
                         role="button" id="a-invite-link" href="https://www.spellcanvas.com"></a>
                 </li>

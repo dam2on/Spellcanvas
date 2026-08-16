@@ -8,10 +8,12 @@ _host = null;
 _pieceInMenu = null;
 _spellRuler = null;
 _drawShape = null;
+_fowShape = null;
 _draggedPiece = null;
 _forceHideRoutes = false;
 _cropper = null;
 _drawMode = DrawMode.Off;
+_fowMode = FowMode.Off;
 
 const shapeIntersects = function (x, y, respectLock = false) {
   for (var piece of CURRENT_SCENE?.pieces) {
@@ -327,7 +329,7 @@ const onToggleGridDisplay = async function () {
   }
 
   CURRENT_SCENE.drawBackdrop();
-  CURRENT_SCENE.drawPieces({
+  await CURRENT_SCENE.drawPieces({
     gridDisplay: display,
     gridOrigin: {
       x: _drawShape?.x ?? 0,
@@ -489,8 +491,13 @@ const onQuickAdd = async function (pieceId) {
 }
 
 const onChangeBackgroundModal = function (args) {
+  if (!isHost()) {
+    console.warn('only host edit background/add scene');
+    return;
+  }
   $('#bg-new-scene').prop('checked', args === true);
 
+  onExitFowMode();
   $("#canvas-submenu").css({ 'display': 'none' });
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bg')).show();
@@ -793,6 +800,13 @@ const emitDiceRollEvent = function (peerId, rolls) {
   });
 }
 
+const emitUpdateFowEvent = function (peerId) {
+  var conn = _peer.connect(peerId);
+  conn.on('open', function () {
+    conn.send({ event: EventTypes.UpdateFow, fow: CURRENT_SCENE.fow });
+  });
+}
+
 const emitAddPieceEvent = function (peerId, piece) {
   var conn = _peer.connect(peerId);
   conn.on('open', function () {
@@ -1035,6 +1049,99 @@ const onUpdatePieceEvent = async function (peerId, piece) {
   CURRENT_SCENE.drawPieces();
 }
 
+const onToggleFow = function(e) {
+  _fowShape.toggle(e.target.checked);
+
+  CURRENT_SCENE.drawPieces({hideFow: true});
+  _fowShape.draw({opacity: true});
+} 
+
+const onEraseFow = function(e) {
+  _fowShape.toggleEraseMode(e.target.checked);
+} 
+
+const onExitFowMode = function() {
+  _fowShape = null;
+  _drawMode = DrawMode.Off;
+  $('.draw-mode-overlay').hide();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-fow')).hide();
+}
+
+const onSubmitFow = async function(e) {
+  e.preventDefault();
+
+  await onUpdateFowEvent(_fowShape);
+
+  onExitFowMode();
+}
+
+const onClearFow = async function(e) {
+  $('#input-enable-fow').prop("checked", true);
+  _fowShape = new FogOfWar(true);
+
+  CURRENT_SCENE.drawPieces({hideFow: true});
+  _fowShape.draw();
+}
+
+const onCancelFow = async function(e) {
+  onExitFowMode();
+
+  await CURRENT_SCENE.drawPieces();
+}
+
+const onUpdateFowEvent = async function (obj) {
+  if (obj != null) {
+    CURRENT_SCENE.addFogOfWar(obj);
+  }
+
+  await CURRENT_SCENE.drawPieces();
+
+  if (isHost()) {
+    await CURRENT_SCENE.saveFow();
+
+    for (var player of PARTY.players) {
+      emitUpdateFowEvent(player.id);
+    }
+  }
+}
+
+const onFogOfWarMode = function() {
+  if (!isHost()) {
+    console.warn("only host can enter fog of war mode");
+    return;
+  }
+  $('.draw-mode-overlay').show();
+
+  if (!($('#modal-fow.modal.show').length)) {
+    $('#modal-fow').find('.modal-dialog').css({
+      top: '5vh',
+      left: '10vw'
+    });
+  }
+
+  $("#canvas-submenu").css({ 'display': 'none' });
+  bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
+  bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('piece-menu')).hide();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-fow')).show();
+
+  // disable spellruler
+  $('#spell-ruler').find('input.btn-check').prop("checked", false);
+  _spellRuler = null;
+  _drawShape = null;
+  _draggedPiece = null;
+
+  _drawMode = DrawMode.AwaitingInput;
+  const isEnabled = $('#input-enable-fow').prop("checked");
+  if (CURRENT_SCENE.fow) {
+    _fowShape = FogOfWar.fromObj(CURRENT_SCENE.fow);
+    CURRENT_SCENE.drawPieces({hideFow: true});
+  } else {
+    _fowShape = new FogOfWar(isEnabled);
+  }
+
+  _fowShape.draw({opacity: true});
+}
+
 const onGridChangeEvent = async function (grid) {
   CURRENT_SCENE.gridRatio = grid;
 
@@ -1044,7 +1151,7 @@ const onGridChangeEvent = async function (grid) {
   }
 
   CURRENT_SCENE.drawGridSetting();
-  CURRENT_SCENE.drawPieces();
+  await CURRENT_SCENE.drawPieces();
 
   if (isHost()) {
     await CURRENT_SCENE.saveGrid();
@@ -1160,6 +1267,7 @@ const initPeerEvents = function () {
           case EventTypes.DeletePiece:
           case EventTypes.ChangeBackground:
           case EventTypes.GridChange:
+          case EventTypes.UpdateFow:
             /* 
              CURRENT_SCENE may be null during initial connection to host which
              can cause errors if other events come through. Refreshing the page should resolve this.
@@ -1200,6 +1308,9 @@ const initPeerEvents = function () {
         case EventTypes.GridChange:
           onGridChangeEvent(data.gridSize);
           break;
+        case EventTypes.UpdateFow:
+          onUpdateFowEvent(data.fow);
+          break;
         case EventTypes.ConnectedToHost:
           onConnectedToHostEvent(conn.peer);
           break;
@@ -1234,11 +1345,6 @@ const displaySceneList = async function (scenePartials) {
 }
 
 const onAddScene = async function () {
-  if (!isHost()) {
-    console.warn('only host can add scene');
-    return;
-  }
-
   onChangeBackgroundModal(true);
   // new scene gets created after background submit
 }
@@ -1256,6 +1362,10 @@ const onToggleCustomShape = function () {
 }
 
 const onGridMode = function () {
+  if (!isHost()) {
+    console.warn('only host can enter grid mode');
+    return;
+  }
   $("#canvas-submenu").css({ 'display': 'none' });
   $('.draw-mode-overlay').show();
 
@@ -1265,6 +1375,9 @@ const onGridMode = function () {
       left: '10vw'
     });
   }
+
+  onExitFowMode();
+
   CURRENT_SCENE.drawGridSetting();
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('main-menu')).hide();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-grid')).show();
@@ -1404,6 +1517,7 @@ const onImportSession = async function () {
               await localforage.setItem(`${StorageKeys.Pieces}-${scene.id}`, scene.pieces);
               await localforage.setItem(`${StorageKeys.Background}-${scene.id}`, scene.background);
               await localforage.setItem(`${StorageKeys.GridRatio}-${scene.id}`, scene.gridRatio);
+              await localforage.setItem(`${StorageKeys.FogOfWar}-${scene.id}`, scene.fow);
             }
 
             const scenePartials = session.scenes.map(s => {
@@ -1898,6 +2012,16 @@ const initDom = function () {
   document.getElementById('form-modal-bg').addEventListener('submit', onChangeBackgroundSubmit);
   document.getElementById('form-modal-grid').addEventListener('submit', onGridSubmit);
   document.getElementById('form-modal-grid').addEventListener('reset', onGridReset);
+
+  // fog of war event listeners
+  document.getElementById('form-modal-fow').addEventListener('submit', onSubmitFow);
+  document.getElementById('btn-reset-fow').addEventListener('click', onClearFow);
+  document.getElementById('form-modal-fow').addEventListener('reset', onCancelFow);
+  document.getElementById('btn-fow-mode').addEventListener('click', onFogOfWarMode);
+  document.getElementById('canvas-submenu-fog-of-war').addEventListener('click', onFogOfWarMode);
+  document.getElementById('input-enable-fow').addEventListener('change', onToggleFow);
+  document.getElementById('input-erase-fow').addEventListener('change', onEraseFow);
+
   document.getElementById('btn-update-piece').addEventListener('click', onUpdatePieceSubmit);
   document.getElementById('checkbox-piece-menu-aura').addEventListener('change', onPieceAuraToggle);
   document.getElementById('btn-delete-piece').addEventListener("click", onDeletePieceSubmit);
@@ -1924,6 +2048,7 @@ const initDom = function () {
   });
 
   document.getElementById("main-menu").addEventListener("show.bs.offcanvas", () => {
+    onExitFowMode();
     $("#canvas-submenu").css({ 'display': 'none' });
   });
 
@@ -1939,7 +2064,15 @@ const initDom = function () {
     $('#modal-grid').find('.modal-dialog').draggable();
   });
 
+  document.getElementById('modal-fow').addEventListener('show.bs.modal', function () {
+    if (CURRENT_SCENE.fow) {
+      $('#input-enable-fow').prop('checked', CURRENT_SCENE.fow.enable);
+    }
+    $('#modal-fow').find('.modal-dialog').draggable();
+  });
+
   document.getElementById('modal-dice').addEventListener('show.bs.modal', function () {
+    onExitFowMode();
     $('#modal-dice').find('.modal-dialog').draggable();
     $("#canvas-submenu").css({ 'display': 'none' });    
   });
@@ -1954,15 +2087,16 @@ const initDom = function () {
   });
 
   document.getElementById('modal-player').addEventListener('show.bs.modal', async function () {
-    // TODO: potentially remove this first
-    document.addEventListener('keydown', (e) => {
+    const hidePlayerModalOnEnter = (e) => {
       if (e.key == 'Enter') {
         e.preventDefault();
         // prevents page from resubmitting when pressing enter on peer name input
         const playerModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-player'));
         playerModal.hide();
+        document.removeEventListener('keydown', hidePlayerModalOnEnter);
       }
-    });
+    }
+    document.addEventListener('keydown', hidePlayerModalOnEnter);
   });
 
   document.getElementById("piece-menu").addEventListener("hide.bs.offcanvas", () => {
@@ -1980,6 +2114,7 @@ const initDom = function () {
   });
 
   document.getElementById("piece-menu").addEventListener("shown.bs.offcanvas", () => {
+    onExitFowMode();
     // animate save button on change
     $('#piece-menu').find('input').one('change', function () {
       $('#btn-update-piece').addClass('shake');
@@ -2011,6 +2146,9 @@ const initDom = function () {
         break;
       case 'g':
         onGridMode();
+        break;
+      case 'w':
+        onFogOfWarMode();
         break;
       case 'f':
         onFullscreenToggle();
@@ -2048,27 +2186,31 @@ const initDom = function () {
       }, 1200);
     }
     else if (args.button != 0) {
-      // button: 0 is left click
+      // if not left click
       return;
     }
 
     if (_drawMode) {
-      let pos = {
-        x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
-        y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
-      }
-      if (_drawShape == null) {
-        _drawShape = initGridShape(pos.x, pos.y);
-      }
-      else {
-        _drawShape.x = pos.x;
-        _drawShape.y = pos.y;
-        _drawShape.updateSize(Number(CURRENT_SCENE.gridRatio.feetPerGrid));
+      if (_fowShape) {
+        // first position of fow
+        _fowShape.addSegment(args.clientX, args.clientY);
+      } else {
+        let pos = {
+          x: args.clientX / CURRENT_SCENE.canvas.width + CURRENT_SCENE.gridRatio.x / 2,
+          y: args.clientY / CURRENT_SCENE.canvas.height + CURRENT_SCENE.gridRatio.y / 2
+        }
+        if (_drawShape == null) {
+          _drawShape = initGridShape(pos.x, pos.y);
+        }
+        else {
+          _drawShape.x = pos.x;
+          _drawShape.y = pos.y;
+          _drawShape.updateSize(Number(CURRENT_SCENE.gridRatio.feetPerGrid));
+        }
       }
       _drawMode = DrawMode.Drawing;
-      return;
     }
-    if (_spellRuler instanceof Shape) {
+    else if (_spellRuler instanceof Shape) {
       CURRENT_SCENE.addPiece(_spellRuler);
       const newPiece = { ..._spellRuler };
       $('#spell-ruler').find('input.btn-check:checked').click();
@@ -2102,23 +2244,27 @@ const initDom = function () {
       args.clientX = args.touches[0].clientX;
       args.clientY = args.touches[0].clientY;
     }
-    if (_drawMode == DrawMode.Drawing && _drawShape != null) {
-      CURRENT_SCENE.drawPieces({
-        hide: [_drawShape.id]
-      });
-      const origin = {
-        x: _drawShape.getX() - _drawShape.width / 2,
-        y: _drawShape.getY() - _drawShape.height / 2
-      }
-      const dW = (args.clientX - origin.x);
-      const dH = (args.clientY - origin.y);
-      _drawShape.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
-      _drawShape.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
+    if (_drawMode == DrawMode.Drawing) {
+      if (_drawShape != null) {
+        CURRENT_SCENE.drawPieces({
+          hide: [_drawShape.id]
+        });
+        const origin = {
+          x: _drawShape.getX() - _drawShape.width / 2,
+          y: _drawShape.getY() - _drawShape.height / 2
+        }
+        const dW = (args.clientX - origin.x);
+        const dH = (args.clientY - origin.y);
+        _drawShape.x = (origin.x + dW / 2) / CURRENT_SCENE.canvas.width;
+        _drawShape.y = (origin.y + dH / 2) / CURRENT_SCENE.canvas.height;
 
-      _drawShape.draw({ width: dW, height: dH, border: "#5f8585" });
-      return;
+        _drawShape.draw({ width: dW, height: dH, border: "#5f8585" });
+      } else if (_fowShape != null) {
+        _fowShape.addRawPosition(args.clientX, args.clientY);
+        _fowShape.draw();
+      }
     }
-    if (_draggedPiece != null) {
+    else if (_draggedPiece != null) {
       $('.menu-toggle').hide(); // disable invisible menu toggle
       if (_draggedPiece instanceof Shape) {
         _draggedPiece.x = args.clientX / document.getElementById("canvas").width;
@@ -2150,42 +2296,45 @@ const initDom = function () {
       return;
     }
 
-    if (_drawMode && _drawShape != null) {
-      const scenePiece = CURRENT_SCENE.getPieceById(_drawShape.id);
-      if (scenePiece != undefined) {
-        // custom piece sizing
-        scenePiece.x = _drawShape.x;
-        scenePiece.y = _drawShape.y;
-        scenePiece.size = {
-          x: Math.abs(((_drawShape.width / CURRENT_SCENE.canvas.width) / CURRENT_SCENE.gridRatio.x) * CURRENT_SCENE.gridRatio.feetPerGrid),
-          y: Math.abs(((_drawShape.height / CURRENT_SCENE.canvas.height) / CURRENT_SCENE.gridRatio.y) * CURRENT_SCENE.gridRatio.feetPerGrid)
-        };
-        scenePiece.updateSize();
-        _drawShape = null;
-        _drawMode = DrawMode.Off;
-        $('.draw-mode-overlay').hide();
-        CURRENT_SCENE.drawPieces();
-        if (isHost()) {
-          await CURRENT_SCENE.savePieces();
+    if (_drawMode) {
+      if (_drawShape != null) {
+        const scenePiece = CURRENT_SCENE.getPieceById(_drawShape.id);
+        if (scenePiece != undefined) {
+          // custom piece sizing
+          scenePiece.x = _drawShape.x;
+          scenePiece.y = _drawShape.y;
+          scenePiece.size = {
+            x: Math.abs(((_drawShape.width / CURRENT_SCENE.canvas.width) / CURRENT_SCENE.gridRatio.x) * CURRENT_SCENE.gridRatio.feetPerGrid),
+            y: Math.abs(((_drawShape.height / CURRENT_SCENE.canvas.height) / CURRENT_SCENE.gridRatio.y) * CURRENT_SCENE.gridRatio.feetPerGrid)
+          };
+          scenePiece.updateSize();
+          _drawShape = null;
+          _drawMode = DrawMode.Off;
+          $('.draw-mode-overlay').hide();
+          CURRENT_SCENE.drawPieces();
+          if (isHost()) {
+            await CURRENT_SCENE.savePieces();
 
-          for (var player of PARTY.players) {
-            emitUpdatePieceEvent(player.id, scenePiece);
+            for (var player of PARTY.players) {
+              emitUpdatePieceEvent(player.id, scenePiece);
+            }
           }
+          else {
+            emitUpdatePieceEvent(_host, scenePiece)
+          }
+        } else {
+          // grid mode
+          _drawMode = DrawMode.AwaitingInput;
+          const width = Math.abs(_drawShape.width);
+          const height = Math.abs(_drawShape.height);
+          $('.grid-indicator').css('width', width + 'px');
+          $('.grid-indicator').css('height', height + 'px');
+          $('#input-grid-width').val(width / CURRENT_SCENE.canvas.width);
+          $('#input-grid-height').val(height / CURRENT_SCENE.canvas.height);
+          onGridChange();
         }
-        else {
-          emitUpdatePieceEvent(_host, scenePiece)
-        }
-      }
-      else {
-        // grid mode
+      } else if (_fowShape != null) {
         _drawMode = DrawMode.AwaitingInput;
-        const width = Math.abs(_drawShape.width);
-        const height = Math.abs(_drawShape.height);
-        $('.grid-indicator').css('width', width + 'px');
-        $('.grid-indicator').css('height', height + 'px');
-        $('#input-grid-width').val(width / CURRENT_SCENE.canvas.width);
-        $('#input-grid-height').val(height / CURRENT_SCENE.canvas.height);
-        onGridChange();
       }
     }
 

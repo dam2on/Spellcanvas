@@ -10,6 +10,7 @@ class Scene {
         };
         this.pieces = [];
         this.unloadedPieces = [];
+        this.fow = null;
         this.background = new Background(BackgroundType.Image, 'img/bg.jpg');
 
         Object.defineProperty(this, 'canvas', { value: document.getElementById('canvas'), enumerable: false, writable: true });
@@ -40,6 +41,11 @@ class Scene {
         }
 
         await Promise.all(pieceImgPromises);
+
+        const fowVal = await localforage.getItem(`${StorageKeys.FogOfWar}-${scene.id}`);
+        if (fowVal != null) {
+            scene.fow = FogOfWar.fromObj(fowVal);
+        }
 
         const backgroundVal = await localforage.getItem(`${StorageKeys.Background}-${scene.id}`);
         if (backgroundVal != null) {
@@ -78,6 +84,7 @@ class Scene {
         await Promise.all(pieceImgPromises);
 
         scene.background = Background.fromObj(obj.background);
+        scene.fow = FogOfWar.fromObj(obj.fow);
         return scene;
     }
 
@@ -114,6 +121,7 @@ class Scene {
 
         await Promise.all([deleteScenePartialPromise,
             localforage.removeItem(`${StorageKeys.Pieces}-${id}`),
+            localforage.removeItem(`${StorageKeys.FogOfWar}-${id}`),
             localforage.removeItem(`${StorageKeys.Background}-${id}`),
             localforage.removeItem(`${StorageKeys.GridRatio}-${id}`)]);
     }
@@ -155,7 +163,7 @@ class Scene {
     }
 
     async save() {
-        await Promise.all([this.saveScene(), this.saveBackground(), this.saveGrid(), this.savePieces()]);
+        await Promise.all([this.saveScene(), this.saveBackground(), this.saveGrid(), this.savePieces(), this.saveFow()]);
     }
 
     async saveBackground() {
@@ -168,6 +176,12 @@ class Scene {
         Scene.updateOrCreateDom(this);
         await this.saveScene(); // update thumbnail in storage
         await localforage.setItem(`${StorageKeys.GridRatio}-${this.id}`, this.gridRatio);
+    }
+
+    async saveFow() {
+        Scene.updateOrCreateDom(this);
+        await this.saveScene(); // update thumbnail in storage
+        await localforage.setItem(`${StorageKeys.FogOfWar}-${this.id}`, this.fow);
     }
 
     async savePieces() {
@@ -199,7 +213,7 @@ class Scene {
         this.pieces.push(this.pieces.splice(currentIndex, 1)[0]);
     }
 
-    async draw(options) {
+    async draw() {
         this.drawGridSetting();
         this.drawBackground();
         await this.drawPieces();
@@ -308,6 +322,10 @@ class Scene {
         for (var piece of this.pieces.filter(p => (options.hide ?? []).indexOf(p.id) == -1)) {
             piece.draw({trailColor});
         }
+
+        if (this.fow && !options.hideFow) {
+            this.fow.draw();
+        }
     }
 
     setBackground(obj) {
@@ -321,6 +339,20 @@ class Scene {
         else {
             console.warn("bad argument: " + JSON.stringify(obj));
         }
+    }
+
+    addFogOfWar(fow) {
+        if (fow instanceof FogOfWar) {
+            this.fow = fow;
+        }
+        else if (fow instanceof Object) {
+            this.fow = FogOfWar.fromObj(fow);
+        } else {
+            console.warn("bad argument: " + JSON.stringify(fow));
+            return;
+        }
+
+        return this.fow;
     }
 
     addPiece(piece) {
