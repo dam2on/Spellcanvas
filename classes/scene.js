@@ -84,7 +84,9 @@ class Scene {
         await Promise.all(pieceImgPromises);
 
         scene.background = Background.fromObj(obj.background);
-        scene.fow = FogOfWar.fromObj(obj.fow);
+        if (obj.fow) {
+            scene.fow = FogOfWar.fromObj(obj.fow);
+        }
         return scene;
     }
 
