@@ -82,7 +82,7 @@
     <div class="draw-mode-overlay" style="display: none;">
         <span style="font-weight: 700;">Click & drag to draw</span>
     </div>
-    <div id="video" class="video-background">
+    <div id="video" class="video-background" data-vbg-always-play="true">
     </div>
     <img id="background-image" style="position: absolute;"></img>
 
@@ -569,7 +569,7 @@
                         <div class="row align-items-end">
                             <div class="offset-sm-4 col-sm-6">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label font-sm" for="input-display-fow">Enable</label>
+                                    <label class="form-check-label font-sm" for="input-enable-fow">Enable</label>
                                     <input class="form-check-input" type="checkbox" role="switch"
                                         id="input-enable-fow" checked>
                                 </div>
@@ -851,7 +851,7 @@
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="radio-bg-type"
-                                        id="radio-bg-video" value="video" disabled>
+                                        id="radio-bg-video" value="video">
                                     <label class="form-check-label" for="radio-bg-video">
                                         Video
                                     </label>

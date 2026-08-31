@@ -228,6 +228,8 @@ a[role="button"] {
 
 .video-background {
   z-index: -100 !important;
+  height: 100vh !important;
+  width: 100vw !important;
 }
 
 .drawer {
@@ -272,7 +274,7 @@ a[role="button"] {
   cursor: pointer;
   background-image: linear-gradient(to right,#000000cc, transparent);
   transition: opacity 0.45s linear;
-  height: 100%;
+  height: 100vh;
 }
 
 .shake {
