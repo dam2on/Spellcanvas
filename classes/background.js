@@ -27,6 +27,7 @@ class Background {
                 // $('#canvas').css('background-image', `url(${this.url})`);
                 $('#background-image').attr('src', this.url);
                 $('#background-image').show();
+                $('#video').hide();
                 break;
             case BackgroundType.Video:
                 if (_videoInitialized) {
@@ -34,6 +35,7 @@ class Background {
                     $('#background-image').removeAttr('src');
                     $('#background-image').hide();
                     $('#video').attr('data-vbg', this.url);
+                    $('#video').show();
                     _video = new VideoBackgrounds($('#video'));
                 } else {
                     console.warn('background type not recognized: ' + this.type);
