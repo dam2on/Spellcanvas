@@ -1,4 +1,14 @@
 _video = null;
+_videoInitialized = false;
+
+try {
+    if (_video instanceof VideoBackgrounds) {
+
+    }
+    _videoInitialized = true;
+} catch {
+    _videoInitialized = false;
+}
 
 class Background {
     constructor(type, url) {
@@ -8,7 +18,7 @@ class Background {
     }
 
     apply() {
-        if (_video instanceof VideoBackgrounds) {
+        if (_videoInitialized && _video instanceof VideoBackgrounds) {
             _video.destroy(_video.elements[0]);
         }
         switch (this.type) {
@@ -19,11 +29,15 @@ class Background {
                 $('#background-image').show();
                 break;
             case BackgroundType.Video:
-                $('#canvas').css('background-image', '');
-                $('#background-image').removeAttr('src');
-                $('#background-image').hide();
-                $('#video').attr('data-vbg', this.url);
-                _video = new VideoBackgrounds($('#video'));
+                if (_videoInitialized) {
+                    $('#canvas').css('background-image', '');
+                    $('#background-image').removeAttr('src');
+                    $('#background-image').hide();
+                    $('#video').attr('data-vbg', this.url);
+                    _video = new VideoBackgrounds($('#video'));
+                } else {
+                    console.warn('background type not recognized: ' + this.type);
+                }
                 break;
             default:
                 console.warn('background type not recognized: ' + this.type);

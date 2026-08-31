@@ -494,6 +494,11 @@ const onChangeBackgroundModal = function (args) {
     console.warn('only host edit background/add scene');
     return;
   }
+
+  if (!_videoInitialized) {
+    $('#radio-bg-video').prop("disabled", true);
+  }
+
   $('#bg-new-scene').prop('checked', args === true);
 
   onExitFowMode();
